@@ -171,7 +171,7 @@ window.GB_GUIDES = {
     x: ["Swinging the weights up.", "Letting your elbows drift forward."],
     q: "hammer curl technique" },
   "neck-b": { m: ["Neck flexors and extensors"],
-    s: ["Same as Tuesday: light plate on a towel, or a neck harness.", "Only add weight when 20 slow reps feel easy."],
+    s: ["Same as Tuesday's: light plate on a towel, or a neck harness.", "Only add weight when 20 slow reps feel easy."],
     c: ["Slow, controlled reps through a comfortable range.", "2 seconds up, 2 seconds down."],
     x: ["Jerky reps or heavy loading.", "Stop at once if anything feels sharp or pinched."],
     q: "neck harness training for beginners" },
