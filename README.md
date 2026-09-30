@@ -1,12 +1,12 @@
 # Gym-Bro: install on your Android phone
 
-The app is 6 files: `index.html`, `data.js`, `manifest.webmanifest`, `sw.js`, `icon-192.png`, `icon-512.png`. Keep them together in one folder.
+The app is 7 files: `index.html`, `data.js`, `guides.js`, `manifest.webmanifest`, `sw.js`, `icon-192.png`, `icon-512.png`. Keep them together in one folder.
 
 ## 1. Put it on GitHub Pages (free, about 10 minutes)
 
 1. Sign in or sign up at github.com.
 2. Tap **+** (top right) → **New repository**. Name it `Gym-Bro`, set it to **Public**, tick **Add a README**, then **Create repository**.
-3. On the repository page: **Add file** → **Upload files**. Drag in all 6 files (not the folder itself, and not the zip). Tap **Commit changes**.
+3. On the repository page: **Add file** → **Upload files**. Drag in all 7 files (not the folder itself, and not the zip). Tap **Commit changes**.
 4. Go to **Settings** → **Pages**. Under **Build and deployment**, set Source to **Deploy from a branch**, Branch to **main**, folder **/ (root)**, then **Save**.
 5. Wait 1–2 minutes and refresh the Pages screen. It shows your link, something like `https://bluebaron42.github.io/Gym-Bro/`.
 

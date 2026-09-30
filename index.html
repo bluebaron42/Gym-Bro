@@ -140,6 +140,25 @@ nav.tabs button[aria-selected="true"]{color:var(--accent)}
 #timer.go .in{background:var(--ok);color:var(--surface)}
 .sync{font-size:12px;color:var(--muted)}
 .data-btns{display:flex;flex-wrap:wrap;gap:8px}
+.excard .face{display:flex;flex-direction:column;gap:10px}
+.excard.heavy{border-color:var(--plate);box-shadow:inset 0 3px 0 var(--plate)}
+.heavy-tag{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.flip-link{border:0;background:none;padding:0;color:var(--accent);font:700 13px var(--body);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.flip-btn{border:1px solid var(--line);background:var(--surface);color:var(--accent);font:700 13px var(--body);border-radius:999px;padding:6px 12px;cursor:pointer;flex-shrink:0}
+.muscles{display:flex;flex-wrap:wrap;gap:6px}
+.gsec b{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.gsec ul,.gsec ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.warn-sec b{color:var(--warn)}
+.btn.video{display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.btn.video svg{width:18px;height:18px}
+.excard.flipping{animation:flip .3s ease-in-out}
+@keyframes flip{0%{transform:perspective(900px) rotateY(0)}49%{transform:perspective(900px) rotateY(90deg)}51%{transform:perspective(900px) rotateY(-90deg)}100%{transform:perspective(900px) rotateY(0)}}
+.e1{padding:10px 0;border-top:1px solid var(--line)}
+.e1:first-of-type{border-top:0}
+.e1-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px}
+.e1-h em{font-style:normal;font-size:12.5px;font-weight:700}
+.e1-h em.up{color:var(--ok)} .e1-h em.down{color:var(--warn)}
+@media (prefers-reduced-motion: reduce){.excard.flipping{animation:none}}
 .meal-main{min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px}
 .meal-main .lbl{flex-basis:100%}
 .linkish{border:0;background:none;padding:0;color:var(--fg);font:600 15px var(--body);text-align:left;cursor:pointer;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
@@ -213,49 +232,54 @@ nav.tabs button[aria-selected="true"]{color:var(--accent)}
 </div></nav>
 
 <script src="data.js"></script>
+<script src="guides.js"></script>
 <script>
 (function(){
 "use strict";
 // ---------- Plan data ----------
 // [id, gym name, sets, lo, hi, home name, home lo, home hi, rest seconds, unit]
 const DAYS = {
-  1:{title:"Push", focus:"Chest · front and side delts · triceps", ex:[
-    ["incline-press","Incline dumbbell press",4,6,10,"Incline DB press, 3-sec lowering",12,15,150],
-    ["flat-press","Flat barbell or machine press",3,8,12,"Deficit push-ups, hands on DBs",8,25,120],
-    ["db-ohp","Seated dumbbell shoulder press",3,8,12,"Seated DB shoulder press",12,15,120],
-    ["lateral-mon","Lateral raise (cable or DB)",4,12,20,"DB lateral raise, 5–10 kg",12,20,75],
-    ["oh-tri","Overhead cable triceps extension",3,10,15,"Two-hand DB overhead extension",10,15,75],
-    ["pushdown","Rope pushdown",2,12,15,"Close-grip push-ups",10,20,60]]},
-  2:{title:"Pull", focus:"Back · traps · biceps", ex:[
-    ["pullup","Pull-ups or lat pulldown",4,6,10,"Pull-ups or band pulldowns",6,12,150],
+  1:{title:"Chest + back", focus:"Heavy bench and pull-ups, then chest and back size work", ex:[
+    ["bench","Barbell bench press",4,4,6,"DB floor press, 3-sec lowering",12,15,180,null,"H"],
+    ["pullup","Weighted pull-up",4,4,6,"Pull-ups or band pulldowns",6,12,180,null,"H"],
+    ["incline-press","Incline dumbbell press",3,8,12,"Incline DB press, 3-sec lowering",12,15,120],
     ["row","Chest-supported row",3,8,12,"One-arm DB row",12,15,120],
-    ["shrug","Barbell or DB shrug",4,10,15,"DB shrug, 2-sec hold at top",20,25,90],
-    ["facepull","Face pull",3,15,20,"Band face pull or rear-delt fly",15,20,60],
+    ["fly","Cable fly",2,12,15,"DB fly on the floor",12,15,75],
+    ["lateral-mon","Lateral raise",3,12,20,"DB lateral raise, 5–10 kg",12,20,60]]},
+  2:{title:"Shoulders + arms", focus:"Heavy overhead press, then shoulders, traps and arms", ex:[
+    ["ohp","Standing overhead press",4,4,6,"Standing DB press",10,15,180,null,"H"],
+    ["shrug","Heavy barbell shrug",4,6,10,"DB shrug, 2-sec hold at top",20,25,120],
+    ["cable-lateral","Cable lateral raise",4,12,20,"DB lateral raise, leaning away",12,20,60],
+    ["cgbench","Close-grip bench press",3,6,10,"Diamond push-ups",10,20,120],
     ["incline-curl","Incline dumbbell curl",3,8,12,"Incline dumbbell curl",10,15,75],
-    ["hammer","Hammer curl",2,10,15,"Hammer curl",12,15,60]]},
-  3:{title:"Legs + carries", focus:"Legs · traps · core", ex:[
-    ["squat","Back squat or hack squat",4,6,10,"Goblet squat, 3-sec lowering",12,20,180],
-    ["rdl","Romanian deadlift",3,8,10,"DB Romanian deadlift",12,15,150],
-    ["bss","Leg press or Bulgarian split squat",3,10,12,"Bulgarian split squat with DBs",10,12,120],
-    ["legcurl","Leg curl",3,12,15,"Single-leg glute bridge",12,15,75],
-    ["calf","Standing calf raise",3,15,20,"One-leg calf raise holding a DB",15,20,60],
-    ["carry","Farmer's carry",3,40,40,"Farmer's carry, heaviest DBs",40,60,90,"m"]]},
+    ["facepull","Face pull",3,15,20,"Band face pull or rear-delt fly",15,20,60],
+    ["neck-a","Neck curl + extension (each)",2,15,20,"Neck curl + extension, towel resistance",15,20,60]]},
+  3:{title:"Legs + deadlift", focus:"Heavy deadlift, then legs, grip and carries", ex:[
+    ["deadlift","Deadlift (barbell or trap bar)",4,3,5,"DB Romanian deadlift",12,15,210,null,"H"],
+    ["squat","Back squat",3,6,8,"Goblet squat, 3-sec lowering",12,20,180],
+    ["bss","Bulgarian split squat",3,8,10,"Bulgarian split squat with DBs",10,12,120],
+    ["legcurl","Leg curl",2,10,12,"Single-leg glute bridge",12,15,75],
+    ["calf","Standing calf raise",3,12,15,"One-leg calf raise holding a DB",15,20,60],
+    ["carry","Heavy farmer's carry",4,30,40,"Farmer's carry, heaviest DBs",40,60,120,"m"]]},
   4:{rest:true, title:"Rest", focus:"8–10k steps, stretch, sleep"},
-  5:{title:"Shoulders + arms", focus:"Delts · biceps · triceps", ex:[
-    ["ohp","Standing overhead press",4,5,8,"Standing DB press",10,15,180],
+  5:{title:"Chest + back", focus:"Heavy dips and rows, then chest and back size work", ex:[
+    ["dips","Weighted dips",4,6,8,"Push-ups to failure",10,30,150,null,"H"],
+    ["bb-row","Barbell row",4,6,8,"One-arm DB row, heavy",8,12,150,null,"H"],
+    ["flat-db","Flat dumbbell press",3,8,12,"DB floor press, 3-sec lowering",12,15,120],
+    ["pulldown","Neutral-grip lat pulldown",3,10,12,"Band pulldowns or pull-ups",8,15,90],
+    ["pecdeck","Pec deck",2,12,15,"DB fly on the floor",12,15,60],
+    ["reardelt","Rear-delt fly",3,15,20,"Bent-over DB fly",15,20,60]]},
+  6:{title:"Shoulders + traps", focus:"Heavy rack pulls, then shoulders, traps and arms", ex:[
+    ["rackpull","Rack pull from the knee",3,5,5,"Heavy DB shrug, slow",15,20,180,null,"H"],
+    ["db-ohp","Seated dumbbell shoulder press",3,8,12,"Seated DB shoulder press",12,15,120],
     ["lateral-myo","Lateral raise (myo-reps)",4,15,20,"DB lateral raise, lighter",15,20,60],
-    ["reardelt","Rear-delt fly",3,15,20,"Bent-over DB fly",15,20,60],
-    ["cgbench","Close-grip bench or dips",3,8,12,"Chair dips or diamond push-ups",10,20,120],
+    ["heavy-shrug","Dumbbell shrug",3,10,15,"DB shrug, slow",20,25,90],
+    ["upright","Wide-grip upright row",3,12,12,"DB upright row to lower chest",12,15,75],
     ["ez-curl","EZ-bar curl",3,8,12,"DB curl, 3-sec lowering",10,15,75],
     ["skull","Skull crusher",3,10,12,"DB skull crusher",12,15,75],
-    ["cable-curl","Cable or preacher curl",2,12,15,"Concentration curl",12,15,60]]},
-  6:{title:"Chest + traps", focus:"Chest · traps · side delts", ex:[
-    ["flat-db","Flat dumbbell press",4,8,12,"DB floor press, 3-sec lowering",12,15,150],
-    ["fly","Cable fly or pec deck",3,12,15,"DB fly on the floor",12,15,75],
-    ["dips","Weighted dips",3,8,12,"Push-ups to failure",10,30,120],
-    ["heavy-shrug","Heavy shrug",4,8,12,"DB shrug, slow",20,25,90],
-    ["upright","Wide-grip cable upright row",3,12,15,"DB upright row to chest height",12,15,75],
-    ["lateral-sat","Lateral raise",3,15,20,"DB lateral raise",15,20,60]]},
+    ["hammer","Hammer curl",2,10,15,"Hammer curl",12,15,60],
+    ["neck-b","Neck curl + extension (each)",2,15,20,"Neck curl + extension, towel resistance",15,20,60],
+    ["sled","Sled push (optional)",4,20,20,"Farmer's walk (optional)",30,40,90,"m"]]},
   0:{rest:true, title:"Rest", focus:"8–10k steps, Sunday food prep"}
 };
 const ORDER=[1,2,3,4,5,6,0];
@@ -263,7 +287,9 @@ const DNAME=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const DFULL=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 
 const CREATORS=[["Tasty Shreds","Tasty Shreds"],["Remington James","Remington James fakeaway"],["Will Tennyson","Will Tennyson fast food"],["Jalalsamfit","Jalalsamfit stealth health"],["The Protein Chef","The Protein Chef"]];
-const MAIN_LIFTS=[["incline-press","Incline press"],["flat-db","Flat DB press"],["ohp","Overhead press"],["db-ohp","Seated DB press"],["shrug","Shrug"],["row","Row"],["ez-curl","Curl"]];
+const MAIN_LIFTS=[["bench","Bench press"],["ohp","Overhead press"],["deadlift","Deadlift"],["squat","Back squat"],["pullup","Pull-up (added kg)"],["dips","Dips (added kg)"],["bb-row","Barbell row"],["rackpull","Rack pull"]];
+const E1RM_LIFTS=[["bench","Bench"],["ohp","Overhead press"],["deadlift","Deadlift"],["squat","Squat"]];
+const GUIDES=window.GB_GUIDES||{};
 
 // ---------- Food: recipes, choices, shopping, prep ----------
 const FD=window.BB_DATA||{ING:{},RECIPES:{},OPTIONS:{dinner:{},lunch:{},breakfast:{}}};
@@ -350,9 +376,9 @@ function putEntry(id,e,now){const h=hist(id).filter(x=>x.d!==e.d);h.push(e);h.so
 // ---------- Rendering ----------
 let tab=(location.hash||"").replace("#","");if(!["today","week","food","progress"].includes(tab))tab="today";
 let weekSel=new Date().getDay();
-function exRow(e){const m=mode();return m==="home"?{id:e[0],name:e[5],sets:e[2],lo:e[6],hi:e[7],rest:e[8],unit:e[9]}:{id:e[0],name:e[1],sets:e[2],lo:e[3],hi:e[4],rest:e[8],unit:e[9]}}
+function exRow(e){const m=mode();return m==="home"?{id:e[0],name:e[5],sets:e[2],lo:e[6],hi:e[7],rest:e[9]==="m"?e[8]:Math.min(e[8],120),unit:e[9],heavy:false}:{id:e[0],name:e[1],sets:e[2],lo:e[3],hi:e[4],rest:e[8],unit:e[9],heavy:e[10]==="H"}}
 function repsLabel(x){return x.unit==="m"?(x.lo===x.hi?x.lo+" m":x.lo+"–"+x.hi+" m"):(x.lo===x.hi?x.lo:x.lo+"–"+x.hi)}
-function restLabel(s){return s>=120?(s/60)+" min":s+" s"}
+function restLabel(s){if(s<120)return s+" s";const m=s/60;return (Number.isInteger(m)?m:m.toFixed(1))+" min"}
 
 function renderStatus(){
   $("#status").textContent="Week "+weekNo()+" · "+(phase2()?"Lean bulk":"Recomp")+" · "+fmtN(kcalTarget())+" kcal";
@@ -368,7 +394,7 @@ function exerciseCard(e){
     const txt=done.map(s=>(s.w!==""?s.w+"×":"")+s.r).join(", ");
     lastHtml='<span>Last ('+fmtDate(last.d)+'): <b class="num">'+esc(txt)+'</b>'+(done[0]&&done[0].w!==""?' <span class="rest-note">kg×reps</span>':'')+'</span>';
     const hitTop=x.unit!=="m"&&last.sets.length>=x.sets&&last.sets.every(s=>s.done&&Number(s.r)>=x.hi);
-    if(hitTop){lastHtml='<span class="chip plate">'+(done.some(s=>s.w!=="")?"Add weight today":"Harder variation today")+'</span>'+lastHtml}
+    if(hitTop){const inc=(x.id==="deadlift"||x.id==="rackpull"||x.id==="squat")?"5":"2.5";lastHtml='<span class="chip plate">'+(done.some(s=>s.w!=="")?(x.heavy?"Add "+inc+" kg today":"Add weight today"):"Harder variation today")+'</span>'+lastHtml}
   }
   const rows=cur.sets.map((s,i)=>{
     const ph=last&&last.sets[i]?last.sets[i]:null;
@@ -378,10 +404,21 @@ function exerciseCard(e){
       '<span class="x">×</span>'+
       '<label><input id="r-'+x.id+'-'+i+'" type="number" inputmode="numeric" min="0" aria-label="'+esc(x.name)+' set '+(i+1)+' '+(x.unit==="m"?"metres":"reps")+'" value="'+esc(s.r)+'" placeholder="'+(ph?esc(ph.r):x.hi)+'" data-f="r"><small>'+(x.unit==="m"?"m":"reps")+'</small></label>'+
       '<button type="button" class="tick" data-tick aria-pressed="'+s.done+'" aria-label="Mark set '+(i+1)+' done">✓</button></div>'}).join("");
-  return '<section class="card" data-ex="'+x.id+'" data-rest="'+x.rest+'" data-name="'+esc(x.name)+'">'+
-    '<div class="ex-head"><div><h3>'+esc(x.name)+'</h3><div class="ex-meta">Rest '+restLabel(x.rest)+'</div></div>'+
+  const g=(mode()==="gym")?GUIDES[x.id]:null;
+  const li=a=>a.map(t=>'<li>'+esc(t)+'</li>').join("");
+  const back=g?'<div class="face back" hidden>'+
+    '<div class="ex-head"><div><div class="eyebrow">Form guide</div><h3>'+esc(x.name)+'</h3></div><button type="button" class="flip-btn" data-flip aria-label="Back to logging">Log sets</button></div>'+
+    '<div class="muscles">'+g.m.map(t=>'<span class="chip muted">'+esc(t)+'</span>').join("")+'</div>'+
+    '<div class="gsec"><b>Set up</b><ul>'+li(g.s)+'</ul></div>'+
+    '<div class="gsec"><b>Do it</b><ol>'+li(g.c)+'</ol></div>'+
+    '<div class="gsec warn-sec"><b>Avoid</b><ul>'+li(g.x)+'</ul></div>'+
+    '<a class="btn video" href="https://www.youtube.com/results?search_query='+encodeURIComponent(g.q)+'" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>Watch form videos</a>'+
+    '<p class="rest-note">Opens YouTube. Pick a video from an established coach and check it matches the cues above.</p></div>':'';
+  return '<section class="card excard'+(x.heavy?' heavy':'')+'" data-ex="'+x.id+'" data-rest="'+x.rest+'" data-name="'+esc(x.name)+'"><div class="face front">'+
+    (x.heavy?'<div class="heavy-tag"><span class="chip plate">Heavy lift</span><span>Stop 1–2 reps short of failure.</span></div>':'')+
+    '<div class="ex-head"><div><h3>'+esc(x.name)+'</h3><div class="ex-meta">Rest '+restLabel(x.rest)+(g?' · <button type="button" class="flip-link" data-flip>Form guide</button>':'')+'</div></div>'+
     '<div class="target num">'+x.sets+' × '+repsLabel(x)+'</div></div>'+
-    '<div class="last">'+lastHtml+'</div><div class="sets">'+rows+'</div></section>';
+    '<div class="last">'+lastHtml+'</div><div class="sets">'+rows+'</div></div>'+back+'</section>';
 }
 
 function mealsBlock(dow,interactive){
@@ -408,7 +445,7 @@ function renderToday(){
     const nx=ORDER[(ORDER.indexOf(dow)+1)%7];
     h+='<section class="card rest-card"><h3 style="margin:0">Rest day</h3><p class="empty">Walk 8–10k steps and sleep 7–9 hours. Recovery is when the muscle is built.</p><p class="empty">Tomorrow: <b>'+esc(DAYS[nx].title)+'</b>.</p>'+(dow===0?'<button type="button" class="btn ghost small" data-go="food">Open Sunday prep</button>':'')+'</section>';
   } else {
-    h+='<p class="rest-note">'+(mode()==="home"?"Home version: slow the lowering to 3 seconds and finish each set close to failure.":"Warm up 5 minutes, then 2 light sets of the first exercise.")+' Tick a set to start its rest timer.</p>';
+    h+='<p class="rest-note">'+(mode()==="home"?"Home version: slow the lowering to 3 seconds and finish each set close to failure. Heavy strength work needs the gym.":"Warm up 5 minutes, then build up to your heavy lift over 3–4 lighter sets. Tap Form guide on any exercise for cues and videos.")+' Tick a set to start its rest timer.</p>';
     h+=D.ex.map(exerciseCard).join("");
   }
   h+='<h2 class="sec">Today’s food</h2>'+mealsBlock(dow,true);
@@ -530,7 +567,12 @@ function renderProgress(){
   // lifts
   const rows=MAIN_LIFTS.map(l=>{const hh=hist(l[0]).filter(e=>bestSet(e));if(!hh.length)return null;const a=bestSet(hh[0]),b=bestSet(hh[hh.length-1]);
     return '<tr><td>'+esc(l[1])+'</td><td class="num">'+a.w+' × '+a.r+'</td><td class="num">'+b.w+' × '+b.r+'</td><td class="num">'+(b.w-a.w>=0?"+":"")+(b.w-a.w)+' kg</td></tr>'}).filter(Boolean);
-  h+='<h2 class="sec">Main lifts ('+(mode()==="home"?"home":"gym")+')</h2><section class="card">'+(rows.length?'<div class="tbl"><table><thead><tr><th>Lift</th><th>Start</th><th>Now</th><th>Change</th></tr></thead><tbody>'+rows.join("")+'</tbody></table></div>':'<p class="empty">Tick off sets with a weight on the Today tab and your best set for each main lift appears here.</p>')+'</section>';
+  // strength: estimated 1-rep max
+  const e1=id=>{const out=[];(get("ex-"+id+"-gym",{h:[]}).h||[]).forEach(en=>{let best=0;(en.sets||[]).forEach(st=>{const w=Number(st.w),r=Number(st.r);if(st.done&&st.w!==""&&w>0&&r>0&&r<=10){const v=w*(1+r/30);if(v>best)best=v}});if(best)out.push({d:en.d,v:Math.round(best*2)/2})});return out};
+  const e1html=E1RM_LIFTS.map(l=>{const pts=e1(l[0]);if(!pts.length)return "";const a=pts[0].v,b=pts[pts.length-1].v;
+    return '<div class="e1"><div class="e1-h"><b>'+esc(l[1])+'</b><span class="num">'+b+' kg'+(pts.length>1?' <em class="'+(b>=a?'up':'down')+'">'+(b-a>=0?"+":"")+(Math.round((b-a)*2)/2)+' kg</em>':'')+'</span></div>'+(pts.length>=2?lineChart(pts,l[1]+" estimated 1-rep max in kg",1):'<p class="rest-note">One more session draws the line.</p>')+'</div>'}).filter(Boolean);
+  h+='<h2 class="sec">Strength</h2><section class="card chart">'+(e1html.length?'<p class="rest-note">Estimated 1-rep max from your best gym set each session (sets of 10 reps or fewer). It rises as you add weight or reps, without ever testing a true max.</p>'+e1html.join(""):'<p class="empty">Log your heavy lifts in the gym and your estimated 1-rep max for bench, overhead press, deadlift and squat is charted here.</p>')+'</section>';
+  h+='<h2 class="sec">Best sets ('+(mode()==="home"?"home":"gym")+')</h2><section class="card">'+(rows.length?'<div class="tbl"><table><thead><tr><th>Lift</th><th>Start</th><th>Now</th><th>Change</th></tr></thead><tbody>'+rows.join("")+'</tbody></table></div>':'<p class="empty">Tick off sets with a weight on the Today tab and your best set for each main lift appears here. Pull-ups and dips use the weight added on a belt.</p>')+'</section>';
   h+='<section class="card"><div class="form" style="grid-template-columns:1fr auto"><label for="p-start">Plan started<input id="p-start" type="date" value="'+startDate()+'"></label><button type="button" class="btn ghost small" id="p-start-save">Update</button></div><p class="rest-note">Week numbers, checkpoints and the calorie target count from this date.</p></section>';
   if(sorted.length){h+='<h2 class="sec">Entries</h2><section class="card"><ul class="list">'+sorted.slice().reverse().slice(0,12).map(x=>'<li><span>'+fmtDate(x.d)+'</span><span class="num">'+(x.w?x.w+' kg':'—')+' · '+(x.waist?x.waist+' cm':'—')+'</span></li>').join("")+'</ul></section>'}
   const bk=get("backup",null);
@@ -565,6 +607,12 @@ $("#m-gym").addEventListener("click",()=>setMode("gym"));$("#m-home").addEventLi
 function ensureStart(){const s=settings();if(!s.start){save("settings",Object.assign({},s,{start:TODAY}))}}
 function findEx(id){for(const k in DAYS){const d=DAYS[k];if(d.ex)for(const e of d.ex)if(e[0]===id)return exRow(e)}return null}
 
+$("#view").addEventListener("click",ev=>{const f=ev.target.closest("[data-flip]");if(!f)return;const card=f.closest(".excard");if(!card)return;
+  const fr=card.querySelector(".front"),bk=card.querySelector(".back");if(!bk)return;const toBack=bk.hidden;
+  card.classList.remove("flipping");void card.offsetWidth;card.classList.add("flipping");
+  setTimeout(()=>{fr.hidden=toBack;bk.hidden=!toBack;const t=(toBack?bk:fr).querySelector("[data-flip]");if(t)t.focus({preventScroll:true});
+    const r=card.getBoundingClientRect();if(r.top<70)window.scrollBy(0,r.top-80)},140);
+  setTimeout(()=>card.classList.remove("flipping"),300)});
 $("#view").addEventListener("input",ev=>{
   const inp=ev.target.closest(".set input");if(!inp)return;
   const row=inp.closest(".set"), id=row.dataset.id, i=Number(row.dataset.i), x=findEx(id);
