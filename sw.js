@@ -1,6 +1,6 @@
-// Bane Build offline cache. Bump VERSION when you upload a new index.html.
-const VERSION = "bane-build-v1";
-const CORE = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
+// Gym-Bro offline cache. Bump VERSION when you upload a new index.html.
+const VERSION = "gym-bro-v2";
+const CORE = ["./", "index.html", "data.js", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));

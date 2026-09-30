@@ -1,6 +1,6 @@
 {
-  "name": "Bane Build",
-  "short_name": "Bane Build",
+  "name": "Gym-Bro",
+  "short_name": "Gym-Bro",
   "description": "Training log, meal plan and progress tracker.",
   "start_url": "./",
   "scope": "./",

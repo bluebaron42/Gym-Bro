@@ -9,7 +9,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Bane Build</title>
+<title>Gym-Bro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&display=swap">
@@ -140,6 +140,45 @@ nav.tabs button[aria-selected="true"]{color:var(--accent)}
 #timer.go .in{background:var(--ok);color:var(--surface)}
 .sync{font-size:12px;color:var(--muted)}
 .data-btns{display:flex;flex-wrap:wrap;gap:8px}
+.meal-main{min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px}
+.meal-main .lbl{flex-basis:100%}
+.linkish{border:0;background:none;padding:0;color:var(--fg);font:600 15px var(--body);text-align:left;cursor:pointer;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.swap{border:1px solid var(--line);background:var(--surface);color:var(--accent);font:700 12px var(--body);border-radius:999px;padding:3px 10px;cursor:pointer}
+.mday{padding:10px 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.mday:first-child{border-top:0;padding-top:0}
+.mday-h{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.mday-h b{font-family:var(--display);font-size:19px;text-transform:uppercase;letter-spacing:.02em}
+.mday-h span{font-size:12.5px;color:var(--muted)}
+.mrow{display:grid;grid-template-columns:52px 1fr auto;gap:8px;align-items:center}
+.mrow .lbl{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lib{gap:0}
+.lib summary{font-weight:700;cursor:pointer;padding:2px 0;list-style-position:inside}
+.rrow{display:flex;justify-content:space-between;gap:10px;width:100%;border:0;border-top:1px solid var(--line);background:none;color:var(--fg);font:500 14.5px var(--body);text-align:left;padding:10px 0;cursor:pointer}
+.rrow:first-of-type{margin-top:8px}
+.rrow em{font-style:normal;font-size:11px;font-weight:700;color:var(--plate);letter-spacing:.06em;text-transform:uppercase}
+.rrow span:last-child{color:var(--muted);white-space:nowrap;font-size:13px}
+.uses{display:block;font-size:12px;color:var(--muted);text-decoration:none}
+.check.on .uses{text-decoration:none}
+#sheet{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:flex-end}
+.sheet-bg{position:absolute;inset:0;background:rgba(8,10,12,.55)}
+.sheet-panel{position:relative;background:var(--surface);color:var(--fg);border-radius:18px 18px 0 0;max-height:88vh;overflow-y:auto;overscroll-behavior:contain;width:100%;max-width:560px;margin:0 auto;padding:0 16px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px}
+.sheet-head{position:sticky;top:0;background:var(--surface);display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 0 8px;border-bottom:1px solid var(--line);z-index:1}
+.sheet-head h2{margin:0;font-family:var(--display);font-size:26px;text-transform:uppercase;line-height:1;text-wrap:balance}
+.x-btn{border:0;background:var(--sunk);color:var(--fg);width:36px;height:36px;border-radius:50%;font-size:16px;cursor:pointer;flex-shrink:0}
+.opt{border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.opt.on{border-color:var(--ok)}
+.opt-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.opt-meta{font-size:13px;color:var(--muted)}
+.rmeta{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tiles div{background:var(--sunk);border-radius:10px;padding:8px 4px;text-align:center;display:flex;flex-direction:column}
+.tiles b{font-family:var(--display);font-size:22px;line-height:1.05}
+.tiles span{font-size:11px;color:var(--muted)}
+.serv{display:flex;align-items:center;gap:10px}
+.serv span{flex:1;font-weight:600}
+.serv b{min-width:20px;text-align:center;font-size:18px}
+.rh{margin:4px 0 -4px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.method{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 </head>
@@ -147,7 +186,7 @@ nav.tabs button[aria-selected="true"]{color:var(--accent)}
 
 <header class="top">
   <div class="shell">
-    <div class="brand"><b>Bane Build</b><span id="status" class="num">Week 1 · Recomp · 2,750 kcal</span></div>
+    <div class="brand"><b>Gym-Bro</b><span id="status" class="num">Week 1 · Recomp · 2,750 kcal</span></div>
     <div class="seg" role="group" aria-label="Where you're training">
       <button id="m-gym" type="button" aria-pressed="true">Gym</button>
       <button id="m-home" type="button" aria-pressed="false">Home</button>
@@ -164,6 +203,8 @@ nav.tabs button[aria-selected="true"]{color:var(--accent)}
   <button type="button" id="t-skip">Skip</button>
 </div></div></div>
 
+<div id="sheet" hidden><div class="sheet-bg" data-close></div><div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title"><div class="sheet-head"><h2 id="sheet-title">Recipe</h2><button type="button" class="x-btn" data-close aria-label="Close">✕</button></div><div id="sheet-body"></div></div></div>
+
 <nav class="tabs" aria-label="Sections"><div class="shell" role="tablist">
   <button type="button" role="tab" data-tab="today" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h2M19 12h2M6 8v8M18 8v8M8 10v4M16 10v4M8 12h8"/></svg>Today</button>
   <button type="button" role="tab" data-tab="week" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Week</button>
@@ -171,6 +212,7 @@ nav.tabs button[aria-selected="true"]{color:var(--accent)}
   <button type="button" role="tab" data-tab="progress" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 20h18M5 16l4-5 4 3 6-8"/></svg>Progress</button>
 </div></nav>
 
+<script src="data.js"></script>
 <script>
 (function(){
 "use strict";
@@ -220,29 +262,49 @@ const ORDER=[1,2,3,4,5,6,0];
 const DNAME=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const DFULL=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 
-const BREAKFAST={A:"4 eggs + 150 g egg whites, 2 slices sourdough, salsa or hot sauce",
-                 B:"70 g oats cooked in milk, 1 scoop whey stirred in, berries, 1 tbsp peanut butter, drizzle of honey"};
-const SNACK="300 g Greek yoghurt + 1 tbsp honey + berries, then a whey shake + fruit later";
-const MEALS={
-  1:{b:"A",l:"Salmon or tuna poke bowl: sushi rice, edamame, cucumber, light mayo-sriracha",d:"Beef ragù pappardelle: slow-cooked shin ragù from Sunday's batch, 100 g dry pasta, parmesan"},
-  2:{b:"B",l:"Teriyaki chicken thigh bowl, skin off, sesame greens",d:"Smash burgers: 2 × 75 g 5% beef patties, light cheese, brioche or protein bun, air-fryer fries"},
-  3:{b:"A",l:"Beef bulgogi bowl: 5% mince, gochujang, kimchi, sushi rice",d:"Chicken “fried” rice: day-old rice, egg, chicken breast, peas, soy"},
-  4:{b:"B",l:"Prawn and egg sushi-rice bowl, furikake",d:"Doner kebab: 5% lamb or beef mince loaf, sliced thin, wrap, garlic yoghurt, salad"},
-  5:{b:"A",l:"Chicken shawarma bowl, rice, pickles, tahini-yoghurt",d:"“Big Mac” bowl or wrap: lean mince, lettuce, gherkin, light burger sauce, potatoes"},
-  6:{b:"B",l:"Spicy salmon rice bowl, light Japanese mayo",d:"High-protein carbonara: bacon medallions or pancetta, 2 eggs + 1 yolk, pecorino, 110 g spaghetti"},
-  0:{b:"A",l:"Leftovers, or 3 tuna-mayo onigiri",d:"Sunday roast: chicken or beef topside, roast potatoes in spray oil, gravy, veg"}
-};
-const MACROS={b:[600,50],l:[700,55],d:[850,60],s:[550,45]};
-
-const SHOP=[
-  ["Carbs",["1.5 kg sushi rice","500 g jasmine or basmati","500 g pappardelle or spaghetti","500 g oats","Sourdough loaf","4 buns or wraps","1.5 kg potatoes","Berries, apples, mango","Honey"]],
-  ["Protein",["2 kg chicken breast and thigh","1 kg 5% beef mince","500 g lean lamb or beef mince","500 g beef shin","200 g bacon medallions","2 salmon fillets","2 tins tuna","300 g prawns","18 eggs","500 ml egg whites","2 kg Greek yoghurt 0%","Whey"]],
-  ["Veg",["Cucumber","Edamame (frozen)","Peas (frozen)","Lettuce","Onions and garlic","Peppers","Greens","Kimchi"]],
-  ["Sauces",["Light soy","Rice vinegar","Gochujang","Sriracha","Light mayo","Teriyaki (reduced sugar)","Passata","Pecorino and parmesan","Furikake"]]
-];
-const PREP=["Cook 500 g dry sushi rice, season lightly, portion into 5 lunch tubs","Cook 1 kg chicken: half teriyaki thighs, half shawarma-spiced","Cook the bulgogi mince","Portion lunches: rice + protein + veg, sauces in separate pots","Mix the doner loaf and slow-cook the beef ragù (portion and freeze)","Boil 6 eggs for snacks","Freeze Thursday and Friday rice; reheat until piping hot"];
 const CREATORS=[["Tasty Shreds","Tasty Shreds"],["Remington James","Remington James fakeaway"],["Will Tennyson","Will Tennyson fast food"],["Jalalsamfit","Jalalsamfit stealth health"],["The Protein Chef","The Protein Chef"]];
 const MAIN_LIFTS=[["incline-press","Incline press"],["flat-db","Flat DB press"],["ohp","Overhead press"],["db-ohp","Seated DB press"],["shrug","Shrug"],["row","Row"],["ez-curl","Curl"]];
+
+// ---------- Food: recipes, choices, shopping, prep ----------
+const FD=window.BB_DATA||{ING:{},RECIPES:{},OPTIONS:{dinner:{},lunch:{},breakfast:{}}};
+const ING=FD.ING, RECIPES=FD.RECIPES, OPTS=FD.OPTIONS;
+const LIQUID={"milk":1,"skimmed-milk":1,"egg-whites":1,"gravy":1};
+const AISLES=["Protein","Carbs","Dairy and eggs","Fruit and veg","Sauces and cupboard"];
+const SLOTNAME={breakfast:"Breakfast",lunch:"Lunch",dinner:"Dinner",snack:"Snack"};
+const macroCache={};
+function macros(id){if(macroCache[id])return macroCache[id];const r=RECIPES[id];let k=0,p=0,c=0,f=0;
+  (r?r.ing:[]).forEach(([i,g])=>{const n=ING[i];if(!n)return;k+=n[2]*g/100;p+=n[3]*g/100;c+=n[4]*g/100;f+=n[5]*g/100});
+  return macroCache[id]={k:Math.round(k),p:Math.round(p),c:Math.round(c),f:Math.round(f)}}
+function choice(slot,dow){if(slot==="snack")return "snack";const opts=(OPTS[slot]||{})[dow]||[];const c=get("menu",{});const v=c[slot+dow];return (v&&opts.indexOf(v)>=0)?v:opts[0]}
+function setChoice(slot,dow,id){const c=Object.assign({},get("menu",{}));c[slot+dow]=id;save("menu",c)}
+function dayMenu(dow){return ["breakfast","lunch","dinner","snack"].map(s=>({slot:s,id:choice(s,dow)}))}
+function dayTotals(dow){let k=0,p=0;dayMenu(dow).forEach(m=>{const x=macros(m.id);k+=x.k;p+=x.p});return {k:k,p:p}}
+function singular(w){return w.replace(/s$/,"")}
+function roundG(g){return g<20?Math.round(g):Math.round(g/5)*5}
+function amount(id,g){const n=ING[id];if(!n)return Math.round(g)+" g";
+  if(n[6]){const cnt=g/n[6];const r=Math.round(cnt*2)/2;
+    if(Math.abs(cnt-Math.round(cnt))<0.1){const c=Math.round(cnt);return c+" "+(c===1?singular(n[7]):n[7])}
+    return roundG(g)+" g (about "+r+" "+(r<=1?singular(n[7]):n[7])+")"}
+  return roundG(g)+(LIQUID[id]?" ml":" g")}
+function shopAmount(id,g){const n=ING[id];
+  if(n[6]){const c=Math.ceil(g/n[6]-0.05);return c+" "+(c===1?singular(n[7]):n[7])}
+  const u=LIQUID[id]?["ml","L"]:["g","kg"];
+  if(g>=1000)return (Math.ceil(g/100)/10).toFixed(1).replace(/\.0$/,"")+" "+u[1];
+  return (g<50?Math.ceil(g/5)*5:Math.ceil(g/10)*10)+" "+u[0]}
+function shopList(){const agg={},uses={};
+  ORDER.forEach(d=>dayMenu(d).forEach(m=>{const r=RECIPES[m.id];if(!r)return;r.ing.forEach(([i,g])=>{agg[i]=(agg[i]||0)+g;(uses[i]=uses[i]||{})[r.name]=1})}));
+  return AISLES.map(a=>[a,Object.keys(agg).filter(i=>ING[i]&&ING[i][1]===a).sort((x,y)=>ING[x][0]<ING[y][0]?-1:1).map(i=>({id:i,name:ING[i][0],amt:shopAmount(i,agg[i]),uses:Object.keys(uses[i])}))]).filter(x=>x[1].length)}
+function prepList(){const out=[];const days=[1,2,3,4,5,6];
+  let sushi=0,jas=0;const lunches={};
+  days.forEach(d=>{const id=choice("lunch",d);const r=RECIPES[id];(lunches[id]=lunches[id]||[]).push(DNAME[d]);r.ing.forEach(([i,g])=>{if(i==="sushi-rice")sushi+=g;if(i==="jasmine-rice")jas+=g})});
+  if(sushi)out.push("Cook "+roundG(sushi)+" g dry sushi rice and season it"+(jas?", plus "+roundG(jas)+" g jasmine or basmati":"")+" for Monday to Saturday lunches");
+  else if(jas)out.push("Cook "+roundG(jas)+" g dry jasmine or basmati for Monday to Saturday lunches");
+  Object.keys(lunches).forEach(id=>{const r=RECIPES[id],n=lunches[id].length;
+    const main=r.ing.find(([i])=>ING[i]&&ING[i][1]==="Protein"&&i!=="whey");
+    out.push(r.name+" × "+n+" ("+lunches[id].join(", ")+"): "+(r.prep||"portion into tubs")+(main?". That's "+amount(main[0],main[1]*n)+" "+ING[main[0]][0].toLowerCase():""))});
+  ORDER.forEach(d=>{const r=RECIPES[choice("dinner",d)];if(r&&r.prep)out.push(DFULL[d]+"'s "+r.name.toLowerCase()+": "+r.prep)});
+  out.push("Tub up lunches with sauces in separate pots. Freeze Thursday to Saturday's; reheat rice until piping hot");
+  return out}
 
 // ---------- Helpers ----------
 const $=s=>document.querySelector(s);
@@ -323,17 +385,19 @@ function exerciseCard(e){
 }
 
 function mealsBlock(dow,interactive){
-  const m=MEALS[dow], rest=!!DAYS[dow].rest;
   const md=get("meals",{d:TODAY,t:{}}); const t=(interactive&&md.d===TODAY)?md.t:{};
-  const dk=rest?[MACROS.d[0]-175,MACROS.d[1]]:MACROS.d;
-  const items=[["b","Breakfast "+m.b,BREAKFAST[m.b],MACROS.b],["l","Lunch",m.l,MACROS.l],["d","Dinner",m.d+(rest?" (50 g less rice or pasta on rest days)":""),dk],["s","Snack",SNACK,MACROS.s]];
-  let kc=0,pr=0; items.forEach(it=>{if(t[it[0]]){kc+=it[3][0];pr+=it[3][1]}});
-  const tgtK=kcalTarget(), tgtP=200;
-  const rows=items.map(it=>'<div class="meal">'+(interactive?'<button type="button" class="box" data-meal="'+it[0]+'" aria-pressed="'+!!t[it[0]]+'" aria-label="Ate '+esc(it[1])+'">✓</button>':'<span></span>')+
-    '<div><div class="lbl">'+esc(it[1])+'</div><p>'+esc(it[2])+'</p></div><div class="k num">~'+it[3][0]+' kcal<br>'+it[3][1]+' g P</div></div>').join("");
+  const keys={breakfast:"b",lunch:"l",dinner:"d",snack:"s"};
+  let kc=0,pr=0;
+  const rows=dayMenu(dow).map(m=>{const r=RECIPES[m.id], x=macros(m.id), key=keys[m.slot];
+    if(t[key]){kc+=x.k;pr+=x.p}
+    return '<div class="meal">'+(interactive?'<button type="button" class="box" data-meal="'+key+'" aria-pressed="'+!!t[key]+'" aria-label="Ate '+esc(SLOTNAME[m.slot])+'">✓</button>':'<span></span>')+
+      '<div class="meal-main"><div class="lbl">'+SLOTNAME[m.slot]+'</div><button type="button" class="linkish" data-recipe="'+m.id+'" data-dow="'+dow+'" data-slot="'+m.slot+'">'+esc(r?r.name:"")+'</button>'+
+      (m.slot!=="snack"?'<button type="button" class="swap" data-swap="'+m.slot+'" data-dow="'+dow+'">Swap</button>':'')+'</div>'+
+      '<div class="k num">'+x.k+' kcal<br>'+x.p+' g P</div></div>'}).join("");
+  const tot=dayTotals(dow), tgtK=kcalTarget(), tgtP=200;
   const meters=interactive?'<div class="totals"><div class="meter"><div class="row"><span>Calories</span><span class="num"><b>'+fmtN(kc)+'</b> / '+fmtN(tgtK)+'</span></div><div class="bar"><i style="width:'+Math.min(100,kc/tgtK*100)+'%"></i></div></div>'+
     '<div class="meter"><div class="row"><span>Protein</span><span class="num"><b>'+pr+'</b> / '+tgtP+' g</span></div><div class="bar"><i style="width:'+Math.min(100,pr/tgtP*100)+'%"></i></div></div></div>':'';
-  return '<section class="card">'+meters+'<div>'+rows+'</div>'+(phase2()?'<p class="rest-note">Phase 2: add about 450 kcal a day, mostly rice, pasta and oats.</p>':'')+'</section>';
+  return '<section class="card">'+meters+'<div>'+rows+'</div><p class="rest-note num">This menu: '+fmtN(tot.k)+' kcal · '+tot.p+' g protein. Tap a meal for its recipe.'+(phase2()?' Phase 2: add about 450 kcal a day, mostly rice, pasta and oats.':'')+'</p></section>';
 }
 
 function renderToday(){
@@ -361,19 +425,66 @@ function renderWeek(){
   return '<div><div class="eyebrow">This week</div><h1 class="day">5 sessions</h1><p class="lead">Push, pull, legs, then shoulders and arms, then chest and traps.</p></div>'+strip+body;
 }
 
+function recipeBtn(id,dow,slot){const r=RECIPES[id],x=macros(id);return '<button type="button" class="rrow" data-recipe="'+id+'"'+(dow!=null?' data-dow="'+dow+'" data-slot="'+slot+'"':'')+'><span>'+esc(r.name)+(r.tag?' <em>'+esc(r.tag)+'</em>':'')+'</span><span class="num">'+x.k+' kcal · '+x.p+' g P</span></button>'}
 function renderFood(){
   const shop=shopState().t||{};
-  const dinners=[1,2,3,4,5,6,0].map(d=>'<div class="fk"><div class="d">'+DNAME[d]+'</div><h3>'+esc(MEALS[d].d.split(":")[0])+'</h3><p>'+esc(MEALS[d].d.split(":").slice(1).join(":").trim()||"")+'</p></div>').join("");
-  const chk=(key,label)=>'<div class="check'+(shop[key]?' on':'')+'" data-shop="'+esc(key)+'" role="checkbox" tabindex="0" aria-checked="'+!!shop[key]+'"><span class="box" aria-hidden="true" style="'+(shop[key]?'background:var(--ok);border-color:var(--ok)':'')+'">✓</span><span>'+esc(label)+'</span></div>';
-  const lists=SHOP.map(g=>'<div><div class="eyebrow" style="margin-top:6px">'+g[0]+'</div>'+g[1].map(i=>chk("s:"+i,i)).join("")+'</div>').join("");
-  const prep=PREP.map((p,i)=>chk("p:"+i,(i+1)+". "+p)).join("");
-  return '<div><div class="eyebrow">Food</div><h1 class="day">Fakeaways</h1><p class="lead">Dinner rotation, recipe creators, the weekly shop and Sunday prep.</p></div>'+
-    '<section class="card">'+dinners+'</section>'+
+  const chk=(key,label,sub)=>'<div class="check'+(shop[key]?' on':'')+'" data-shop="'+esc(key)+'" role="checkbox" tabindex="0" aria-checked="'+!!shop[key]+'"><span class="box" aria-hidden="true" style="'+(shop[key]?'background:var(--ok);border-color:var(--ok)':'')+'">✓</span><span>'+label+(sub?'<small class="uses">'+esc(sub)+'</small>':'')+'</span></div>';
+  const menu=ORDER.map(d=>{const tot=dayTotals(d);return '<div class="mday"><div class="mday-h"><b>'+DFULL[d]+'</b><span class="num">'+fmtN(tot.k)+' kcal · '+tot.p+' g P</span></div>'+
+    ["lunch","dinner"].map(s=>{const id=choice(s,d);return '<div class="mrow"><span class="lbl">'+SLOTNAME[s]+'</span><button type="button" class="linkish" data-recipe="'+id+'" data-dow="'+d+'" data-slot="'+s+'">'+esc(RECIPES[id].name)+'</button><button type="button" class="swap" data-swap="'+s+'" data-dow="'+d+'">Swap</button></div>'}).join("")+'</div>'}).join("");
+  const all=id=>Object.keys(RECIPES).filter(k=>RECIPES[k].slot===id);
+  const lib='<details class="card lib"><summary>Dinners ('+all("dinner").length+')</summary>'+all("dinner").map(i=>recipeBtn(i)).join("")+'</details>'+
+    '<details class="card lib"><summary>Lunch bowls ('+all("lunch").length+')</summary>'+all("lunch").map(i=>recipeBtn(i)).join("")+'</details>'+
+    '<details class="card lib"><summary>Breakfast and snack</summary>'+all("breakfast").concat(all("snack")).map(i=>recipeBtn(i)).join("")+'</details>';
+  const lists=shopList().map(g=>'<div><div class="eyebrow" style="margin-top:6px">'+g[0]+'</div>'+g[1].map(i=>chk("i:"+i.id,'<b class="num">'+esc(i.amt)+'</b> '+esc(i.name),i.uses.length>2?i.uses.length+" meals":i.uses.join(", "))).join("")+'</div>').join("");
+  const prep=prepList().map((p,i)=>chk("p:"+p,(i+1)+". "+esc(p))).join("");
+  return '<div><div class="eyebrow">Food</div><h1 class="day">This week’s menu</h1><p class="lead">Swap any lunch or dinner. The shopping list and Sunday prep update to match.</p></div>'+
+    '<section class="card">'+menu+'</section>'+
+    '<h2 class="sec">Recipes</h2>'+lib+
+    '<h2 class="sec">Shopping list</h2><section class="card"><p class="rest-note">Totals for all 7 days of your current menu. Check the cupboard items before you buy.</p>'+lists+'</section>'+
+    '<h2 class="sec">Sunday prep</h2><section class="card">'+prep+'<p class="rest-note">Shopping and prep ticks clear themselves every Monday.</p><button type="button" class="btn ghost small" id="clear-shop" style="align-self:flex-start">Clear ticks now</button></section>'+
     '<h2 class="sec">Recipe creators</h2><div class="links">'+CREATORS.map(c=>'<a href="https://www.youtube.com/results?search_query='+encodeURIComponent(c[1])+'" target="_blank" rel="noopener">'+esc(c[0])+'</a>').join("")+'</div>'+
-    '<p class="rest-note">Swaps that matter: air fryer, 5% mince or chicken, light mayo and yoghurt sauces, measured oil.</p>'+
-    '<h2 class="sec">Weekly shop</h2><section class="card">'+lists+'</section>'+
-    '<h2 class="sec">Sunday prep</h2><section class="card">'+prep+'<p class="rest-note">Shopping and prep ticks clear themselves every Monday.</p><button type="button" class="btn ghost small" id="clear-shop" style="align-self:flex-start">Clear ticks now</button></section>';
+    '<p class="rest-note">Swaps that matter: air fryer, 5% mince or chicken, light mayo and yoghurt sauces, measured oil.</p>';
 }
+
+// ---------- Recipe and swap sheet ----------
+let sheet=null;
+function openSheet(state){sheet=state;renderSheet();$("#sheet").hidden=false;document.body.style.overflow="hidden";const c=$("#sheet .x-btn");if(c)c.focus({preventScroll:true})}
+function closeSheet(){sheet=null;$("#sheet").hidden=true;document.body.style.overflow=""}
+function renderSheet(){if(!sheet)return;const T=$("#sheet-title"),B=$("#sheet-body");
+  if(sheet.mode==="swap"){const cur=choice(sheet.slot,sheet.dow);
+    T.textContent=DFULL[sheet.dow]+" "+SLOTNAME[sheet.slot].toLowerCase();
+    B.innerHTML='<p class="rest-note">Pick one. Your shopping list and prep update straight away.</p>'+OPTS[sheet.slot][sheet.dow].map(id=>{const r=RECIPES[id],x=macros(id),on=id===cur;
+      return '<div class="opt'+(on?' on':'')+'"><div class="opt-top"><b>'+esc(r.name)+'</b>'+(on?'<span class="chip ok">Current</span>':'')+'</div>'+
+        '<div class="opt-meta num">'+x.k+' kcal · '+x.p+' g protein · '+x.c+' g carbs · '+x.f+' g fat'+(r.time?' · '+esc(r.time):'')+'</div>'+
+        '<div class="data-btns">'+(on?'':'<button type="button" class="btn small" data-choose="'+id+'">Choose</button>')+'<button type="button" class="btn ghost small" data-recipe="'+id+'" data-dow="'+sheet.dow+'" data-slot="'+sheet.slot+'" data-from="swap">Recipe</button></div></div>'}).join("");
+    return}
+  const r=RECIPES[sheet.id], x=macros(sheet.id), s=sheet.serv||1;
+  T.textContent=r.name;
+  const canUse=sheet.dow!=null&&sheet.slot&&sheet.slot!=="snack"&&(OPTS[sheet.slot][sheet.dow]||[]).indexOf(r.id)>=0&&choice(sheet.slot,sheet.dow)!==r.id;
+  B.innerHTML=(sheet.from==="swap"?'<button type="button" class="btn ghost small" data-back>‹ Back to options</button>':'')+
+    '<div class="rmeta">'+[r.time,r.tag,SLOTNAME[r.slot]].filter(Boolean).map(esc).join(" · ")+'</div>'+
+    '<div class="tiles num"><div><b>'+x.k+'</b><span>kcal</span></div><div><b>'+x.p+' g</b><span>protein</span></div><div><b>'+x.c+' g</b><span>carbs</span></div><div><b>'+x.f+' g</b><span>fat</span></div></div>'+
+    '<p class="rest-note">Per serving, worked out from the weights below. Raw weights unless stated; rice and pasta are dry.</p>'+
+    '<div class="serv"><span>Servings</span><button type="button" class="btn ghost small" data-serv="-1" aria-label="Fewer servings">−</button><b class="num">'+s+'</b><button type="button" class="btn ghost small" data-serv="1" aria-label="More servings">+</button></div>'+
+    '<h3 class="rh">Ingredients</h3><ul class="list ing">'+r.ing.map(([i,g])=>'<li><span>'+esc(ING[i]?ING[i][0]:i)+'</span><span class="num">'+esc(amount(i,g*s))+'</span></li>').join("")+'</ul>'+
+    '<h3 class="rh">Method</h3><ol class="method">'+r.method.map(m=>'<li>'+esc(m)+'</li>').join("")+'</ol>'+
+    (r.prep?'<p class="banner"><b>Sunday prep:</b> '+esc(r.prep)+'.</p>':'')+
+    (canUse?'<button type="button" class="btn" data-choose="'+r.id+'">Use for '+DFULL[sheet.dow]+' '+SLOTNAME[sheet.slot].toLowerCase()+'</button>':'');
+}
+document.addEventListener("click",ev=>{
+  const rb=ev.target.closest("[data-recipe]");
+  if(rb){ev.preventDefault();const d=rb.dataset.dow;openSheet({mode:"recipe",id:rb.dataset.recipe,dow:d!=null&&d!==""?Number(d):null,slot:rb.dataset.slot||null,serv:1,from:rb.dataset.from||null});return}
+  const sw=ev.target.closest("[data-swap]");
+  if(sw){openSheet({mode:"swap",slot:sw.dataset.swap,dow:Number(sw.dataset.dow)});return}
+  if(!sheet)return;
+  if(ev.target.closest("[data-close]")){closeSheet();return}
+  if(ev.target.closest("[data-back]")){sheet={mode:"swap",slot:sheet.slot,dow:sheet.dow};renderSheet();return}
+  const sv=ev.target.closest("[data-serv]");
+  if(sv){sheet.serv=Math.min(8,Math.max(1,(sheet.serv||1)+Number(sv.dataset.serv)));renderSheet();return}
+  const ch=ev.target.closest("[data-choose]");
+  if(ch){setChoice(sheet.slot,sheet.dow,ch.dataset.choose);closeSheet();const y=window.scrollY;render();window.scrollTo(0,y);return}
+});
+document.addEventListener("keydown",ev=>{if(ev.key==="Escape"&&sheet)closeSheet()});
 
 function lineChart(pts,unit,dp){
   const W=320,H=150,L=38,R=12,T=12,B=26;
@@ -401,7 +512,7 @@ function renderProgress(){
   let h='<div><div class="eyebrow">Progress · week '+weekNo()+' of 12</div><h1 class="day">'+(phase2()?"Lean bulk":"Recomp")+'</h1><p class="lead">Log weight and waist once a week, same time and conditions. Waist down with lifts up means it’s working.</p></div>';
   h+='<section class="card"><div class="form">'+
     '<label for="p-date">Date<input id="p-date" type="date" value="'+TODAY+'"></label>'+
-    '<label for="p-w">Weight (kg)<input id="p-w" type="number" inputmode="decimal" step="0.1" placeholder="'+(last&&last.w?last.w:"97.0")+'"></label>'+
+    '<label for="p-w">Weight (kg)<input id="p-w" type="number" inputmode="decimal" step="0.1" placeholder="'+(last&&last.w?last.w:"e.g. 95.0")+'"></label>'+
     '<label for="p-waist">Waist (cm)<input id="p-waist" type="number" inputmode="decimal" step="0.5" placeholder="'+(last&&last.waist?last.waist:"at navel")+'"></label></div>'+
     '<button type="button" class="btn" id="p-save">Save entry</button><p class="rest-note" id="p-msg">Use the average of your daily morning weigh-ins for the week.</p></section>';
   const wp=sorted.filter(x=>x.w).map(x=>({d:x.d,v:Number(x.w)})), cp=sorted.filter(x=>x.waist).map(x=>({d:x.d,v:Number(x.waist)}));
@@ -490,7 +601,7 @@ function exName(e,m){return m==="home"?e[5]:e[1]}
 function exTarget(e,m){const lo=m==="home"?e[6]:e[3],hi=m==="home"?e[7]:e[4];return e[2]+"x"+(lo===hi?lo:lo+"-"+hi)+(e[9]==="m"?" m":"")}
 function buildSummary(){
   const L=[];
-  L.push("BANE BUILD DATA (exported "+TODAY+")");
+  L.push("GYM-BRO DATA (exported "+TODAY+")");
   L.push("Plan start "+startDate()+" | week "+weekNo()+" | "+(phase2()?"Phase 2 lean bulk":"Phase 1 recomp")+" | target "+kcalTarget()+" kcal, 200 g protein | currently training at "+mode());
   const pr=(get("progress",{e:[]}).e||[]).slice().sort((a,b)=>a.d<b.d?-1:1);
   L.push("");L.push("BODY (date, weight kg, waist cm)");
@@ -506,6 +617,7 @@ function buildSummary(){
       if(rows.length){any=true;L.push("["+DNAME[d]+" "+D.title+", "+m+"]");rows.forEach(r=>L.push(r))}})});
   if(!any)L.push("No sets logged yet");
   const md=get("meals",{d:"",t:{}});
+  L.push("");L.push("CURRENT MENU (lunch / dinner)");ORDER.forEach(d=>L.push(DNAME[d]+": "+RECIPES[choice("lunch",d)].name+" / "+RECIPES[choice("dinner",d)].name+" ("+dayTotals(d).k+" kcal, "+dayTotals(d).p+" g protein with breakfast and snack)"));
   L.push("");L.push("Meals ticked today: "+(md.d===TODAY?Object.values(md.t).filter(Boolean).length:0)+" of 4");
   return L.join("\n");
 }
@@ -518,9 +630,9 @@ $("#view").addEventListener("click",async ev=>{
     catch(e){const ta=$("#d-text");ta.hidden=false;ta.value=text;ta.focus();ta.select();msg("Your phone blocked copying. The text is selected above: long-press and choose Copy.")}
     return}
   if(id==="d-backup"){const data=allData();delete data.backup;
-    const blob=new Blob([JSON.stringify({app:"bane-build",v:1,exported:TODAY,data:data},null,1)],{type:"application/json"});
-    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="bane-build-backup-"+TODAY+".json";document.body.appendChild(a);a.click();a.remove();
-    setTimeout(()=>URL.revokeObjectURL(a.href),4000);save("backup",TODAY);msg("Backup saved to your Downloads folder as bane-build-backup-"+TODAY+".json.");return}
+    const blob=new Blob([JSON.stringify({app:"gym-bro",v:1,exported:TODAY,data:data},null,1)],{type:"application/json"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="gym-bro-backup-"+TODAY+".json";document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000);save("backup",TODAY);msg("Backup saved to your Downloads folder as gym-bro-backup-"+TODAY+".json.");return}
   if(id==="d-restore"){$("#d-file").click();return}
   if(id==="d-apply"&&pendingRestore){
     try{for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i);if(k&&k.indexOf(LS)===0)localStorage.removeItem(k)}}catch(e){}
@@ -532,11 +644,11 @@ $("#view").addEventListener("click",async ev=>{
 $("#view").addEventListener("change",ev=>{
   if(ev.target.id!=="d-file")return;const f=ev.target.files&&ev.target.files[0];if(!f)return;
   const r=new FileReader();
-  r.onload=()=>{try{const j=JSON.parse(r.result);if(j.app!=="bane-build"||!j.data)throw new Error("x");
+  r.onload=()=>{try{const j=JSON.parse(r.result);if((j.app!=="gym-bro"&&j.app!=="bane-build")||!j.data)throw new Error("x");
       pendingRestore=j.data;const el=$("#d-msg");
       el.innerHTML="Backup from "+esc(fmtDate(j.exported||TODAY))+" found. Restoring replaces everything on this phone. "+
         '<span class="data-btns" style="margin-top:8px"><button type="button" class="btn small" id="d-apply">Replace my data</button><button type="button" class="btn ghost small" id="d-cancel">Cancel</button></span>'}
-    catch(e){msg("That file isn’t a Bane Build backup. Choose the bane-build-backup file from your Downloads.")}};
+    catch(e){msg("That file isn’t a Gym-Bro backup. Choose the gym-bro-backup file from your Downloads.")}};
   r.onerror=()=>msg("Couldn’t read that file. Try choosing it again.");
   r.readAsText(f);ev.target.value="";
 });
