@@ -473,7 +473,7 @@ function renderFood(){
   const prep=prepList().map((p,i)=>chk("p:"+p,(i+1)+". "+esc(p))).join("");
   return '<div><div class="eyebrow">Food</div><h1 class="day">This week’s menu</h1><p class="lead">Swap any lunch or dinner. The shopping list and Sunday prep update to match.</p></div>'+
     '<section class="card">'+menu+'</section>'+
-    '<h2 class="sec">Share with your partner</h2>'+shareCard()+
+    '<h2 class="sec">Share with '+esc(pname())+'</h2>'+shareCard()+
     '<h2 class="sec">Recipes</h2>'+lib+
     '<h2 class="sec">Shopping list</h2><section class="card"><p class="rest-note">'+(together()?'<b>Together:</b> your 7 days plus '+esc(partner().who)+'’s, at each person’s portions. ':'Totals for all 7 days of your current menu. ')+'Check the cupboard items before you buy.</p>'+lists+'</section>'+
     '<h2 class="sec">Sunday prep</h2><section class="card">'+prep+'<p class="rest-note">Shopping and prep ticks clear themselves every Monday.</p><button type="button" class="btn ghost small" id="clear-shop" style="align-self:flex-start">Clear ticks now</button></section>'+
@@ -673,6 +673,8 @@ function toggleShop(k){const s={t:Object.assign({},shopState().t),wk:THIS_MONDAY
 
 // ---------- Sharing menus with a partner ----------
 function partner(){return get("partner",null)}
+function pname(){const pt=partner();return (pt&&pt.who&&pt.who!=="Partner")?pt.who:(P.partnerName||"your partner")}
+function pposs(){return pname()+"’s"}
 function shareSet(){return get("shareset",{together:false,same:false})}
 function together(){return !!shareSet().together&&!!partner()}
 function sameDinner(){return !!shareSet().same&&!!partner()}
@@ -681,32 +683,32 @@ function b64d(t){return decodeURIComponent(escape(atob(t)))}
 function menuCode(){const m={};["breakfast","lunch","dinner"].forEach(sl=>ORDER.forEach(d=>{m[sl+d]=choice(sl,d)}));
   const body={v:1,who:P.person,app:P.app,set:P.menuSet,sc:P.scales,ex:P.exclude,m:m,t:get("menuT",{}),at:Date.now()};
   return "GYMMENU:"+b64e(JSON.stringify(body))}
-function shareMessage(){return P.app+" menu from "+P.person+". Open your app, go to Food, tap Paste partner's menu.\n\n"+menuCode()}
-function loadCode(text){const mt=String(text||"").match(/GYMMENU:([A-Za-z0-9+/=]+)/);if(!mt)return {err:"No menu code found. Copy the whole message your partner sent, then try again."};
-  let j;try{j=JSON.parse(b64d(mt[1]))}catch(e){return {err:"That code is incomplete. Ask your partner to copy their menu again."}}
+function shareMessage(){return P.app+" menu from "+P.person+". Open your app, go to Food, tap Paste "+P.person+"’s menu.\n\n"+menuCode()}
+function loadCode(text){const mt=String(text||"").match(/GYMMENU:([A-Za-z0-9+/=]+)/);if(!mt)return {err:"No menu code found. Copy the whole message "+pname()+" sent, then try again."};
+  let j;try{j=JSON.parse(b64d(mt[1]))}catch(e){return {err:"That code is incomplete. Ask "+pname()+" to copy their menu again."}}
   if(!j||!j.m||!j.set)return {err:"That code isn't a menu code."};
-  if(j.app===P.app&&j.who===P.person)return {err:"That's your own menu. Paste the code your partner sent you."};
-  const pt={who:j.who||"Partner",app:j.app,set:j.set,sc:j.sc||{p:1,c:1,v:1},ex:j.ex||[],m:j.m,t:j.t||{},at:j.at||Date.now(),got:TODAY};
+  if(j.app===P.app&&j.who===P.person)return {err:"That's your own menu. Paste the code "+pname()+" sent you."};
+  const pt={who:(j.who&&j.who!=="Partner")?j.who:(P.partnerName||"Partner"),app:j.app,set:j.set,sc:j.sc||{p:1,c:1,v:1},ex:j.ex||[],m:j.m,t:j.t||{},at:j.at||Date.now(),got:TODAY};
   save("partner",pt);
   let moved=0;
   if(shareSet().same){const mine=get("menuT",{});ORDER.forEach(d=>{const k="dinner"+d,id=pt.m[k],tt=pt.t[k]||0;
     if(id&&tt>(mine[k]||0)&&RECIPES[id]&&allowedForMe(id)&&choice("dinner",d)!==id){setChoice("dinner",d,id,tt);moved++}})}
   return {ok:true,who:pt.who,moved:moved}}
 function shareCard(){const pt=partner(),ss=shareSet();
-  const status=pt?'<p class="rest-note">'+esc(pt.who)+'’s menu loaded '+fmtDate(pt.got)+'. Paste again whenever they change it.</p>':'<p class="rest-note">Send your menu with Copy my menu, then paste the code your partner sends back. Nothing is shared until you do.</p>';
+  const status=pt?'<p class="rest-note">'+esc(pt.who)+'’s menu loaded '+fmtDate(pt.got)+'. Paste again whenever they change it.</p>':'<p class="rest-note">Send your menu with Copy my menu, then paste the code '+esc(pname())+' sends back. Nothing is shared until you do.</p>';
   const seg=(id,on,a,b,dis)=>'<div class="seg wide" role="group"><button type="button" data-ss="'+id+'" data-v="0" aria-pressed="'+!on+'"'+(dis?' disabled':'')+'>'+a+'</button><button type="button" data-ss="'+id+'" data-v="1" aria-pressed="'+on+'"'+(dis?' disabled':'')+'>'+b+'</button></div>';
   return '<section class="card share">'+
-    '<div class="data-btns"><button type="button" class="btn" id="sh-copy">Copy my menu</button><button type="button" class="btn ghost" id="sh-paste">Paste partner’s menu</button></div>'+
-    '<textarea id="sh-text" hidden aria-label="Paste your partner’s menu code here" placeholder="Paste the message here"></textarea>'+
+    '<div class="data-btns"><button type="button" class="btn" id="sh-copy">Copy my menu</button><button type="button" class="btn ghost" id="sh-paste">Paste '+esc(pposs())+' menu</button></div>'+
+    '<textarea id="sh-text" hidden aria-label="Paste '+esc(pposs())+' menu code here" placeholder="Paste the message here"></textarea>'+
     '<button type="button" class="btn small" id="sh-load" hidden>Load menu</button>'+
     '<p class="rest-note" id="sh-msg" aria-live="polite"></p>'+status+
-    '<div class="share-row"><span><b>Shopping list</b><small>'+(pt?'Together adds '+esc(pt.who)+'’s week to yours, for one shop.':'Load a partner’s menu to shop together.')+'</small></span>'+seg("together",!!(ss.together&&pt),"Just mine","Together",!pt)+'</div>'+
-    '<div class="share-row"><span><b>Same dinner</b><small>'+(pt?'Dinners match. Whoever changed a dinner most recently wins when you share. Recipes show both portions.':'Load a partner’s menu first.')+'</small></span>'+seg("same",!!(ss.same&&pt),"Off","On",!pt)+'</div>'+
+    '<div class="share-row"><span><b>Shopping list</b><small>'+(pt?'Together adds '+esc(pt.who)+'’s week to yours, for one shop.':'Load '+esc(pposs())+' menu to shop together.')+'</small></span>'+seg("together",!!(ss.together&&pt),"Just mine","Together",!pt)+'</div>'+
+    '<div class="share-row"><span><b>Same dinner</b><small>'+(pt?'Dinners match. Whoever changed a dinner most recently wins when you share. Recipes show both portions.':'Load '+esc(pposs())+' menu first.')+'</small></span>'+seg("same",!!(ss.same&&pt),"Off","On",!pt)+'</div>'+
     '</section>'}
 $("#view").addEventListener("click",async ev=>{
   const id=ev.target.id;
   if(id==="sh-copy"){const t=shareMessage();
-    try{await navigator.clipboard.writeText(t);$("#sh-msg").textContent="Copied. Paste it into WhatsApp or Messages to your partner."}
+    try{await navigator.clipboard.writeText(t);$("#sh-msg").textContent="Copied. Paste it into WhatsApp or Messages to "+pname()+"."}
     catch(e){const ta=$("#sh-text");ta.hidden=false;ta.readOnly=true;ta.value=t;ta.focus();ta.select();$("#sh-msg").textContent="Your phone blocked copying. The message is selected above: long-press and choose Copy."}
     return}
   if(id==="sh-paste"){let t="";try{t=await navigator.clipboard.readText()}catch(e){}
