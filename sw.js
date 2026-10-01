@@ -1,5 +1,5 @@
 // Gym-Bro offline cache. Bump VERSION on every update.
-const VERSION = "gym-bro-v10";
+const VERSION = "gym-bro-v11";
 const CORE = ["./", "index.html", "profile.js", "data.js", "guides.js", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", (e) => {

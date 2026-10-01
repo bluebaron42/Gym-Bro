@@ -142,6 +142,8 @@ nav.tabs button[aria-selected="true"]{color:var(--accent)}
 .sync{font-size:12px;color:var(--muted)}
 .data-btns{display:flex;flex-wrap:wrap;gap:8px}
 #q-msg:empty,#sh-msg:empty,#shop-msg:empty{display:none}
+.pd{display:block;font-size:13px;color:var(--muted);margin-top:2px;line-height:1.45}
+.check.on .pd{text-decoration:line-through}
 .onday{flex-basis:100%;font-size:12.5px;color:var(--muted)}
 .onday::before{content:"On the day: ";font-weight:700}
 .share-ta{width:100%;min-height:140px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--fg);font:13px ui-monospace,monospace;padding:8px}
@@ -326,14 +328,17 @@ function prepList(){const out=[];const days=[1,2,3,4,5,6];const pt=partner();con
   const carb={};Object.keys(use).forEach(id=>{if(NO_BATCH.indexOf(id)>=0)return;RECIPES[id].ing.forEach(([i,g])=>{if(BATCH.indexOf(i)<0)return;use[id].scs.forEach(sc=>{carb[i]=(carb[i]||0)+g*scaleOf(i,sc)})})});
   const CT={"sushi-rice":g=>"cook "+roundG(g)+" g dry sushi rice and season it","jasmine-rice":g=>"cook "+roundG(g)+" g dry jasmine or basmati rice","pasta":g=>"cook "+roundG(g)+" g pasta 2 minutes short, drain and toss in a little oil","rice-noodles":g=>"soak "+roundG(g)+" g rice noodles, rinse cold and toss in a little oil","potatoes":g=>"cut "+shopAmount("potatoes",g)+" potatoes into chips or cubes, boil 5 minutes, cool and bag for air-frying on the day"};
   const carbs=BATCH.filter(i=>carb[i]).map(i=>CT[i](carb[i]));
-  if(carbs.length)out.push("Carbs first: "+carbs.join("; ")+". Cool rice within an hour of cooking, then portion it into the boxes");
+  if(carbs.length)out.push({t:"Carbs first",d:carbs.map(x=>x[0].toUpperCase()+x.slice(1)).join(". ")+". Cool rice within an hour of cooking, then portion it into the boxes."});
   ["lunch","dinner","snack"].forEach(sl=>Object.keys(use).filter(id=>use[id].slot===sl).forEach(id=>{const r=RECIPES[id],u=use[id],pr=PREPD[id];
     if(!pr||/^(Nothing to|Sunday)/.test(pr[0]))return;
     const main=r.ing.find(([i])=>ING[i]&&ING[i][1]==="Protein"&&i!=="whey");let amt="";
-    if(main&&sl!=="snack"){let g=0;u.scs.forEach(sc=>g+=main[1]*scaleOf(main[0],sc));amt=". That's "+amount(main[0],g)+" "+ING[main[0]][0].toLowerCase()}
-    const n=u.scs.length;const who=(sl==="dinner"&&sd&&n>u.days.length)?" for you and "+pt.who:"";
-    out.push(SLOTNAME[sl]+" ("+u.days.join(", ")+"): "+r.name+(n>1?" × "+n:"")+who+". "+pr[0]+amt)}));
-  out.push("Pack and label the boxes: Monday to Wednesday in the fridge, Thursday to Saturday in the freezer. Each night, move the next day's boxes to the fridge. Reheat until piping hot all the way through");
+    if(main&&sl!=="snack"){let g=0;u.scs.forEach(sc=>g+=main[1]*scaleOf(main[0],sc));amt=" · "+amount(main[0],g)+" "+ING[main[0]][0].toLowerCase()}
+    const n=u.scs.length;const who=(sl==="dinner"&&sd&&n>u.days.length)?" (you and "+pt.who+")":"";
+    let lots=0;u.scs.forEach(sc=>lots+=((sc.p!=null?sc.p:1)+(sc.c!=null?sc.c:1))/2);lots=Math.max(0.25,Math.round(lots*4)/4);
+    const frac=x=>{const w=Math.floor(x),f={0:"",0.25:"¼",0.5:"½",0.75:"¾"}[x-w];return (w?String(w):"")+f};
+    const scaleNote=(Math.abs(lots-n)>0.01&&/[Pp]er (portion|pot|2 squares)/.test(pr[0]))?(lots<1?" The amounts below are for a standard portion: use about "+frac(lots)+" of each.":" The amounts below are per standard portion: multiply by "+frac(lots)+" for this batch."):"";
+    out.push({t:r.name+", "+n+" portion"+(n>1?"s":"")+who+amt,d:SLOTNAME[sl]+" "+u.days.join(", ")+"."+scaleNote+" "+pr[0]+"."})}));
+  out.push({t:"Pack and label",d:"Monday to Wednesday in the fridge, Thursday to Saturday in the freezer. Each night, move the next day's boxes to the fridge. Reheat until piping hot all the way through."});
   return out}
 
 // ---------- Helpers ----------
@@ -478,7 +483,7 @@ function renderFood(){
     '<details class="card lib"><summary>Lunch bowls ('+all("lunch").length+')</summary>'+all("lunch").map(i=>recipeBtn(i)).join("")+'</details>'+
     '<details class="card lib"><summary>Breakfast and snack</summary>'+all("breakfast").concat(all("snack")).map(i=>recipeBtn(i)).join("")+'</details>';
   const lists=shopList().map(g=>'<div><div class="eyebrow" style="margin-top:6px">'+g[0]+'</div>'+g[1].map(i=>chk("i:"+i.id,'<b class="num">'+esc(i.amt)+'</b> '+esc(i.name),i.uses.length>2?i.uses.length+" meals":i.uses.join(", "))).join("")+'</div>').join("");
-  const prep=prepList().map((p,i)=>chk("p:"+p,(i+1)+". "+esc(p))).join("");
+  const prep=prepList().map((p,i)=>chk("p:"+p.t+p.d,'<b>'+(i+1)+". "+esc(p.t)+'</b><small class="pd">'+esc(p.d)+'</small>')).join("");
   return '<div><div class="eyebrow">Food</div><h1 class="day">This week’s menu</h1><p class="lead">Swap any lunch or dinner. The shopping list and Sunday prep update to match.</p></div>'+
     '<section class="card">'+menu+'</section>'+
     '<h2 class="sec">Share with '+esc(pname())+'</h2>'+shareCard()+
