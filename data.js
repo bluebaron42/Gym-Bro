@@ -16,6 +16,8 @@ window.BB_DATA = (function () {
     "potatoes": ["Potatoes", "Carbs", 77, 2, 17, 0.1],
     "rice-noodles": ["Rice noodles (dry)", "Carbs", 360, 6, 82, 0.6],
     "sweet-potato": ["Sweet potatoes", "Carbs", 86, 1.6, 20, 0.1],
+    "digestives": ["Digestive biscuits", "Carbs", 480, 7, 62, 21, 15, "biscuits"],
+    "rice-cakes": ["Rice cakes", "Carbs", 390, 8, 81, 3, 8, "rice cakes"],
     "panko": ["Panko breadcrumbs", "Carbs", 370, 12, 75, 3],
     "granola": ["Granola (lower sugar)", "Carbs", 430, 10, 60, 15],
 
@@ -42,6 +44,8 @@ window.BB_DATA = (function () {
     "mozzarella": ["Light mozzarella", "Dairy and eggs", 165, 20, 1, 9],
     "parmesan": ["Parmesan", "Dairy and eggs", 390, 33, 0, 28],
     "pecorino": ["Pecorino", "Dairy and eggs", 390, 28, 0, 30],
+    "quark": ["Quark", "Dairy and eggs", 70, 12, 4, 0.2],
+    "cream-cheese": ["Light cream cheese", "Dairy and eggs", 150, 7, 5, 11],
     "cheese-slice": ["Light cheese slices", "Dairy and eggs", 250, 20, 5, 15, 20, "slices"],
 
     "onion": ["Onions", "Fruit and veg", 40, 1.1, 9, 0.1],
@@ -93,6 +97,9 @@ window.BB_DATA = (function () {
     "peanuts": ["Roasted peanuts", "Sauces and cupboard", 590, 26, 13, 49],
     "kidney-beans": ["Kidney beans (tin, drained)", "Sauces and cupboard", 100, 7, 15, 0.5],
     "peri-peri": ["Peri-peri sauce", "Sauces and cupboard", 80, 1, 15, 2],
+    "cocoa": ["Cocoa powder", "Sauces and cupboard", 380, 20, 12, 21],
+    "dark-choc": ["Dark chocolate (85%)", "Sauces and cupboard", 600, 10, 20, 50],
+    "jam": ["Reduced-sugar jam", "Sauces and cupboard", 140, 0.5, 34, 0.1],
     "gravy": ["Gravy (made up)", "Sauces and cupboard", 30, 0.5, 5, 1]
   };
 
@@ -110,6 +117,24 @@ window.BB_DATA = (function () {
     { id: "snack", slot: "snack", name: "Yoghurt bowl, plus a shake", time: "2 min",
       ing: [["greek-yog", 300], ["honey", 15], ["berries", 80], ["granola", 40], ["whey", 30], ["apple", 150]],
       method: ["Yoghurt with honey, berries and granola mid-afternoon.", "Whey shake with water and an apple after training or in the evening."] },
+    { id: "s-choc-mousse", slot: "snack", name: "Chocolate protein mousse, plus a shake", time: "5 min", tag: "Sweet",
+      ing: [["quark", 250], ["whey", 60], ["cocoa", 10], ["honey", 10], ["berries", 60], ["dark-choc", 10]],
+      method: ["Whisk quark, half the whey, cocoa and honey until thick and smooth.", "Top with berries and grated dark chocolate. Chill 20 minutes if you can.", "Shake the rest of the whey with water later on."] },
+    { id: "s-brownie", slot: "snack", name: "Protein brownies with yoghurt", time: "Batch: 25 min", tag: "Sweet",
+      ing: [["oats", 30], ["whey", 30], ["cocoa", 12], ["eggs", 25], ["honey", 15], ["dark-choc", 10], ["greek-yog", 200], ["berries", 60]],
+      method: ["Blitz oats to flour; mix with whey, cocoa, egg, honey and a splash of milk to a thick batter.", "Fold in chopped dark chocolate; bake in a lined tin at 180°C for 15–18 minutes, still fudgy in the middle.", "Two squares per serving with Greek yoghurt and berries."] },
+    { id: "s-cheesecake", slot: "snack", name: "Berry cheesecake pot, plus a shake", time: "5 min", tag: "Sweet",
+      ing: [["quark", 200], ["cream-cheese", 30], ["whey", 60], ["honey", 10], ["berries", 80], ["digestives", 15]],
+      method: ["Crush a digestive into the bottom of a jar.", "Whisk quark, cream cheese, half the whey and honey; spoon over.", "Top with berries. Shake the rest of the whey with water later on."] },
+    { id: "s-bark", slot: "snack", name: "Frozen yoghurt bark, plus a shake", time: "Batch: 10 min + freezing", tag: "Sweet",
+      ing: [["greek-yog", 250], ["honey", 15], ["berries", 80], ["dark-choc", 15], ["granola", 20], ["whey", 30]],
+      method: ["Mix yoghurt and honey; spread 1 cm thick on a lined tray.", "Scatter berries, granola and chopped dark chocolate; freeze 3 hours.", "Snap into shards. Shake the whey with water later on."] },
+    { id: "s-crumble", slot: "snack", name: "Apple crumble pot with vanilla yoghurt", time: "Batch: 20 min", tag: "Sweet",
+      ing: [["apple", 150], ["honey", 10], ["oats", 30], ["peanut-butter", 10], ["greek-yog", 250], ["whey", 30]],
+      method: ["Dice the apple and microwave with cinnamon and half the honey for 2 minutes.", "Crumble: oats, peanut butter and the rest of the honey, toasted in a dry pan or baked at 180°C for 8 minutes.", "Stir whey (vanilla if you have it) into the yoghurt; layer apple, yoghurt and crumble."] },
+    { id: "s-pbj", slot: "snack", name: "PB and jam rice cakes, plus a milkshake", time: "3 min", tag: "Sweet",
+      ing: [["rice-cakes", 32], ["peanut-butter", 20], ["jam", 20], ["whey", 40], ["milk", 250]],
+      method: ["Spread 4 rice cakes with peanut butter and jam.", "Blend or shake whey with cold milk and ice."] },
 
     // ---- Lunch bowls ----
     { id: "l-salmon-poke", slot: "lunch", name: "Salmon poke bowl", time: "15 min",
@@ -349,10 +374,82 @@ window.BB_DATA = (function () {
       }
     }
   };
+  // Snack options are the same for both apps; the first is the day's default.
+  const SNACKS = { 1: "s-choc-mousse", 2: "s-brownie", 3: "s-cheesecake", 4: "s-bark", 5: "s-crumble", 6: "s-pbj", 0: "snack" };
+  const ALL_SNACKS = ["s-choc-mousse", "s-brownie", "s-cheesecake", "s-bark", "s-crumble", "s-pbj", "snack"];
+  ["bro", "gyal"].forEach(function (k) { OPTIONS[k].snack = {}; for (let d = 0; d < 7; d++) { OPTIONS[k].snack[d] = [SNACKS[d]].concat(ALL_SNACKS.filter(function (x) { return x !== SNACKS[d]; })); } });
+
+  // Batch prep: [Sunday job, what's left on the day]. Mon–Sat meals are cooked on Sunday where it works.
+  const PREP = {
+    "l-salmon-poke": ["Roast the salmon at 200°C for 12 min and flake; chop the cucumber; portion with edamame, sauce in a small pot", "Microwave the rice until steaming, top with the cold salmon and veg, add sauce. 3 min"],
+    "l-tuna-poke": ["Portion the rice, edamame and cucumber; mix tuna mayo in sealed pots (make Thursday's on Wednesday night)", "Microwave the rice until steaming, top with tuna mayo and veg. 3 min"],
+    "l-teriyaki": ["Air-fry all the teriyaki thighs and slice; steam the greens; portion with rice", "Microwave the box until steaming throughout. 3 min"],
+    "l-bulgogi": ["Cook all the bulgogi mince; portion with rice; kimchi in a separate pot", "Microwave until steaming, kimchi on top. 3 min"],
+    "l-prawn-egg": ["Boil the eggs for 7 min, cool and peel; portion rice and edamame", "Microwave the rice until steaming, add cold prawns, egg and soy. 2 min"],
+    "l-shawarma": ["Roast all the shawarma thighs and slice; portion with rice; salad and pickles in a separate pot; mix the tahini yoghurt", "Microwave chicken and rice until steaming, add salad and sauce. 3 min"],
+    "l-spicy-salmon": ["Roast and flake the salmon, mix with sriracha mayo; portion with rice, cucumber and edamame", "Microwave the rice until steaming, top with the salmon mix. 2 min"],
+    "l-onigiri": ["Sunday lunch: make the onigiri fresh and eat today", "Eat cold. 0 min"],
+    "l-thai-beef-salad": ["Sear and slice the steak; soak, rinse and oil the noodles; chop the veg; dressing in a jar", "Toss everything with the dressing, peanuts on top. 2 min"],
+    "l-caesar": ["Grill and slice the chicken; bake croutons and keep in a bag; wash and chop the lettuce; mix the dressing", "Toss lettuce, chicken and dressing, croutons on top. 2 min"],
+    "l-satay-noodle": ["Cook and shred the chicken; cook, rinse and oil the noodles; slice the veg; make the satay sauce", "Toss everything with the sauce, cold. 2 min"],
+    "l-prawn-mango": ["Portion the rice; dice mango and cucumber; dressing in a jar", "Microwave the rice until steaming, add prawns, mango, avocado and dressing. 3 min"],
+    "l-spicy-tuna-salad": ["Portion the rice with edamame, cucumber and leaves", "Mix tuna with sriracha mayo, build over the leaves and warm rice. 3 min"],
+
+    "d-ragu": ["Slow-cook the beef ragù and portion", "Reheat ragù until piping hot, toss with the pasta and parmesan. 6 min"],
+    "d-chicken-parm": ["Bread the chicken in panko and freeze raw on a tray; make the marinara", "Air-fry the chicken from frozen at 200°C for 18 min, sauce and mozzarella on for 3 min; reheat the pasta. 20 min hands-off"],
+    "d-gyros": ["Marinate and grill the gyros chicken, slice and portion; make the tzatziki", "Air-fry the chips 15 min; warm the chicken; build the wrap. 15 min, mostly hands-off"],
+    "d-honey-garlic": ["Cook the honey garlic chicken and charred broccoli; portion with rice", "Microwave until steaming. 4 min"],
+    "d-smash": ["Weigh the mince into 90 g balls and freeze between baking paper; mix the burger sauce", "Air-fry the chips 15 min; smash and cook the patties 4 min; build. 15 min"],
+    "d-crispy-burger": ["Butterfly and bread the chicken, freeze raw; mix the sriracha mayo", "Air-fry chicken and chips together at 200°C for 18 min; build. 20 min hands-off"],
+    "d-philly": ["Slice the steak paper-thin and freeze flat in a bag; cook the onions and peppers", "Flash-fry the steak 2 min with the veg and cheese; air-fry the chips; fill the roll. 15 min"],
+    "d-bbq-chicken": ["Poach and shred the chicken, toss in BBQ sauce and portion; shred the slaw veg (dress on the day)", "Reheat the chicken until steaming; air-fry the chips; dress the slaw; build. 15 min"],
+    "d-fried-rice": ["Make the whole fried rice and portion", "Microwave until piping hot. 4 min"],
+    "d-beef-broccoli": ["Cook the beef and broccoli; portion with rice", "Microwave until steaming. 4 min"],
+    "d-salt-pepper": ["Air-fry the cornflour chicken; wok the peppers and onion; portion with rice", "Air-fry the chicken 5 min to re-crisp, toss with the veg; microwave the rice. 8 min"],
+    "d-sweet-sour": ["Make the sweet and sour chicken; portion with rice", "Microwave until steaming. 4 min"],
+    "d-doner": ["Make and bake the doner loaf, cool, slice thin and portion; make the garlic yoghurt", "Crisp the doner slices in a hot pan 3 min; air-fry the chips; build. 15 min"],
+    "d-shish": ["Marinate and grill the chicken shish, portion; make the garlic yoghurt", "Warm the chicken; air-fry the chips; build. 15 min"],
+    "d-kofta": ["Shape and grill the koftas; chop the salad; make the tahini yoghurt; portion with rice", "Microwave koftas and rice until steaming, add salad and sauce. 5 min"],
+    "d-kebab-fries": ["Grill the spiced chicken and slice; make the garlic yoghurt", "Air-fry the chips 15 min, add chicken and cheese for 3 min, top. 18 min hands-off"],
+    "d-bigmac": ["Brown the mince with onion and portion; mix the Big Mac sauce", "Air-fry the potatoes 15 min, reheat the mince until steaming, build the bowl. 15 min"],
+    "d-pizza": ["Cook and slice the chicken; mix the pizza sauce", "Top the base and bake 8–10 min. 12 min"],
+    "d-meatball-sub": ["Make the meatballs and simmer in marinara; portion", "Reheat until piping hot, fill the roll, grill the cheese. 8 min"],
+    "d-quesadilla": ["Cook the fajita chicken with the peppers and onion; portion", "Fill the wraps with the filling and cheese; dry-fry 2 min a side. 6 min"],
+    "d-carbonara": ["Crisp the diced bacon; cook and slice the chicken; portion together", "Cook the spaghetti, warm the meat, toss with egg and pecorino. 12 min, best fresh"],
+    "d-lasagne": ["Build and bake the whole lasagne; cool, cut and portion", "Microwave until piping hot. 5 min"],
+    "d-prawn-linguine": ["Make the arrabbiata sauce and portion", "Cook the linguine 9 min, reheat the sauce, prawns in for 2 min. 12 min"],
+    "d-steak-chips": ["Nothing to cook. Steak is best fresh", "Air-fry the chips 15 min; sear the steak 6 min and rest. 15 min"],
+    "d-roast-chicken": ["Sunday dinner: cook fresh", "About an hour in the oven"],
+    "d-roast-beef": ["Sunday dinner: cook fresh", "About 1½ hours in the oven"],
+    "d-roast-pork": ["Sunday dinner: cook fresh", "About 1½ hours in the oven"],
+    "d-pasta-bake": ["Build and bake the pasta bake; portion", "Microwave until piping hot. 5 min"],
+    "d-thai-green-curry": ["Cook the green curry; portion with rice", "Microwave until steaming. 5 min"],
+    "d-tikka": ["Cook the tikka masala; portion with rice", "Microwave until steaming. 5 min"],
+    "d-jalfrezi": ["Cook the jalfrezi; portion with rice", "Microwave until steaming. 5 min"],
+    "d-katsu-curry": ["Bread the chicken and freeze raw; make the katsu sauce; portion the rice", "Air-fry the chicken from frozen 18 min; reheat sauce and rice. 20 min hands-off"],
+    "d-pad-thai": ["Cook and slice the chicken; mix the sauce in a jar; prep the veg", "Soak the noodles 5 min, wok everything 5 min. 10 min, best fresh"],
+    "d-thai-basil": ["Cook the Thai basil beef; portion with rice", "Microwave until steaming, fry an egg for the top. 5 min"],
+    "d-peri-peri": ["Grill the peri-peri thighs; portion with the spicy rice", "Microwave until steaming, corn on the side. 5 min"],
+    "d-burrito-bowl": ["Grill and slice the chicken; mix the beans and corn; portion with the lime rice; salsa and yoghurt in pots", "Microwave the chicken, rice and beans until steaming, add the cold toppings. 4 min"],
+    "d-chilli": ["Batch-cook the chilli; portion with rice", "Microwave until steaming. 5 min"],
+    "d-massaman": ["Slow-cook the massaman; portion with rice", "Microwave until steaming. 5 min"],
+
+    "s-choc-mousse": ["Make the mousse pots (keep 3 days; make the rest Wednesday night)", "Grab a pot, top with berries. 1 min"],
+    "s-brownie": ["Bake a tray of protein brownies, cut and bag (fridge 5 days, or freeze)", "Two squares with yoghurt and berries. 1 min"],
+    "s-cheesecake": ["Make the cheesecake pots (keep 3 days)", "Grab a pot. 0 min"],
+    "s-bark": ["Make a tray of yoghurt bark and freeze", "Snap off a portion. 0 min"],
+    "s-crumble": ["Bake a jar of crumble topping; cook the cinnamon apple and portion", "Layer apple, yoghurt and crumble. 2 min"],
+    "s-pbj": ["Nothing to prep", "Spread and shake. 3 min"],
+    "snack": ["Nothing to prep", "2 min"]
+  };
+  // Carbs cooked in one batch on Sunday, except for these recipes (cooked on the day or built into the dish).
+  const BATCH_CARBS = ["sushi-rice", "jasmine-rice", "pasta", "rice-noodles", "potatoes"];
+  const NO_BATCH = ["d-carbonara", "d-prawn-linguine", "d-pad-thai", "d-massaman", "d-roast-chicken", "d-roast-beef", "d-roast-pork", "d-lasagne", "d-pasta-bake", "d-fried-rice", "l-onigiri"];
+
   // Ingredients some people don't eat.
   const TAGS = { pork: ["bacon", "pork-loin"] };
 
   const RECIPES = {};
   R.forEach(function (r) { RECIPES[r.id] = r; });
-  return { ING: ING, RECIPES: RECIPES, OPTIONS: OPTIONS, TAGS: TAGS };
+  return { ING: ING, RECIPES: RECIPES, OPTIONS: OPTIONS, TAGS: TAGS, PREP: PREP, BATCH_CARBS: BATCH_CARBS, NO_BATCH: NO_BATCH };
 })();
