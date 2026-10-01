@@ -1,9 +1,12 @@
-// Gym-Bro offline cache. Bump VERSION when you upload a new index.html.
-const VERSION = "gym-bro-v8";
+// Gym-Bro offline cache. Bump VERSION on every update.
+const VERSION = "gym-bro-v9";
 const CORE = ["./", "index.html", "profile.js", "data.js", "guides.js", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));
+  // "reload" skips the browser's HTTP cache so a new version installs fresh files.
+  e.waitUntil(caches.open(VERSION)
+    .then((c) => c.addAll(CORE.map((u) => new Request(u, { cache: "reload" }))))
+    .then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", (e) => {
@@ -14,25 +17,24 @@ self.addEventListener("activate", (e) => {
   );
 });
 
+// App files: always check the server first (so updates show on the next open), fall back to the cache offline.
+function networkFirst(req, cacheKey) {
+  const url = typeof req === "string" ? req : req.url;
+  return fetch(url, { cache: "no-cache" })
+    .then((r) => { if (r.ok) { const copy = r.clone(); caches.open(VERSION).then((c) => c.put(cacheKey || req, copy)); } return r; })
+    .catch(() => caches.match(cacheKey || req, { ignoreSearch: true }));
+}
+
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
   const url = new URL(e.request.url);
-  // The app page: try the network first so updates arrive, fall back to cache offline.
-  if (e.request.mode === "navigate") {
-    e.respondWith(
-      fetch(e.request)
-        .then((r) => { const copy = r.clone(); caches.open(VERSION).then((c) => c.put("index.html", copy)); return r; })
-        .catch(() => caches.match("index.html"))
-    );
-    return;
-  }
-  // Everything else (icons, fonts): cache first, then network.
-  if (url.origin === location.origin || url.hostname.endsWith("gstatic.com") || url.hostname.endsWith("googleapis.com")) {
-    e.respondWith(
-      caches.match(e.request).then((hit) => hit || fetch(e.request).then((r) => {
-        if (r.ok || r.type === "opaque") { const copy = r.clone(); caches.open(VERSION).then((c) => c.put(e.request, copy)); }
-        return r;
-      }))
-    );
+  if (e.request.mode === "navigate") { e.respondWith(networkFirst(e.request.url, "index.html")); return; }
+  if (url.origin === location.origin) { e.respondWith(networkFirst(e.request)); return; }
+  // Fonts: cache first, they never change.
+  if (url.hostname.endsWith("gstatic.com") || url.hostname.endsWith("googleapis.com")) {
+    e.respondWith(caches.match(e.request).then((hit) => hit || fetch(e.request).then((r) => {
+      if (r.ok || r.type === "opaque") { const copy = r.clone(); caches.open(VERSION).then((c) => c.put(e.request, copy)); }
+      return r;
+    })));
   }
 });
