@@ -141,7 +141,8 @@ nav.tabs button[aria-selected="true"]{color:var(--accent)}
 #timer.go .in{background:var(--ok);color:var(--surface)}
 .sync{font-size:12px;color:var(--muted)}
 .data-btns{display:flex;flex-wrap:wrap;gap:8px}
-#q-msg:empty,#sh-msg:empty{display:none}
+#q-msg:empty,#sh-msg:empty,#shop-msg:empty{display:none}
+.share-ta{width:100%;min-height:140px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--fg);font:13px ui-monospace,monospace;padding:8px}
 #sh-load{align-self:flex-start}
 .seg.wide{display:flex}
 .seg.wide button{flex:1}
@@ -475,7 +476,7 @@ function renderFood(){
     '<section class="card">'+menu+'</section>'+
     '<h2 class="sec">Share with '+esc(pname())+'</h2>'+shareCard()+
     '<h2 class="sec">Recipes</h2>'+lib+
-    '<h2 class="sec">Shopping list</h2><section class="card"><p class="rest-note">'+(together()?'<b>Together:</b> your 7 days plus '+esc(partner().who)+'’s, at each person’s portions. ':'Totals for all 7 days of your current menu. ')+'Check the cupboard items before you buy.</p>'+lists+'</section>'+
+    '<h2 class="sec">Shopping list</h2><section class="card"><p class="rest-note">'+(together()?'<b>Together:</b> your 7 days plus '+esc(partner().who)+'’s, at each person’s portions. ':'Totals for all 7 days of your current menu. ')+'Check the cupboard items before you buy.</p><div class="data-btns"><button type="button" class="btn small" id="shop-copy">Copy shopping list</button></div><p class="rest-note" id="shop-msg" aria-live="polite"></p>'+lists+'</section>'+
     '<h2 class="sec">Sunday prep</h2><section class="card">'+prep+'<p class="rest-note">Shopping and prep ticks clear themselves every Monday.</p><button type="button" class="btn ghost small" id="clear-shop" style="align-self:flex-start">Clear ticks now</button></section>'+
     '<h2 class="sec">Recipe creators</h2><div class="links">'+CREATORS.map(c=>'<a href="https://www.youtube.com/results?search_query='+encodeURIComponent(c[1])+'" target="_blank" rel="noopener">'+esc(c[0])+'</a>').join("")+'</div>'+
     '<p class="rest-note">Swaps that matter: air fryer, 5% mince or chicken, light mayo and yoghurt sauces, measured oil.</p>';
@@ -670,6 +671,15 @@ $("#view").addEventListener("click",ev=>{
 });
 $("#view").addEventListener("keydown",ev=>{const sh=ev.target.closest("[data-shop]");if(sh&&(ev.key===" "||ev.key==="Enter")){ev.preventDefault();toggleShop(sh.dataset.shop)}});
 function toggleShop(k){const s={t:Object.assign({},shopState().t),wk:THIS_MONDAY};s.t[k]=!s.t[k];if(!s.t[k])delete s.t[k];save("shop",s);const y=window.scrollY;render();window.scrollTo(0,y)}
+
+function shopText(){const shop=shopState().t||{};const pt=together()?partner():null;let skipped=0;
+  const L=["Shopping list, week of "+fmtDate(THIS_MONDAY)+(pt?" (together: "+P.person+" and "+pt.who+")":" ("+P.person+")"),""];
+  shopList().forEach(g=>{const need=g[1].filter(i=>{if(shop["i:"+i.id]){skipped++;return false}return true});if(!need.length)return;L.push(g[0]);need.forEach(i=>L.push("- "+i.amt+" "+i.name));L.push("")});
+  if(skipped)L.push("("+skipped+" ticked item"+(skipped>1?"s":"")+" left off as already got.)");
+  return L.join("\n").trim()}
+$("#view").addEventListener("click",async ev=>{if(ev.target.id!=="shop-copy")return;const t=shopText();const m=$("#shop-msg");
+  try{await navigator.clipboard.writeText(t);m.textContent="Copied. Ticked items are left off. Paste it to Claude to order, or into your notes."}
+  catch(e){let ta=$("#shop-text");if(!ta){ta=document.createElement("textarea");ta.id="shop-text";ta.readOnly=true;ta.setAttribute("aria-label","Shopping list as text");ta.className="share-ta";m.after(ta)}ta.value=t;ta.focus();ta.select();m.textContent="Your phone blocked copying. The list is selected below: long-press and choose Copy."}});
 
 // ---------- Sharing menus with a partner ----------
 function partner(){return get("partner",null)}
