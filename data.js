@@ -442,14 +442,175 @@ window.BB_DATA = (function () {
     "s-pbj": ["Nothing to prep", "Spread 4 rice cakes with peanut butter and jam; shake the whey with cold milk. 3 min"],
     "snack": ["Nothing to prep", "Yoghurt, honey, berries and granola; shake the whey with water. 2 min"]
   };
+
+  // Prep components per recipe, per standard portion. The app pools these across the week's menu
+  // and groups them by station. Spice lists: "qty unit name; ..." (units: g, ml, tsp, tbsp, clove, x, pinch).
+  // L long cook [label, equip ip|hob, minutes, spices, method]
+  // V veg [ingredient, cut]
+  // M marinade/rub [type yog|wet|dry, label, protein ingredient, spices, minutes to marinate]
+  // B coat [protein ingredient, panko|cornflour, spices]
+  // X shape/assemble [label, method, spices?]
+  // S sauce/dressing [label, spices, simmer minutes or 0, blend true|false]
+  // O oven tray [temp °C, minutes, label]
+  // H hob job [label, minutes, method, spices?]
+  // T treat [label, method, spices]
+  // P pack [what goes in the box]
+  const COMP = {
+    "l-salmon-poke": [["V", "cucumber", "half-moons"], ["M", "dry", "Salt and soy", "salmon", "0.5 tsp salt; 1 tsp soy", 0], ["O", 200, 12, "Salmon fillets, then flake"],
+      ["S", "Quick cucumber pickle", "1 tsp rice vinegar; 1 pinch salt", 0], ["S", "Poke sauce", "10 g light mayo; 10 g sriracha; 10 ml soy; 0.5 tsp sesame oil", 0], ["P", "rice, flaked salmon, cucumber, edamame; poke sauce pot"]],
+    "l-tuna-poke": [["V", "cucumber", "half-moons"], ["S", "Quick cucumber pickle", "1 tsp rice vinegar; 1 pinch salt; 1 pinch sugar", 0],
+      ["S", "Tuna mayo (stir into the drained tuna)", "15 g light mayo; 10 g sriracha; 10 ml soy; 0.125 x lime juice", 0], ["P", "rice, cucumber, edamame; tuna mayo in a sealed pot (mix Thursday's on Wednesday night)"]],
+    "l-teriyaki": [["V", "greens", "trimmed and halved"], ["M", "wet", "Teriyaki", "chicken-thigh", "15 ml teriyaki; 5 ml soy; 1 clove garlic; 1 tsp grated ginger", 30],
+      ["O", 200, 18, "Teriyaki thighs (brush with 15 ml more teriyaki per portion for the last 5 min), then slice"], ["H", "Steam the greens", 5, "Steam 3 min, toss with a few drops of sesame oil and a pinch of salt"],
+      ["P", "rice, sliced teriyaki chicken, greens; furikake in a twist of foil"]],
+    "l-bulgogi": [["S", "Bulgogi sauce", "1 clove garlic; 1 tsp grated ginger; 20 g gochujang; 15 ml soy; 5 g honey; 5 ml sesame oil", 0],
+      ["H", "Bulgogi mince", 15, "Brown the mince hard in a dry pan in batches, add the bulgogi sauce, cook down until sticky"], ["P", "rice, bulgogi mince; kimchi in a separate pot"]],
+    "l-prawn-egg": [["H", "Boil eggs", 12, "Boil 7 min, into iced water, peel"], ["S", "Prawn dressing (toss the prawns in it)", "10 ml soy; 0.5 tsp sesame oil; 1 pinch chilli flakes", 0],
+      ["S", "Sriracha mayo", "10 g light mayo; 1 tsp sriracha", 0], ["P", "rice, edamame; dressed prawns and halved eggs in a separate tub; sriracha mayo pot"]],
+    "l-shawarma": [["V", "cucumber", "diced"], ["V", "tomato", "diced"], ["V", "gherkins", "sliced"],
+      ["M", "yog", "Shawarma", "chicken-thigh", "30 g greek yoghurt; 1 tsp cumin; 1 tsp smoked paprika; 0.5 tsp turmeric; 0.5 tsp cinnamon; 0.5 tsp garlic granules; 0.25 x lemon juice; 0.5 tsp salt; 5 ml olive oil", 60],
+      ["O", 220, 20, "Shawarma thighs, rest and slice"], ["S", "Tahini yoghurt", "30 g greek yoghurt; 8 g tahini; 0.125 x lemon juice; 1 pinch salt", 0],
+      ["P", "rice, shawarma chicken; cucumber, tomato and pickle pot; tahini yoghurt pot"]],
+    "l-spicy-salmon": [["V", "cucumber", "sliced"], ["M", "dry", "Salt and pepper", "salmon", "0.5 tsp salt; 0.25 tsp black pepper", 0], ["O", 200, 12, "Salmon fillets, then flake into the spicy mayo"],
+      ["S", "Spicy mayo", "15 g light mayo; 15 g sriracha; 5 ml soy", 0], ["P", "seasoned rice, spicy salmon, cucumber, edamame; furikake on top"]],
+    "l-onigiri": [],
+    "l-thai-beef-salad": [["V", "cucumber", "batons"], ["V", "tomato", "wedges"], ["V", "onion", "thinly sliced (red)"], ["V", "lettuce", "torn"],
+      ["M", "dry", "Salt and pepper", "steak", "0.5 tsp salt; 0.25 tsp black pepper", 0], ["H", "Sear the salad steak", 10, "Ripping-hot pan, 2 min a side, rest 5 min, slice thin"],
+      ["S", "Thai dressing", "0.5 x lime juice; 15 ml fish sauce; 5 g honey; 0.5 x red chilli; 0.5 clove garlic", 0], ["P", "noodles, sliced beef, veg, mint and coriander; dressing jar; crushed peanuts in a bag"]],
+    "l-caesar": [["V", "lettuce", "washed, dried and chopped"], ["M", "dry", "Lemon and herb rub", "chicken-breast", "5 ml olive oil; 0.5 tsp garlic granules; 0.5 tsp dried oregano; 0.5 tsp salt; 0.25 x lemon zest", 0],
+      ["O", 200, 18, "Caesar chicken (74°C inside), rest and slice"], ["O", 200, 8, "Croutons: cubed sourdough, oil spray, pinch of salt and garlic granules"],
+      ["S", "Caesar dressing", "50 g greek yoghurt; 10 g light mayo; 1 clove garlic; 1 tsp Dijon mustard; 0.25 x lemon juice; 0.5 tsp Worcestershire; 1 tbsp grated parmesan", 0],
+      ["P", "lettuce, sliced chicken; dressing jar; croutons in a bag"]],
+    "l-satay-noodle": [["V", "cucumber", "julienned"], ["V", "peppers", "julienned"], ["H", "Poach the satay chicken", 15, "Simmering water with a slice of ginger, 12 min; cool and shred"],
+      ["S", "Satay sauce", "20 g peanut butter; 15 ml soy; 0.33 x lime juice; 5 g honey; 5 g sriracha; 0.5 clove garlic; 2 tbsp hot water", 0], ["P", "noodles, shredded chicken, veg, beansprouts; satay jar"]],
+    "l-prawn-mango": [["V", "mango", "diced"], ["V", "cucumber", "diced"], ["V", "lettuce", "shredded"], ["S", "Lime and chilli dressing", "0.33 x lime juice; 10 g sriracha; 5 g honey; 1 pinch salt", 0],
+      ["P", "rice; prawns, mango, cucumber and lettuce; dressing jar; avocado stays whole until the day"]],
+    "l-spicy-tuna-salad": [["V", "cucumber", "sliced"], ["V", "lettuce", "shredded"], ["S", "Sriracha mayo (stir into the tuna on the day)", "15 g light mayo; 15 g sriracha; 0.125 x lime juice", 0],
+      ["P", "seasoned rice, leaves, edamame, cucumber; sauce pot"]],
+
+    "d-ragu": [["V", "onion", "finely diced"], ["L", "Beef ragù", "ip", 50, "1 clove garlic; 1 tsp tomato purée; 200 g passata; 100 ml beef stock; 1 x bay leaf; 0.5 tsp dried oregano; 0.5 tsp salt",
+      "Brown the shin in batches on Sauté, soften the onion and garlic, add everything else, pressure-cook 50 min, shred, reduce on Sauté until thick"], ["P", "ragù; pasta"]],
+    "d-chicken-parm": [["B", "chicken-breast", "panko", "1 tsp dried oregano; 1 tbsp grated parmesan; 0.5 tsp garlic granules; 0.5 tsp salt"],
+      ["S", "Marinara", "120 g passata; 0.5 clove garlic; 0.5 tsp dried oregano; 1 pinch chilli flakes; 1 pinch salt", 10], ["P", "breaded chicken (freeze raw); marinara; pasta; mozzarella"]],
+    "d-gyros": [["V", "onion", "thinly sliced (red)"], ["V", "tomato", "sliced"], ["V", "lettuce", "shredded"],
+      ["M", "yog", "Gyros", "chicken-thigh", "30 g greek yoghurt; 0.25 x lemon juice; 1 clove garlic; 1 tsp dried oregano; 1 tsp smoked paprika; 0.5 tsp cumin; 0.5 tsp salt; 5 ml olive oil", 60],
+      ["O", 220, 20, "Gyros thighs, then slice"], ["S", "Tzatziki", "30 g greek yoghurt; 30 g cucumber, grated and squeezed; 0.5 clove garlic; 1 pinch dried mint; 1 pinch salt", 0],
+      ["P", "sliced gyros chicken; tzatziki; salad; wraps; par-boiled chips"]],
+    "d-honey-garlic": [["V", "broccoli", "florets"], ["S", "Honey garlic glaze", "20 g honey; 20 ml soy; 2 clove garlic; 1 tsp rice vinegar; 1 pinch chilli flakes", 0],
+      ["H", "Honey garlic chicken", 20, "Season the diced thighs with salt and pepper, sear until golden, pour in the glaze and reduce until sticky; char the broccoli in the same pan"],
+      ["P", "rice, honey garlic chicken, broccoli; sesame seeds on top"]],
+    "d-smash": [["V", "onion", "very thinly sliced"], ["V", "lettuce", "shredded"], ["V", "gherkins", "sliced"],
+      ["X", "Smash burger balls", "Weigh 2 × 90 g balls of mince per portion (don't season yet); freeze between squares of baking paper"],
+      ["S", "Burger sauce", "10 g light mayo; 10 g ketchup; 1 tsp American mustard; 1 tsp chopped gherkin; 1 pinch smoked paprika", 0],
+      ["P", "frozen burger balls; sauce pot; onion, lettuce and pickles; buns; par-boiled chips"]],
+    "d-crispy-burger": [["V", "lettuce", "shredded"], ["B", "chicken-breast", "panko", "0.5 tsp smoked paprika; 0.5 tsp garlic granules; 0.25 tsp cayenne; 0.5 tsp salt"],
+      ["S", "Sriracha mayo", "15 g light mayo; 5 g sriracha; 0.125 x lime juice", 0], ["P", "breaded chicken (freeze raw); sauce pot; lettuce; buns; par-boiled chips"]],
+    "d-philly": [["V", "onion", "sliced"], ["V", "peppers", "sliced"], ["X", "Philly steak", "Freeze 20 min, slice paper-thin, freeze flat in portion bags"],
+      ["H", "Philly onions and peppers", 15, "Cook slowly in a little oil with a pinch of salt until soft and sweet; black pepper and a few drops of Worcestershire"],
+      ["P", "steak bag (freezer); cooked onions and peppers; cheese slices; rolls; par-boiled chips"]],
+    "d-bbq-chicken": [["V", "cabbage", "finely shredded"], ["M", "dry", "BBQ rub", "chicken-thigh", "1 tsp smoked paprika; 0.5 tsp garlic granules; 0.5 tsp onion powder; 0.5 tsp salt", 0],
+      ["L", "BBQ pulled chicken", "ip", 25, "100 ml chicken stock; 30 g BBQ sauce", "Pressure-cook the rubbed thighs in the stock 12 min, shred, toss with the BBQ sauce and a splash of the liquid"],
+      ["S", "Slaw dressing", "15 g light mayo; 1 tsp cider vinegar; 1 pinch salt", 0], ["P", "pulled chicken; slaw veg with dressing pot; buns; par-boiled chips"]],
+    "d-fried-rice": [["V", "onion", "sliced (spring onion if you have it)"], ["S", "Fried rice seasoning", "20 ml soy; 7 ml sesame oil; 0.25 tsp white pepper", 0],
+      ["H", "Chicken fried rice", 15, "Wok the diced chicken hard with a pinch of salt, push aside and scramble the eggs, add the cooled rice, peas and onion, then the seasoning"], ["P", "fried rice"]],
+    "d-beef-broccoli": [["V", "broccoli", "florets"], ["X", "Stir-fry beef", "Slice the steak thin and toss in the coating", "4 g cornflour; 0.5 tsp soy; 1 pinch salt"],
+      ["S", "Beef and broccoli sauce", "20 ml soy; 10 g honey; 1 clove garlic; 1 tsp grated ginger; 4 g cornflour; 60 ml water", 0],
+      ["H", "Beef and broccoli", 15, "Blanch the broccoli 2 min; sear the beef in batches in a very hot wok; add the sauce and bubble until glossy; toss together"], ["P", "rice, beef and broccoli"]],
+    "d-salt-pepper": [["V", "onion", "sliced"], ["V", "peppers", "sliced"], ["B", "chicken-breast", "cornflour", "0.5 tsp salt; 0.5 tsp black pepper; 0.25 tsp five-spice"],
+      ["O", 200, 12, "Cornflour chicken for salt and pepper (spray with oil)"], ["H", "Salt and pepper veg", 8, "Wok the onion and peppers hot with garlic and chilli", "1 clove garlic; 0.5 x red chilli"],
+      ["S", "Salt and pepper seasoning pot", "0.5 tsp salt; 0.5 tsp black pepper; 0.25 tsp five-spice; 1 pinch sugar", 0], ["P", "crispy chicken, veg and rice in separate boxes; seasoning pot"]],
+    "d-sweet-sour": [["V", "onion", "chunks"], ["V", "peppers", "chunks"], ["V", "pineapple", "chunks"], ["B", "chicken-breast", "cornflour", "0.5 tsp salt"],
+      ["O", 200, 12, "Cornflour chicken for sweet and sour (spray with oil)"], ["S", "Sweet and sour sauce", "25 g ketchup; 10 g honey; 15 ml rice vinegar; 10 ml soy; 50 ml pineapple juice; 3 g cornflour", 3],
+      ["H", "Sweet and sour", 8, "Wok the onion and peppers, add the pineapple and sauce, toss the chicken through"], ["P", "rice, sweet and sour chicken"]],
+    "d-doner": [["V", "onion", "thinly sliced"], ["V", "tomato", "sliced"], ["V", "lettuce", "shredded"],
+      ["X", "Doner loaf", "Blitz the lamb mince to a paste with the spices, pack into a tight loaf, wrap in foil", "0.5 tsp salt; 0.5 tsp cumin; 0.5 tsp ground coriander; 0.5 tsp dried oregano; 0.5 tsp smoked paprika; 0.5 tsp garlic granules; 0.5 tsp onion powder; 0.25 tsp chilli flakes"],
+      ["O", 180, 60, "Doner loaf (50 min in foil, 10 min uncovered); chill, then slice paper-thin"],
+      ["S", "Garlic sauce", "50 g greek yoghurt; 1 clove garlic; 0.125 x lemon juice; 1 pinch dried mint; 1 pinch salt", 0], ["P", "doner slices; garlic sauce; salad; wraps; par-boiled chips"]],
+    "d-shish": [["V", "onion", "sliced"], ["V", "tomato", "sliced"], ["V", "lettuce", "shredded"],
+      ["M", "yog", "Shish", "chicken-breast", "40 g greek yoghurt; 1 tsp smoked paprika; 0.5 tsp cumin; 0.5 tsp chilli flakes; 1 clove garlic; 0.25 x lemon juice; 1 tsp tomato purée; 0.5 tsp salt", 120],
+      ["O", 220, 14, "Shish chicken on skewers"], ["S", "Garlic sauce", "20 g greek yoghurt; 0.5 clove garlic; 1 pinch salt", 0], ["P", "shish chicken; garlic sauce; salad; wraps; par-boiled chips"]],
+    "d-kofta": [["V", "onion", "grated and squeezed"], ["V", "cucumber", "diced"], ["V", "tomato", "diced"],
+      ["X", "Koftas", "Mix the lamb mince with the grated onion and spices; shape onto skewers", "1 clove garlic; 0.5 tsp cumin; 0.5 tsp ground coriander; 0.5 tsp smoked paprika; 0.25 tsp cinnamon; 0.5 tsp salt; 1 tbsp chopped parsley"],
+      ["O", 220, 12, "Koftas on a rack"], ["S", "Tahini yoghurt", "60 g greek yoghurt; 10 g tahini; 0.125 x lemon juice; 1 pinch salt", 0], ["P", "rice, koftas; salad pot; tahini yoghurt pot"]],
+    "d-kebab-fries": [["V", "onion", "thinly sliced"], ["V", "lettuce", "shredded"],
+      ["M", "yog", "Kebab spice", "chicken-thigh", "20 g greek yoghurt; 1 tsp smoked paprika; 0.5 tsp cumin; 0.5 tsp garlic granules; 0.25 tsp chilli flakes; 0.5 tsp salt", 30],
+      ["O", 220, 20, "Kebab thighs, then slice"], ["S", "Garlic sauce", "40 g greek yoghurt; 1 clove garlic; 0.125 x lemon juice; 1 pinch dried mint; 1 pinch salt", 0],
+      ["P", "sliced chicken; garlic sauce; onion and lettuce; cheese; par-boiled chips"]],
+    "d-bigmac": [["V", "onion", "finely diced"], ["V", "lettuce", "shredded"], ["V", "gherkins", "sliced"],
+      ["H", "Big Mac mince", 12, "Brown hard with the diced onion and seasoning", "0.5 tsp salt; 0.5 tsp black pepper; 0.5 tsp garlic granules; 1 tsp Worcestershire"],
+      ["S", "Big Mac sauce", "20 g light mayo; 10 g ketchup; 1 tsp American mustard; 1 tsp chopped gherkin; 0.25 tsp smoked paprika; 0.25 tsp onion powder", 0],
+      ["P", "mince; sauce pot; lettuce, gherkins, cheese; par-boiled potatoes"]],
+    "d-pizza": [["M", "dry", "Italian rub", "chicken-breast", "0.5 tsp dried oregano; 0.5 tsp garlic granules; 0.5 tsp salt", 0], ["O", 200, 18, "Pizza chicken, then slice"],
+      ["S", "Pizza sauce", "60 g passata; 0.5 tsp dried oregano; 0.5 clove garlic; 1 pinch salt; 1 pinch chilli flakes", 0], ["P", "sliced chicken; sauce pot; mozzarella and pepperoni; base"]],
+    "d-meatball-sub": [["X", "Meatballs", "Mix the mince with the panko, egg and seasoning; roll 6 per portion", "1 clove garlic; 10 g grated parmesan; 0.5 tsp dried oregano; 0.5 tsp salt"],
+      ["O", 200, 15, "Meatballs, to brown"], ["S", "Meatball marinara (simmer the cooked meatballs in it)", "120 g passata; 0.5 clove garlic; 0.5 tsp dried oregano; 1 pinch chilli flakes", 12],
+      ["P", "meatballs in marinara; mozzarella; rolls"]],
+    "d-quesadilla": [["V", "onion", "sliced"], ["V", "peppers", "sliced"],
+      ["M", "dry", "Fajita spice", "chicken-breast", "1 tsp smoked paprika; 0.5 tsp cumin; 0.5 tsp garlic granules; 0.5 tsp chilli powder; 0.25 tsp dried oregano; 0.5 tsp salt; 0.125 x lime juice", 0],
+      ["H", "Fajita chicken", 12, "Sear the sliced chicken hot with the peppers and onion; cool"], ["P", "fajita filling; cheese; wraps; salsa and yoghurt pots"]],
+    "d-carbonara": [["H", "Carbonara meat", 15, "Crisp the diced bacon in a dry pan; pan-fry the chicken with salt and pepper and slice"], ["P", "bacon and chicken together; pecorino grated into a pot"]],
+    "d-lasagne": [["V", "onion", "finely diced"],
+      ["H", "Lasagne ragù", 30, "Brown the mince with the onion and garlic, add the passata and seasoning, simmer 30 min", "1 clove garlic; 1 tsp tomato purée; 150 g passata; 0.5 tsp dried oregano; 1 x bay leaf; 0.5 tsp salt"],
+      ["S", "Lasagne white sauce (whisk over the heat until thick)", "150 ml skimmed milk; 12 g cornflour; 1 pinch nutmeg; 1 pinch salt; 8 g grated parmesan", 5],
+      ["X", "Build the lasagne", "Layer ragù, sheets and white sauce; finish with mozzarella and parmesan"], ["O", 180, 45, "Lasagne; rest 15 min before cutting"], ["P", "lasagne portions"]],
+    "d-prawn-linguine": [["S", "Arrabbiata", "10 ml olive oil; 2 clove garlic; 0.5 tsp chilli flakes; 200 g chopped tomatoes; 1 pinch sugar; 1 pinch salt", 15], ["P", "arrabbiata; prawns stay in their pack"]],
+    "d-steak-chips": [],
+    "d-roast-chicken": [], "d-roast-beef": [], "d-roast-pork": [],
+    "d-pasta-bake": [["H", "Pasta bake sauce", 15, "Brown the diced chicken and bacon, add the garlic, passata and seasoning, simmer 10 min", "1 clove garlic; 150 g passata; 0.5 tsp dried oregano; 1 pinch chilli flakes; 0.25 tsp salt"],
+      ["X", "Build the pasta bake", "Stir the penne through the sauce; top with mozzarella and parmesan"], ["O", 200, 15, "Pasta bake"], ["P", "pasta bake portions"]],
+    "d-thai-green-curry": [["V", "peppers", "sliced"], ["V", "broccoli", "small florets"],
+      ["H", "Thai green curry", 20, "Fry the paste 1 min, seal the sliced thighs, add the coconut milk and water, simmer 10 min with the veg, then season", "30 g green curry paste; 150 ml light coconut milk; 50 ml water; 10 ml fish sauce; 0.25 x lime juice; 1 pinch sugar"],
+      ["P", "rice, green curry"]],
+    "d-tikka": [["V", "onion", "finely diced"], ["M", "yog", "Tikka", "chicken-breast", "40 g greek yoghurt; 12 g curry paste; 1 clove garlic; 0.25 x lemon juice; 0.5 tsp salt", 60],
+      ["O", 220, 12, "Tikka chicken"], ["H", "Tikka masala sauce", 20, "Soften the onion with the garlic and ginger, fry the paste 1 min, add passata and coconut milk, simmer 10 min, blend smooth, stir in the chicken and garam masala", "1 clove garlic; 1 tsp grated ginger; 13 g curry paste; 120 g passata; 60 ml light coconut milk; 0.5 tsp garam masala"],
+      ["P", "rice, tikka masala"]],
+    "d-jalfrezi": [["V", "onion", "chunks"], ["V", "peppers", "chunks"],
+      ["H", "Jalfrezi", 25, "Char the onion and peppers in a hot pan, set aside; fry the paste with garlic, ginger and chilli, brown the chicken, add the tomatoes, simmer 12 min, return the veg", "25 g curry paste; 1 clove garlic; 1 tsp grated ginger; 1 x green chilli; 150 g chopped tomatoes; 0.5 tsp garam masala; 0.5 tsp salt"],
+      ["P", "rice, jalfrezi"]],
+    "d-katsu-curry": [["V", "onion", "diced"], ["B", "chicken-breast", "panko", "0.5 tsp salt; 0.25 tsp black pepper"],
+      ["S", "Katsu sauce (soften the onion first, then simmer and blend)", "20 g curry paste; 1 tsp honey; 1 clove garlic; 1 tsp grated ginger; 80 ml light coconut milk; 100 ml water", 10, true],
+      ["P", "breaded chicken (freeze raw); katsu sauce; rice"]],
+    "d-pad-thai": [["V", "onion", "sliced"], ["H", "Pad thai chicken", 10, "Pan-fry with a pinch of salt and pepper, then slice"],
+      ["S", "Pad thai sauce", "10 ml fish sauce; 15 ml soy; 10 g honey; 0.33 x lime juice; 1 tsp rice vinegar; 0.25 tsp chilli flakes", 0],
+      ["P", "chicken; sauce jar; sliced onion; crushed peanuts; beansprouts stay bagged"]],
+    "d-thai-basil": [["V", "peppers", "sliced"],
+      ["H", "Thai basil beef", 15, "Fry the pounded garlic and chilli 30 s, brown the mince hard, add the peppers and sauces, cook until sticky, stir in the basil", "2 clove garlic; 1 x bird's-eye chilli; 15 ml soy; 10 ml fish sauce; 5 g honey; 1 tsp oyster sauce"],
+      ["P", "rice, basil beef (fry the egg on the day)"]],
+    "d-peri-peri": [["V", "peppers", "diced"], ["M", "wet", "Peri-peri", "chicken-thigh", "30 g peri-peri sauce; 0.25 x lemon juice; 1 clove garlic; 0.5 tsp smoked paprika", 60],
+      ["O", 200, 20, "Peri-peri thighs"], ["H", "Spicy rice", 8, "Fry the peppers with the spices, then toss the cooked rice through", "0.5 tsp smoked paprika; 0.25 tsp turmeric; 0.5 tsp garlic granules; 0.5 x stock cube"],
+      ["S", "Garlic dip", "40 g greek yoghurt; 0.5 clove garlic; 0.125 x lemon juice; 1 pinch salt", 0], ["P", "spicy rice, peri-peri chicken; garlic dip; corn"]],
+    "d-burrito-bowl": [["V", "lettuce", "shredded"],
+      ["M", "dry", "Burrito spice", "chicken-breast", "1 tsp smoked paprika; 0.5 tsp cumin; 0.5 tsp chilli powder; 0.5 tsp garlic granules; 0.25 tsp dried oregano; 0.5 tsp salt; 0.125 x lime juice", 0],
+      ["O", 220, 18, "Burrito chicken, then slice"], ["H", "Beans, corn and lime rice", 5, "Warm the beans and corn with the cumin and salt; stir lime juice and coriander through the rice", "0.125 x lime juice; 1 pinch cumin; 1 pinch salt"],
+      ["P", "lime rice, chicken, beans and corn; salsa, yoghurt and cheese pots; lettuce"]],
+    "d-chilli": [["V", "onion", "diced"], ["V", "peppers", "diced"],
+      ["L", "Chilli con carne", "hob", 40, "1 clove garlic; 1 tsp cumin; 1 tsp smoked paprika; 0.5 tsp chilli powder; 0.5 tsp dried oregano; 0.25 tsp cinnamon; 1 tsp tomato purée; 100 ml beef stock; 0.5 tsp salt; 5 g dark chocolate",
+        "Brown the mince hard, soften the onion, peppers and garlic, add the spices and purée, then tomatoes, stock and beans; simmer 30 min, stir in the chocolate"], ["P", "rice, chilli; yoghurt pot"]],
+    "d-massaman": [["V", "onion", "sliced"], ["V", "potatoes", "chunks"],
+      ["L", "Beef massaman", "ip", 40, "25 g curry paste; 120 ml light coconut milk; 150 ml water; 5 ml fish sauce; 1 tsp honey; 1 x cinnamon stick; 1 x bay leaf",
+        "Brown the beef on Sauté, fry the paste, add everything except the potatoes, pressure-cook 25 min, add the potatoes and pressure-cook 8 min more"], ["P", "rice, massaman; peanuts in a bag"]],
+
+    "s-choc-mousse": [["T", "Chocolate mousse pots", "Whisk until thick, spoon into jars, berries and grated chocolate on top", "250 g quark; 30 g chocolate whey; 10 g cocoa; 10 g honey"]],
+    "s-brownie": [["T", "Protein brownie batter", "Blitz the oats to flour, mix everything to a thick batter, fold in the chopped chocolate, spread in a lined tin", "30 g oats; 30 g chocolate whey; 12 g cocoa; 0.5 x egg; 15 g honey; 10 g dark chocolate; 1 pinch baking powder; 2 tbsp milk"],
+      ["O", 180, 16, "Protein brownies (still fudgy in the middle); cool and cut into squares"]],
+    "s-cheesecake": [["T", "Cheesecake pots", "Crush a digestive into each jar; whisk the filling smooth, spoon over, berries on top", "200 g quark; 30 g light cream cheese; 30 g vanilla whey; 10 g honey; 1 x digestive"]],
+    "s-bark": [["T", "Yoghurt bark", "Mix the yoghurt and honey, spread 1 cm thick on a lined tray, scatter berries, granola and chopped chocolate; freeze 3 hours, then snap and bag", "250 g greek yoghurt; 15 g honey; 80 g berries; 20 g granola; 15 g dark chocolate"]],
+    "s-crumble": [["T", "Crumble topping", "Rub together and spread on a tray", "30 g oats; 10 g peanut butter; 5 g honey; 1 pinch cinnamon"], ["O", 180, 10, "Crumble topping, until golden"],
+      ["H", "Cinnamon apple", 6, "Dice the apple and cook with the honey, cinnamon and a splash of water for 5 min", "1 x apple; 5 g honey; 0.5 tsp cinnamon"],
+      ["T", "Vanilla yoghurt pots", "Stir the whey into the yoghurt", "250 g greek yoghurt; 30 g vanilla whey"]],
+    "s-pbj": [], "snack": []
+  };
+  // Rough whole-veg weights for "about N" counts.
+  const VEG_EACH = { onion: [150, "onion"], peppers: [160, "pepper"], cucumber: [300, "cucumber"], tomato: [90, "tomato"], broccoli: [350, "head of broccoli"], lettuce: [250, "lettuce"], cabbage: [800, "cabbage"], mango: [200, "mango"], greens: [250, "bunch of pak choi or greens"] };
+
   // Carbs cooked in one batch on Sunday, except for these recipes (cooked on the day or built into the dish).
-  const BATCH_CARBS = ["sushi-rice", "jasmine-rice", "pasta", "rice-noodles", "potatoes"];
-  const NO_BATCH = ["d-carbonara", "d-prawn-linguine", "d-pad-thai", "d-massaman", "d-roast-chicken", "d-roast-beef", "d-roast-pork", "d-lasagne", "d-pasta-bake", "d-fried-rice", "l-onigiri"];
+  const BATCH_CARBS = ["sushi-rice", "jasmine-rice", "pasta", "penne", "rice-noodles", "potatoes"];
+  const NO_BATCH = ["d-carbonara", "d-prawn-linguine", "d-pad-thai", "d-massaman", "d-roast-chicken", "d-roast-beef", "d-roast-pork", "d-lasagne", "l-onigiri"];
 
   // Ingredients some people don't eat.
   const TAGS = { pork: ["bacon", "pork-loin"] };
 
   const RECIPES = {};
   R.forEach(function (r) { RECIPES[r.id] = r; });
-  return { ING: ING, RECIPES: RECIPES, OPTIONS: OPTIONS, TAGS: TAGS, PREP: PREP, BATCH_CARBS: BATCH_CARBS, NO_BATCH: NO_BATCH };
+  return { ING: ING, RECIPES: RECIPES, OPTIONS: OPTIONS, TAGS: TAGS, PREP: PREP, BATCH_CARBS: BATCH_CARBS, NO_BATCH: NO_BATCH, COMP: COMP, VEG_EACH: VEG_EACH };
 })();

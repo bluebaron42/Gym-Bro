@@ -142,6 +142,14 @@ nav.tabs button[aria-selected="true"]{color:var(--accent)}
 .sync{font-size:12px;color:var(--muted)}
 .data-btns{display:flex;flex-wrap:wrap;gap:8px}
 #q-msg:empty,#sh-msg:empty,#shop-msg:empty{display:none}
+.pl{margin:4px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:5px;font-size:13.5px;color:var(--fg);font-weight:400}
+.pl li b{font-weight:700}
+.pl .plh{list-style:none;margin:4px 0 0 -18px;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.check.on .pl{opacity:.55}
+.check.on span .pl{text-decoration:none}
+.prep-est{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.prep-est b{font-family:var(--display);font-size:26px;text-transform:uppercase}
+.prep-est span{color:var(--muted);font-size:13px}
 .pd{display:block;font-size:13px;color:var(--muted);margin-top:2px;line-height:1.45}
 .check.on .pd{text-decoration:line-through}
 .onday{flex-basis:100%;font-size:12.5px;color:var(--muted)}
@@ -322,23 +330,127 @@ function shopList(){const agg={},uses={};
   const pt=together()?partner():null;
   if(pt)ORDER.forEach(d=>["breakfast","lunch","dinner","snack"].forEach(s=>add(partnerChoice(pt,s,d),pt.sc)));
   return AISLES.map(a=>[a,Object.keys(agg).filter(i=>ING[i]&&ING[i][1]===a).sort((x,y)=>ING[x][0]<ING[y][0]?-1:1).map(i=>({id:i,name:ING[i][0],amt:shopAmount(i,agg[i]),uses:Object.keys(uses[i])}))]).filter(x=>x[1].length)}
-function prepList(){const out=[];const days=[1,2,3,4,5,6];const pt=partner();const sd=!!(sameDinner()&&pt);
-  const use={};const addUse=(id,slot,d,sc)=>{if(!RECIPES[id])return;const u=use[id]=use[id]||{slot:slot,days:[],scs:[]};if(u.days.indexOf(DNAME[d])<0)u.days.push(DNAME[d]);u.scs.push(sc)};
-  days.forEach(d=>["lunch","dinner","snack"].forEach(sl=>{const id=choice(sl,d);addUse(id,sl,d,P.scales);if(sl==="dinner"&&sd&&!excludedBy(id,pt.ex))addUse(id,sl,d,pt.sc)}));
+function prepList(){
+  const days=[1,2,3,4,5,6];const pt=partner();const sd=!!(sameDinner()&&pt);
+  const COMPD=FD.COMP||{},VEGE=FD.VEG_EACH||{};
+  const use={};const addUse=(id,slot,d,sc,who)=>{if(!RECIPES[id])return;const u=use[id]=use[id]||{slot:slot,days:[],scs:[],boxes:[]};if(u.days.indexOf(d)<0)u.days.push(d);u.scs.push(sc);u.boxes.push({d:d,who:who})};
+  days.forEach(d=>["lunch","dinner","snack"].forEach(sl=>{const id=choice(sl,d);addUse(id,sl,d,P.scales,"me");if(sl==="dinner"&&sd&&!excludedBy(id,pt.ex))addUse(id,sl,d,pt.sc,"pt")}));
+  // ---- helpers ----
+  const SPRE=/^([\d.]+)\s*(g|ml|tsp|tbsp|clove|x|pinch)\s+(.+)$/;
+  const parse=str=>(str||"").split(";").map(x=>x.trim()).filter(Boolean).map(x=>{const m=x.match(SPRE);return m?{q:+m[1],u:m[2],n:m[3]}:null}).filter(Boolean);
+  const tally={garlic:0,ginger:0,lemon:0,lime:0};
+  const addSp=(acc,str,f)=>parse(str).forEach(s=>{const k=s.u+"|"+s.n;acc[k]=acc[k]||{u:s.u,n:s.n,q:0};acc[k].q+=s.q*f;
+    if(s.u==="clove")tally.garlic+=s.q*f;if(s.u==="tsp"&&/ginger/.test(s.n))tally.ginger+=s.q*f;const c=s.n.match(/^(lemon|lime) (juice|zest)$/);if(s.u==="x"&&c)tally[c[1]]+=s.q*f});
+  const q4=x=>Math.round(x*4)/4;
+  const fr=x=>{x=Math.max(0.25,q4(x));const w=Math.floor(x+1e-9),r=Math.round((x-w)*4);return ((w||"")+["","¼","½","¾"][r])||"¼"};
+  const fmt=s=>{const q=s.q;
+    if(s.u==="g"||s.u==="ml")return (q<20?Math.max(1,Math.round(q)):Math.round(q/5)*5)+" "+s.u+" "+s.n;
+    if(s.u==="tsp")return q>=6?fr(q/3)+" tbsp "+s.n:fr(q)+" tsp "+s.n;
+    if(s.u==="tbsp")return fr(q)+" tbsp "+s.n;
+    if(s.u==="clove"){const c=Math.max(1,Math.round(q));return c+" garlic clove"+(c>1?"s":"")}
+    if(s.u==="pinch"){const c=Math.max(1,Math.round(q));return c===1?"a pinch of "+s.n:c+" pinches of "+s.n}
+    const m=s.n.match(/^(lemon|lime) (juice|zest)$/);if(m)return m[2]+" of "+fr(q)+" "+m[1]+(q>1.1?"s":"");
+    if(/bay leaf|cinnamon stick/.test(s.n)){const c=Math.max(1,Math.ceil(q-0.25));return c+" "+(c>1?s.n.replace("leaf","leaves").replace("stick","sticks"):s.n)}
+    return (Math.max(0.5,Math.round(q*2)/2)+"").replace(".5","½").replace(/^0½/,"½")+" × "+s.n};
+  const spText=acc=>Object.values(acc).map(fmt).join(", ");
+  const lots=sc=>((sc.p!=null?sc.p:1)+(sc.c!=null?sc.c:1))/2;
+  const gOf=(r,ing,sc)=>{const e=r.ing.find(x=>x[0]===ing);return e?e[1]*scaleOf(ing,sc):0};
+  const mainP=r=>{const e=r.ing.find(([i])=>ING[i]&&ING[i][1]==="Protein"&&i!=="whey");return e?e[0]:null};
+  const dish=(id)=>RECIPES[id].name;
+  const list=a=>{a=[...new Set(a)];return a.length<3?a.join(" and "):a.slice(0,-1).join(", ")+" and "+a[a.length-1]};
+  const pname2=id=>ING[id]?ING[id][0].toLowerCase():id;
+  // ---- pool components ----
+  const LONG={},VEG={},MAR={},BR={},SH={},SA={},OV={},HB={},TR={},PK={};
+  const HP={"Carbonara meat":["bacon","chicken-breast"],"Pad thai chicken":["chicken-breast"],"Pasta bake sauce":["chicken-breast","bacon"],"Chicken fried rice":["chicken-breast"]};
+  Object.keys(use).forEach(id=>{const r=RECIPES[id],u=use[id],comps=COMPD[id]||[];
+    u.scs.forEach((sc,ix)=>{const f=lots(sc);
+      comps.forEach(t=>{const k=t[0];
+        if(k==="L"){const o=LONG[t[1]]=LONG[t[1]]||{eq:t[2],min:t[3],sp:{},m:t[5],d:[],p:{}};addSp(o.sp,t[4],f);o.d.push(dish(id));const mp=mainP(r);if(mp)o.p[mp]=(o.p[mp]||0)+gOf(r,mp,sc)}
+        else if(k==="V"){const g=gOf(r,t[1],sc);const o=VEG[t[1]]=VEG[t[1]]||{g:0,cuts:{}};o.g+=g;const c=o.cuts[t[2]]=o.cuts[t[2]]||{g:0,d:[]};c.g+=g;c.d.push(dish(id))}
+        else if(k==="M"){const key=t[2]+"|"+t[3];const o=(MAR[t[1]]=MAR[t[1]]||{})[key]=(MAR[t[1]]||{})[key]||{lab:t[2],p:t[3],g:0,sp:{},min:t[5],d:[]};o.g+=gOf(r,t[3],sc);addSp(o.sp,t[4],f);o.d.push(dish(id))}
+        else if(k==="B"){const key=t[2]+"|"+id;const o=BR[key]=BR[key]||{coat:t[2],p:t[1],g:0,egg:0,crumb:0,sp:{},d:dish(id),n:0};o.g+=gOf(r,t[1],sc);o.n++;
+          if(t[2]==="panko"){o.egg+=gOf(r,"eggs",sc);o.crumb+=gOf(r,"panko",sc)}else{o.crumb+=gOf(r,"cornflour",sc)}addSp(o.sp,t[3],f)}
+        else if(k==="X"){const o=SH[t[1]]=SH[t[1]]||{m:t[2],sp:{},d:[],p:{},n:0};o.n++;if(t[3])addSp(o.sp,t[3],f);o.d.push(dish(id));const mp=mainP(r);if(mp)o.p[mp]=(o.p[mp]||0)+gOf(r,mp,sc)}
+        else if(k==="S"){const o=SA[t[1]]=SA[t[1]]||{sp:{},sim:t[3]||0,bl:!!t[4],d:[],n:0};o.n++;addSp(o.sp,t[2],f);o.d.push(dish(id))}
+        else if(k==="O"){const ov=OV[t[1]]=OV[t[1]]||{};const o=ov[t[3]]=ov[t[3]]||{min:t[2],n:0,d:[],p:{}};o.n++;o.d.push(dish(id));const mp=/oats|brownie|crumble|crouton|lasagne|pasta bake|meatball/i.test(t[3])?null:mainP(r);if(mp)o.p[mp]=(o.p[mp]||0)+gOf(r,mp,sc)}
+        else if(k==="H"){const o=HB[t[1]]=HB[t[1]]||{min:t[2],m:t[3],sp:{},d:[],n:0,p:{}};o.n++;if(t[4])addSp(o.sp,t[4],f);o.d.push(dish(id));
+          const ps=HP[t[1]]||(/^(Boil eggs|Steam|Cinnamon apple|Spicy rice|Beans|Salt and pepper veg|Philly onions|Sweet and sour|Tikka masala sauce)/.test(t[1])?[]:[mainP(r)]);ps.forEach(mp=>{if(mp)o.p[mp]=(o.p[mp]||0)+gOf(r,mp,sc)})}
+        else if(k==="T"){const o=TR[t[1]]=TR[t[1]]||{m:t[2],sp:{},n:0,days:[]};o.n++;addSp(o.sp,t[3],f);const bd=u.boxes[ix].d;if(o.days.indexOf(bd)<0)o.days.push(bd)}
+        else if(k==="P"){const b=u.boxes[ix];(PK[b.d]=PK[b.d]||[]).push({sl:u.slot,name:r.name,what:t[1],who:b.who})}
+      })})});
+  const out=[];let total=10;
+  const mins=m=>m<60?m+" min":Math.floor(m/60)+" h"+(m%60?" "+(m%60)+" min":"");
+  const amt=(p)=>Object.keys(p).filter(i=>p[i]>0).map(i=>amount(i,p[i])+" "+pname2(i)).join(" + ");
+  // carbs
   const carb={};Object.keys(use).forEach(id=>{if(NO_BATCH.indexOf(id)>=0)return;RECIPES[id].ing.forEach(([i,g])=>{if(BATCH.indexOf(i)<0)return;use[id].scs.forEach(sc=>{carb[i]=(carb[i]||0)+g*scaleOf(i,sc)})})});
-  const CT={"sushi-rice":g=>"cook "+roundG(g)+" g dry sushi rice and season it","jasmine-rice":g=>"cook "+roundG(g)+" g dry jasmine or basmati rice","pasta":g=>"cook "+roundG(g)+" g pasta 2 minutes short, drain and toss in a little oil","rice-noodles":g=>"soak "+roundG(g)+" g rice noodles, rinse cold and toss in a little oil","potatoes":g=>"cut "+shopAmount("potatoes",g)+" potatoes into chips or cubes, boil 5 minutes, cool and bag for air-frying on the day"};
-  const carbs=BATCH.filter(i=>carb[i]).map(i=>CT[i](carb[i]));
-  if(carbs.length)out.push({t:"Carbs first",d:carbs.map(x=>x[0].toUpperCase()+x.slice(1)).join(". ")+". Cool rice within an hour of cooking, then portion it into the boxes."});
-  ["lunch","dinner","snack"].forEach(sl=>Object.keys(use).filter(id=>use[id].slot===sl).forEach(id=>{const r=RECIPES[id],u=use[id],pr=PREPD[id];
-    if(!pr||/^(Nothing to|Sunday)/.test(pr[0]))return;
-    const main=r.ing.find(([i])=>ING[i]&&ING[i][1]==="Protein"&&i!=="whey");let amt="";
-    if(main&&sl!=="snack"){let g=0;u.scs.forEach(sc=>g+=main[1]*scaleOf(main[0],sc));amt=" · "+amount(main[0],g)+" "+ING[main[0]][0].toLowerCase()}
-    const n=u.scs.length;const who=(sl==="dinner"&&sd&&n>u.days.length)?" (you and "+pt.who+")":"";
-    let lots=0;u.scs.forEach(sc=>lots+=((sc.p!=null?sc.p:1)+(sc.c!=null?sc.c:1))/2);lots=Math.max(0.25,Math.round(lots*4)/4);
-    const frac=x=>{const w=Math.floor(x),f={0:"",0.25:"¼",0.5:"½",0.75:"¾"}[x-w];return (w?String(w):"")+f};
-    const scaleNote=(Math.abs(lots-n)>0.01&&/[Pp]er (portion|pot|2 squares)/.test(pr[0]))?(lots<1?" The amounts below are for a standard portion: use about "+frac(lots)+" of each.":" The amounts below are per standard portion: multiply by "+frac(lots)+" for this batch."):"";
-    out.push({t:r.name+", "+n+" portion"+(n>1?"s":"")+who+amt,d:SLOTNAME[sl]+" "+u.days.join(", ")+"."+scaleNote+" "+pr[0]+"."})}));
-  out.push({t:"Pack and label",d:"Monday to Wednesday in the fridge, Thursday to Saturday in the freezer. Each night, move the next day's boxes to the fridge. Reheat until piping hot all the way through."});
+  // 1. long cooks + equipment plan
+  const longs=Object.keys(LONG).map(k=>Object.assign({k:k},LONG[k])).sort((a,b)=>b.min-a.min);
+  let ipBusy=false;const L1=[];
+  longs.forEach(o=>{let where;if(o.eq==="ip"&&!ipBusy){where="Instant Pot";ipBusy=true}else if(o.eq==="ip"){where="Hob, ring 4 (Instant Pot is busy: simmer covered about 3× as long, topping up with water)"}else where="Hob, ring 4";
+    L1.push("<b>"+o.k+"</b> ("+where+", "+mins(o.min)+")"+(Object.keys(o.p).length?": "+amt(o.p):"")+". "+o.m+". You need: "+spText(o.sp)+".");total+=8});
+  const ovTemps=Object.keys(OV).map(Number).sort((a,b)=>b-a);
+  if(ovTemps.length)L1.push("<b>Oven</b>: fan oven on to "+ovTemps[0]+"°C so it's hot when the trays are ready.");
+  // rice equipment
+  const rices=["sushi-rice","jasmine-rice"].filter(i=>carb[i]).sort((a,b)=>carb[b]-carb[a]);
+  const C=[];let ipForRice=!ipBusy;
+  rices.forEach(i=>{const g=roundG(carb[i]);const nm=i==="sushi-rice"?"sushi rice":"jasmine or basmati rice";
+    if(ipForRice&&carb[i]>=150){C.push("<b>Instant Pot</b>: rinse "+g+" g "+nm+" until the water runs clear; add "+Math.round(g*(i==="sushi-rice"?1.1:1.25))+" ml water; pressure-cook "+(i==="sushi-rice"?"6":"4")+" min, natural release 10 min."+(i==="sushi-rice"?" Season with the sushi vinegar while hot.":""));ipForRice=false}
+    else C.push("<b>Hob</b>: rinse "+g+" g "+nm+"; add "+Math.round(g*(i==="sushi-rice"?1.15:1.4))+" ml water, bring to the boil, lid on, lowest heat 12 min, then off the heat 10 min with the lid on."+(i==="sushi-rice"?" Season with the sushi vinegar while hot.":""))});
+  if(carb.pasta)C.push("<b>Pasta</b>: cook "+roundG(carb.pasta)+" g 2 min short of the packet time; drain, toss in a little oil, spread out to cool.");
+  if(carb.penne)C.push("<b>Penne</b>: cook "+roundG(carb.penne)+" g 2 min short; drain (it finishes in the pasta bake).");
+  if(carb["rice-noodles"])C.push("<b>Rice noodles</b>: soak "+roundG(carb["rice-noodles"])+" g in boiling water 5 min, rinse cold, toss in a few drops of oil.");
+  if(carb.potatoes)C.push("<b>Potatoes</b>: cut "+shopAmount("potatoes",carb.potatoes)+" into chips or cubes; boil 5 min, drain, steam-dry, cool, bag by meal (air-fry on the day).");
+  if(C.length)C.push("Spread cooked rice on a tray to cool fast; portion within an hour.");
+  // 2. veg
+  const V=[];const tVeg=Object.keys(VEG).length;
+  if(tally.garlic>=1)V.push("<b>Garlic</b>: peel and grate "+Math.ceil(tally.garlic)+" cloves into a small covered bowl. Every recipe below draws from it.");
+  if(tally.ginger>0)V.push("<b>Ginger</b>: grate "+fr(tally.ginger)+" tsp (about "+Math.max(2,Math.round(tally.ginger*1.5))+" cm).");
+  ["lemon","lime"].forEach(c=>{if(tally[c]>0)V.push("<b>"+(c==="lemon"?"Lemons":"Limes")+"</b>: zest first if needed, then juice "+Math.max(1,Math.ceil(tally[c]-0.15))+".")});
+  Object.keys(VEG).sort((a,b)=>VEG[b].g-VEG[a].g).forEach(i=>{const o=VEG[i],each=VEGE[i];const head=ING[i][0]+(each?" (about "+Math.max(1,Math.round(o.g/each[0]*2)/2)+")":"");
+    V.push("<b>"+head+"</b>: "+Object.keys(o.cuts).map(c=>c+" "+amount(i,o.cuts[c].g)+" for "+list(o.cuts[c].d)).join("; ")+".");total+=2+o.g/100*1.5});
+  total+=Math.ceil(tally.garlic*0.4)+(tally.ginger?2:0)+Math.ceil(tally.lemon+tally.lime);
+  // 3. marinades
+  const M=[];const MT={yog:"Yoghurt marinades: mix in a bowl, coat the meat, cover, fridge",wet:"Wet marinades: mix in a bowl or bag with the meat",dry:"Dry rubs and seasoning: mix, rub on, onto the oven trays or into the fridge"};
+  ["yog","wet","dry"].forEach(ty=>{if(!MAR[ty])return;M.push("## "+MT[ty]);Object.values(MAR[ty]).forEach(o=>{M.push("<b>"+o.lab+"</b> for "+amount(o.p,o.g)+" "+pname2(o.p)+" ("+list(o.d)+"): "+spText(o.sp)+"."+(o.min?" At least "+mins(o.min)+".":""));total+=3})});
+  // 4. breading + shaping
+  const BS=[];const brs=Object.values(BR);
+  if(brs.length){const egg=brs.reduce((a,b)=>a+b.egg,0),pk=brs.filter(b=>b.coat==="panko").reduce((a,b)=>a+b.crumb,0),cf=brs.filter(b=>b.coat==="cornflour").reduce((a,b)=>a+b.crumb,0);
+    BS.push("## Coating station: "+(egg?"one bowl of beaten egg ("+Math.max(1,Math.ceil(egg/50-0.2))+" egg"+(egg>60?"s":"")+"), ":"")+(pk?"panko ("+Math.round(pk)+" g) ":"")+(cf?(pk?"and ":"")+"cornflour ("+Math.round(cf)+" g)":"")+". Season each meal's crumb separately.");
+    brs.forEach(b=>{BS.push("<b>"+b.d+"</b>: "+amount(b.p,b.g)+" "+pname2(b.p)+(b.coat==="panko"?", butterflied and bashed to 1.5 cm; egg, then panko seasoned with ":", diced; toss in cornflour seasoned with ")+spText(b.sp)+"."+(b.coat==="panko"?" Lay on a lined tray and freeze raw, then bag.":" Onto an oven tray."));total+=4+b.n})}
+  Object.keys(SH).forEach(k=>{const o=SH[k];BS.push("<b>"+k+"</b>"+(Object.keys(o.p).length?" ("+amt(o.p)+")":"")+": "+o.m+(Object.keys(o.sp).length?". Mix in: "+spText(o.sp):"")+".");total+=5+o.n});
+  // 5. sauces
+  const S=[];const cold=Object.keys(SA).filter(k=>!SA[k].sim),hot=Object.keys(SA).filter(k=>SA[k].sim);
+  if(cold.length){S.push("## Cold: whisk in jars or pots");cold.forEach(k=>{S.push("<b>"+k+"</b> ("+list(SA[k].d)+"): "+spText(SA[k].sp)+".");total+=3})}
+  if(hot.length){S.push("## Cooked: run these side by side on the hob");hot.forEach(k=>{const o=SA[k];S.push("<b>"+k+"</b> ("+list(o.d)+", simmer "+o.sim+" min"+(o.bl?", then blend":"")+"): "+spText(o.sp)+".");total+=4+(o.bl?2:0)})}
+  // 6. treats
+  const T=Object.keys(TR).map(k=>{const o=TR[k];total+=5+o.n;const late=/pots/i.test(k)&&o.days.some(d=>d>3);
+    return "<b>"+k+"</b>, "+o.n+" portion"+(o.n>1?"s":"")+" ("+o.days.sort().map(d=>DNAME[d]).join(", ")+"): "+spText(o.sp)+". "+o.m+"."+(late?" Pots keep 3 days: make Thursday to Saturday's on Wednesday night.":"")});
+  // 7. cook by equipment
+  const K=[];
+  ovTemps.forEach(tp=>{const items=OV[tp];const mx=Math.max(...Object.values(items).map(o=>o.min));
+    K.push("## Oven "+tp+"°C fan, about "+mins(mx)+" (spread over 2 trays; longest first)");
+    Object.keys(items).sort((a,b)=>items[b].min-items[a].min).forEach(l=>{const o=items[l];K.push("<b>"+l+"</b>"+(Object.keys(o.p).length?" ("+amt(o.p)+")":"")+": "+o.min+" min.");total+=2})});
+  const hobs=Object.keys(HB);
+  if(hobs.length){K.push("## Hob jobs: up to 3 rings at once while the oven works");hobs.forEach(k=>{const o=HB[k];K.push("<b>"+k+"</b>"+(Object.keys(o.p).length?" ("+amt(o.p)+")":"")+", "+o.min+" min: "+o.m+(Object.keys(o.sp).length?". With: "+spText(o.sp):"")+".");total+=Math.ceil(o.min*0.4)})}
+  // 8. pack
+  const PKL=[];let boxes=0;
+  days.forEach(d=>{const it=PK[d];if(!it||!it.length)return;const store=d<=3?"fridge":"freezer";
+    const grp={};it.forEach(b=>{const k=b.sl+"|"+b.name;(grp[k]=grp[k]||{sl:b.sl,name:b.name,what:b.what,me:0,pt:0})[b.who]++});
+    PKL.push("<b>"+DFULL[d]+" ("+store+")</b>: "+Object.values(grp).map(g=>{boxes+=g.me+g.pt;return SLOTNAME[g.sl].toLowerCase()+", "+g.name+(g.pt?" × 2 (you and "+pt.who+")":"")+": "+g.what}).join(". ")+".")});
+  PKL.push("Label every box with the day. Each night, move the next day's freezer boxes to the fridge. Reheat until piping hot all the way through.");
+  total+=10+boxes;
+  const longMax=longs.length?longs[0].min+15:0;const wall=Math.round(Math.max(total,longMax)/5)*5;
+  const push=(t,d,m)=>{if(d.length)out.push({t:t+(m?" · about "+mins(Math.max(5,Math.round(m/5)*5)):""),d:d})};
+  push("Start the long cooks",L1,longs.length*8);
+  push("Carbs",C,6+C.length*2);
+  push("Veg prep",V,V.length*4);
+  push("Marinades and rubs",M,M.filter(x=>x.indexOf("## ")!==0).length*3);
+  push("Coating and shaping",BS,BS.length*5);
+  push("Sauces and dressings",S,S.filter(x=>x.indexOf("## ")!==0).length*3);
+  push("Treats",T,T.length*6);
+  push("Cook: oven and hob",K,K.length*3);
+  push("Cool, portion and pack",PKL,10+boxes);
+  out.estimate=wall;
   return out}
 
 // ---------- Helpers ----------
@@ -483,13 +595,15 @@ function renderFood(){
     '<details class="card lib"><summary>Lunch bowls ('+all("lunch").length+')</summary>'+all("lunch").map(i=>recipeBtn(i)).join("")+'</details>'+
     '<details class="card lib"><summary>Breakfast and snack</summary>'+all("breakfast").concat(all("snack")).map(i=>recipeBtn(i)).join("")+'</details>';
   const lists=shopList().map(g=>'<div><div class="eyebrow" style="margin-top:6px">'+g[0]+'</div>'+g[1].map(i=>chk("i:"+i.id,'<b class="num">'+esc(i.amt)+'</b> '+esc(i.name),i.uses.length>2?i.uses.length+" meals":i.uses.join(", "))).join("")+'</div>').join("");
-  const prep=prepList().map((p,i)=>chk("p:"+p.t+p.d,'<b>'+(i+1)+". "+esc(p.t)+'</b><small class="pd">'+esc(p.d)+'</small>')).join("");
+  const PL=prepList();const prepEst=PL.estimate||0;
+  const rl=l=>l.indexOf("## ")===0?'<li class="plh">'+l.slice(3)+'</li>':'<li>'+l+'</li>';
+  const prep=PL.map((p,i)=>chk("p:"+p.t+"|"+p.d.join("|").length,'<b>'+(i+1)+". "+esc(p.t)+'</b><ul class="pl">'+p.d.map(rl).join("")+'</ul>')).join("");
   return '<div><div class="eyebrow">Food</div><h1 class="day">This week’s menu</h1><p class="lead">Swap any lunch or dinner. The shopping list and Sunday prep update to match.</p></div>'+
     '<section class="card">'+menu+'</section>'+
     '<h2 class="sec">Share with '+esc(pname())+'</h2>'+shareCard()+
     '<h2 class="sec">Recipes</h2>'+lib+
     '<h2 class="sec">Shopping list</h2><section class="card"><p class="rest-note">'+(together()?'<b>Together:</b> your 7 days plus '+esc(partner().who)+'’s, at each person’s portions. ':'Totals for all 7 days of your current menu. ')+'Check the cupboard items before you buy.</p><div class="data-btns"><button type="button" class="btn small" id="shop-copy">Copy shopping list</button></div><p class="rest-note" id="shop-msg" aria-live="polite"></p>'+lists+'</section>'+
-    '<h2 class="sec">Sunday prep</h2><section class="card"><p class="rest-note">Everything for Monday to Saturday, cooked in one go. Each meal\u2019s on-the-day step shows under it on the Today tab.'+(sameDinner()&&partner()?' Same dinner is on, so dinners are cooked for both of you.':'')+'</p>'+prep+'<p class="rest-note">Shopping and prep ticks clear themselves every Monday.</p><button type="button" class="btn ghost small" id="clear-shop" style="align-self:flex-start">Clear ticks now</button></section>'+
+    '<h2 class="sec">Sunday prep</h2><section class="card"><div class="prep-est"><b>About '+(prepEst>=60?Math.floor(prepEst/60)+' h '+(prepEst%60?(prepEst%60)+' min':''):prepEst+' min')+'</b><span>estimated Sunday prep for Monday to Saturday</span></div><p class="rest-note">Work down the stations in order: like jobs are batched together, and the long cooks run in the background. It rebuilds whenever you swap a meal.'+(sameDinner()&&partner()?' Same dinner is on, so dinners are cooked for both of you.':'')+' Each meal\u2019s on-the-day step is on the Today tab.</p>'+prep+'<p class="rest-note">Shopping and prep ticks clear themselves every Monday.</p><button type="button" class="btn ghost small" id="clear-shop" style="align-self:flex-start">Clear ticks now</button></section>'+
     '<h2 class="sec">Recipe creators</h2><div class="links">'+CREATORS.map(c=>'<a href="https://www.youtube.com/results?search_query='+encodeURIComponent(c[1])+'" target="_blank" rel="noopener">'+esc(c[0])+'</a>').join("")+'</div>'+
     '<p class="rest-note">Swaps that matter: air fryer, 5% mince or chicken, light mayo and yoghurt sauces, measured oil.</p>';
 }
