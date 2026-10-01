@@ -1,12 +1,12 @@
 # Gym-Bro: install on your Android phone
 
-The app is 7 files: `index.html`, `data.js`, `guides.js`, `manifest.webmanifest`, `sw.js`, `icon-192.png`, `icon-512.png`. Keep them together in one folder.
+The app is 8 files: `index.html`, `profile.js`, `data.js`, `guides.js`, `manifest.webmanifest`, `sw.js`, `icon-192.png`, `icon-512.png`. Keep them together in one folder.
 
 ## 1. Put it on GitHub Pages (free, about 10 minutes)
 
 1. Sign in or sign up at github.com.
 2. Tap **+** (top right) → **New repository**. Name it `Gym-Bro`, set it to **Public**, tick **Add a README**, then **Create repository**.
-3. On the repository page: **Add file** → **Upload files**. Drag in all 7 files (not the folder itself, and not the zip). Tap **Commit changes**.
+3. On the repository page: **Add file** → **Upload files**. Drag in all 8 files (not the folder itself, and not the zip). Tap **Commit changes**.
 4. Go to **Settings** → **Pages**. Under **Build and deployment**, set Source to **Deploy from a branch**, Branch to **main**, folder **/ (root)**, then **Save**.
 5. Wait 1–2 minutes and refresh the Pages screen. It shows your link, something like `https://bluebaron42.github.io/Gym-Bro/`.
 
@@ -25,6 +25,15 @@ The repository is public, so anyone with the link can see the plan. Your logged 
 - **Restore:** Progress tab → **Restore** and pick the backup file. It replaces what's on the phone.
 
 Your data is lost if you uninstall the app or clear Chrome's site data, so keep a recent backup.
+
+## Sharing menus with your partner
+
+- **Food tab → Copy my menu**, then send the message on WhatsApp.
+- When your partner sends theirs, copy the whole message, then **Food tab → Paste partner's menu**.
+- **Shopping list: Together** combines both weeks into one list; **Just mine** shows only yours.
+- **Same dinner: On** keeps dinners matched; the most recent change wins when you share.
+
+`index.html`, `data.js` and `guides.js` are shared with Gym-Gyal. `profile.js` holds the settings that make this app yours.
 
 ## Updating the app later
 

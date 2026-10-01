@@ -14,6 +14,8 @@ window.BB_DATA = (function () {
     "sub-roll": ["Sub rolls", "Carbs", 270, 9, 50, 3, 90, "rolls"],
     "pizza-base": ["Thin pizza bases", "Carbs", 270, 8, 52, 3, 150, "bases"],
     "potatoes": ["Potatoes", "Carbs", 77, 2, 17, 0.1],
+    "rice-noodles": ["Rice noodles (dry)", "Carbs", 360, 6, 82, 0.6],
+    "sweet-potato": ["Sweet potatoes", "Carbs", 86, 1.6, 20, 0.1],
     "panko": ["Panko breadcrumbs", "Carbs", 370, 12, 75, 3],
     "granola": ["Granola (lower sugar)", "Carbs", 430, 10, 60, 15],
 
@@ -57,6 +59,12 @@ window.BB_DATA = (function () {
     "pineapple": ["Pineapple chunks", "Fruit and veg", 50, 0.5, 12, 0.1],
     "berries": ["Berries (frozen is fine)", "Fruit and veg", 50, 1, 9, 0.3],
     "apple": ["Apples", "Fruit and veg", 52, 0.3, 14, 0.2, 150, "apples"],
+    "beansprouts": ["Beansprouts", "Fruit and veg", 30, 3, 4, 0.2],
+    "lime": ["Limes", "Fruit and veg", 30, 0.7, 10, 0.2, 65, "limes"],
+    "mango": ["Mango", "Fruit and veg", 60, 0.8, 15, 0.4],
+    "avocado": ["Avocado", "Fruit and veg", 160, 2, 9, 15],
+    "corn": ["Sweetcorn (frozen or tin)", "Fruit and veg", 86, 3.3, 19, 1.4],
+    "spinach": ["Spinach", "Fruit and veg", 23, 2.9, 3.6, 0.4],
     "kimchi": ["Kimchi", "Fruit and veg", 20, 1.5, 3, 0.5],
     "gherkins": ["Gherkins", "Fruit and veg", 20, 0.5, 4, 0.1],
 
@@ -78,6 +86,13 @@ window.BB_DATA = (function () {
     "cornflour": ["Cornflour", "Sauces and cupboard", 350, 0.3, 88, 0.1],
     "furikake": ["Furikake or toasted sesame", "Sauces and cupboard", 400, 20, 40, 15],
     "salsa": ["Salsa (jar)", "Sauces and cupboard", 35, 1, 7, 0.2],
+    "coconut-light": ["Light coconut milk", "Sauces and cupboard", 75, 0.7, 2.5, 7],
+    "green-curry-paste": ["Thai green curry paste", "Sauces and cupboard", 110, 2, 12, 6],
+    "curry-paste": ["Curry paste (tikka, jalfrezi or katsu)", "Sauces and cupboard", 150, 3, 15, 9],
+    "fish-sauce": ["Fish sauce", "Sauces and cupboard", 35, 5, 4, 0],
+    "peanuts": ["Roasted peanuts", "Sauces and cupboard", 590, 26, 13, 49],
+    "kidney-beans": ["Kidney beans (tin, drained)", "Sauces and cupboard", 100, 7, 15, 0.5],
+    "peri-peri": ["Peri-peri sauce", "Sauces and cupboard", 80, 1, 15, 2],
     "gravy": ["Gravy (made up)", "Sauces and cupboard", 30, 0.5, 5, 1]
   };
 
@@ -129,6 +144,63 @@ window.BB_DATA = (function () {
       ing: [["sushi-rice", 120], ["tuna", 150], ["light-mayo", 20], ["furikake", 5], ["edamame", 100]],
       prep: "make 3 tuna-mayo onigiri and wrap them",
       method: ["Mix tuna with light mayo.", "Shape 3 rice triangles around the filling with wet, salted hands.", "Roll edges in furikake; edamame on the side."] },
+
+
+    // ---- Gym-Gyal lunches ----
+    { id: "l-thai-beef-salad", slot: "lunch", name: "Thai beef salad", time: "15 min", tag: "Spicy",
+      ing: [["steak", 160], ["rice-noodles", 60], ["lettuce", 80], ["cucumber", 80], ["tomato", 60], ["onion", 20], ["lime", 30], ["fish-sauce", 15], ["honey", 5], ["peanuts", 10]],
+      prep: "sear and slice the steak, soak the noodles, mix the dressing in a jar",
+      method: ["Sear the steak hard, rest and slice thin.", "Dressing: lime juice, fish sauce, honey, chilli and garlic.", "Toss noodles, leaves, cucumber, tomato, red onion, mint and coriander with the beef; top with crushed peanuts."] },
+    { id: "l-caesar", slot: "lunch", name: "Chicken Caesar salad", time: "15 min",
+      ing: [["chicken-breast", 180], ["lettuce", 120], ["sourdough", 45], ["parmesan", 15], ["greek-yog", 50], ["light-mayo", 10], ["garlic", 2]],
+      prep: "grill the chicken, bake sourdough croutons, mix the dressing",
+      method: ["Grill the chicken and slice.", "Cube the sourdough and bake at 200°C for 8 minutes for croutons.", "Dressing: yoghurt, light mayo, garlic, lemon, parmesan and a little anchovy if you like.", "Toss with cos lettuce; dressing on the day."] },
+    { id: "l-satay-noodle", slot: "lunch", name: "Satay chicken noodle salad", time: "20 min", tag: "Asian",
+      ing: [["chicken-breast", 170], ["rice-noodles", 70], ["peanut-butter", 20], ["soy", 15], ["lime", 20], ["honey", 5], ["sriracha", 5], ["cucumber", 60], ["peppers", 60], ["beansprouts", 50]],
+      prep: "cook the chicken and noodles, make the satay sauce",
+      method: ["Poach or grill the chicken; shred.", "Satay: peanut butter, soy, lime, honey, sriracha and hot water to loosen.", "Toss cold noodles, veg and chicken with the sauce."] },
+    { id: "l-prawn-mango", slot: "lunch", name: "Prawn, mango and avocado bowl", time: "10 min", tag: "Spicy",
+      ing: [["prawns", 200], ["jasmine-rice", 50], ["mango", 100], ["avocado", 40], ["lettuce", 60], ["cucumber", 60], ["lime", 20], ["sriracha", 10], ["honey", 5]],
+      prep: "cook and portion the rice; dice mango and cucumber",
+      method: ["Rice in the base.", "Prawns, mango, cucumber and leaves on top.", "Dress with lime, sriracha and honey; add avocado on the day so it doesn't brown."] },
+    { id: "l-spicy-tuna-salad", slot: "lunch", name: "Spicy tuna rice salad", time: "10 min", tag: "Spicy",
+      ing: [["tuna", 200], ["sushi-rice", 60], ["sushi-vinegar", 10], ["light-mayo", 15], ["sriracha", 15], ["lettuce", 60], ["edamame", 80], ["cucumber", 60], ["furikake", 5]],
+      prep: "portion seasoned sushi rice; mix tuna with sriracha mayo on the day",
+      method: ["Season the rice with sushi vinegar.", "Mix tuna with light mayo and sriracha.", "Build over leaves with edamame and cucumber; finish with furikake."] },
+
+    // ---- Gym-Gyal dinners ----
+    { id: "d-thai-green-curry", slot: "dinner", name: "Thai green chicken curry", time: "25 min", tag: "Thai",
+      ing: [["chicken-thigh", 200], ["green-curry-paste", 30], ["coconut-light", 150], ["peppers", 60], ["broccoli", 60], ["fish-sauce", 10], ["lime", 15], ["jasmine-rice", 80]],
+      method: ["Fry the paste for a minute; add sliced thighs and seal.", "Pour in the coconut milk and a splash of water; simmer 12 minutes with the veg.", "Season with fish sauce and lime; basil if you have it. Serve with rice."] },
+    { id: "d-tikka", slot: "dinner", name: "Chicken tikka masala (lighter)", time: "35 min", tag: "Curry",
+      ing: [["chicken-breast", 200], ["greek-yog", 60], ["curry-paste", 25], ["onion", 50], ["garlic", 5], ["passata", 120], ["coconut-light", 60], ["jasmine-rice", 80]],
+      method: ["Marinate the chicken in yoghurt and half the paste; grill or air-fry at 220°C for 12 minutes.", "Soften onion and garlic, fry the rest of the paste, add passata and coconut milk; simmer 10 minutes.", "Blend smooth if you like, add the chicken. Serve with basmati."] },
+    { id: "d-jalfrezi", slot: "dinner", name: "Chicken jalfrezi", time: "30 min", tag: "Curry",
+      ing: [["chicken-breast", 200], ["curry-paste", 25], ["onion", 80], ["peppers", 100], ["chopped-tom", 150], ["olive-oil", 5], ["jasmine-rice", 80]],
+      method: ["Fry chunky onion and peppers hot so they char a little; set aside.", "Fry the paste, brown the chicken, add tomatoes and green chilli.", "Simmer 12 minutes, return the veg. Serve with basmati."] },
+    { id: "d-katsu-curry", slot: "dinner", name: "Chicken katsu curry", time: "35 min", tag: "Fakeaway",
+      ing: [["chicken-breast", 200], ["eggs", 25], ["panko", 30], ["olive-oil", 5], ["curry-paste", 20], ["onion", 50], ["coconut-light", 80], ["jasmine-rice", 80]],
+      method: ["Flatten the breast, egg and panko; air-fry at 200°C for 12–14 minutes.", "Sauce: soften onion and carrot, add katsu paste and coconut milk with water; simmer and blend.", "Slice the chicken over rice and pour the sauce alongside."] },
+    { id: "d-pad-thai", slot: "dinner", name: "Prawn and chicken pad thai", time: "20 min", tag: "Thai",
+      ing: [["rice-noodles", 80], ["prawns", 120], ["chicken-breast", 80], ["eggs", 50], ["beansprouts", 80], ["onion", 30], ["soy", 15], ["fish-sauce", 10], ["honey", 10], ["lime", 20], ["peanuts", 10]],
+      method: ["Soak the noodles until just soft.", "Wok the chicken, then prawns; push aside and scramble the egg.", "Add noodles with fish sauce, soy, honey and lime; toss with beansprouts and spring onion. Peanuts and chilli flakes on top."] },
+    { id: "d-thai-basil", slot: "dinner", name: "Thai basil beef with a fried egg", time: "15 min", tag: "Thai",
+      ing: [["beef-mince", 180], ["garlic", 10], ["peppers", 60], ["soy", 15], ["fish-sauce", 10], ["honey", 5], ["eggs", 50], ["jasmine-rice", 80]],
+      method: ["Pound garlic and bird's-eye chilli; fry in a hot wok.", "Add the mince and brown hard; peppers in.", "Soy, fish sauce and honey; a big handful of basil. Over rice with a crispy fried egg."] },
+    { id: "d-peri-peri", slot: "dinner", name: "Peri-peri chicken and spicy rice", time: "30 min", tag: "Fakeaway",
+      ing: [["chicken-thigh", 220], ["peri-peri", 30], ["jasmine-rice", 70], ["peppers", 60], ["corn", 80], ["greek-yog", 40]],
+      method: ["Marinate the thighs in peri-peri sauce; grill or air-fry at 200°C for 18 minutes.", "Spicy rice: cook rice with paprika, peppers and a stock cube.", "Corn on the side; yoghurt and garlic to dip."] },
+    { id: "d-burrito-bowl", slot: "dinner", name: "Chicken burrito bowl", time: "25 min", tag: "Spicy",
+      ing: [["chicken-breast", 180], ["jasmine-rice", 70], ["kidney-beans", 80], ["corn", 60], ["salsa", 60], ["lettuce", 40], ["greek-yog", 40], ["mozzarella", 20], ["lime", 15]],
+      method: ["Season the chicken with chipotle or fajita spice; grill and slice.", "Lime and coriander rice.", "Build with beans, corn, salsa, lettuce, a little cheese and yoghurt as soured cream."] },
+    { id: "d-chilli", slot: "dinner", name: "Beef chilli con carne", time: "40 min", tag: "Spicy",
+      ing: [["beef-mince", 180], ["kidney-beans", 100], ["chopped-tom", 200], ["onion", 60], ["peppers", 60], ["garlic", 5], ["jasmine-rice", 70], ["greek-yog", 40]],
+      prep: "batch-cook the chilli and portion it",
+      method: ["Brown the mince; soften onion, peppers and garlic.", "Add cumin, smoked paprika and chilli; tomatoes and beans.", "Simmer 30 minutes. Rice and a spoon of yoghurt."] },
+    { id: "d-massaman", slot: "dinner", name: "Beef massaman curry", time: "2 h (or batch)", tag: "Thai",
+      ing: [["beef-shin", 180], ["potatoes", 150], ["coconut-light", 120], ["curry-paste", 25], ["onion", 50], ["peanuts", 10], ["jasmine-rice", 50]],
+      prep: "slow-cook the massaman and portion it",
+      method: ["Brown the beef; fry the paste.", "Add coconut milk, water, onion and a little fish sauce and sugar; simmer low for 1½ hours.", "Add potato chunks for the last 30 minutes. Peanuts on top; a small portion of rice."] },
 
     // ---- Dinners ----
     { id: "d-ragu", slot: "dinner", name: "Beef ragù pappardelle", time: "20 min on the day", tag: "Italian",
@@ -226,33 +298,61 @@ window.BB_DATA = (function () {
       method: ["Roast the loin at 180°C to 63°C core; rest.", "Roast potatoes as usual.", "Quick apple sauce, greens and gravy."] }
   ];
 
-  // Options per weekday (0 = Sunday). First option is the default.
+  // Options per weekday (0 = Sunday), per app. First option is the default.
   const OPTIONS = {
-    dinner: {
-      1: ["d-ragu", "d-chicken-parm", "d-gyros", "d-honey-garlic"],
-      2: ["d-smash", "d-crispy-burger", "d-philly", "d-bbq-chicken"],
-      3: ["d-fried-rice", "d-beef-broccoli", "d-salt-pepper", "d-sweet-sour"],
-      4: ["d-doner", "d-shish", "d-kofta", "d-kebab-fries"],
-      5: ["d-bigmac", "d-pizza", "d-meatball-sub", "d-quesadilla"],
-      6: ["d-carbonara", "d-lasagne", "d-prawn-linguine", "d-steak-chips"],
-      0: ["d-roast-chicken", "d-roast-beef", "d-pasta-bake", "d-roast-pork"]
+    bro: {
+      dinner: {
+        1: ["d-ragu", "d-chicken-parm", "d-gyros", "d-honey-garlic"],
+        2: ["d-smash", "d-crispy-burger", "d-philly", "d-bbq-chicken"],
+        3: ["d-fried-rice", "d-beef-broccoli", "d-salt-pepper", "d-sweet-sour"],
+        4: ["d-doner", "d-shish", "d-kofta", "d-kebab-fries"],
+        5: ["d-bigmac", "d-pizza", "d-meatball-sub", "d-quesadilla"],
+        6: ["d-carbonara", "d-lasagne", "d-prawn-linguine", "d-steak-chips"],
+        0: ["d-roast-chicken", "d-roast-beef", "d-pasta-bake", "d-roast-pork"]
+      },
+      lunch: {
+        1: ["l-salmon-poke", "l-tuna-poke", "l-teriyaki"],
+        2: ["l-teriyaki", "l-shawarma", "l-bulgogi"],
+        3: ["l-bulgogi", "l-teriyaki", "l-prawn-egg"],
+        4: ["l-prawn-egg", "l-spicy-salmon", "l-shawarma"],
+        5: ["l-shawarma", "l-bulgogi", "l-tuna-poke"],
+        6: ["l-spicy-salmon", "l-salmon-poke", "l-prawn-egg"],
+        0: ["l-onigiri", "l-tuna-poke", "l-teriyaki"]
+      },
+      breakfast: {
+        1: ["bf-eggs", "bf-oats"], 2: ["bf-oats", "bf-eggs"], 3: ["bf-eggs", "bf-oats"], 4: ["bf-oats", "bf-eggs"],
+        5: ["bf-eggs", "bf-oats"], 6: ["bf-oats", "bf-eggs"], 0: ["bf-eggs", "bf-oats"]
+      }
     },
-    lunch: {
-      1: ["l-salmon-poke", "l-tuna-poke", "l-teriyaki"],
-      2: ["l-teriyaki", "l-shawarma", "l-bulgogi"],
-      3: ["l-bulgogi", "l-teriyaki", "l-prawn-egg"],
-      4: ["l-prawn-egg", "l-spicy-salmon", "l-shawarma"],
-      5: ["l-shawarma", "l-bulgogi", "l-tuna-poke"],
-      6: ["l-spicy-salmon", "l-salmon-poke", "l-prawn-egg"],
-      0: ["l-onigiri", "l-tuna-poke", "l-teriyaki"]
-    },
-    breakfast: {
-      1: ["bf-eggs", "bf-oats"], 2: ["bf-oats", "bf-eggs"], 3: ["bf-eggs", "bf-oats"], 4: ["bf-oats", "bf-eggs"],
-      5: ["bf-eggs", "bf-oats"], 6: ["bf-oats", "bf-eggs"], 0: ["bf-eggs", "bf-oats"]
+    gyal: {
+      dinner: {
+        1: ["d-thai-green-curry", "d-chicken-parm", "d-honey-garlic", "d-gyros"],
+        2: ["d-peri-peri", "d-crispy-burger", "d-burrito-bowl", "d-smash"],
+        3: ["d-pad-thai", "d-salt-pepper", "d-sweet-sour", "d-fried-rice"],
+        4: ["d-tikka", "d-jalfrezi", "d-shish", "d-doner"],
+        5: ["d-katsu-curry", "d-pizza", "d-quesadilla", "d-bigmac"],
+        6: ["d-thai-basil", "d-chilli", "d-prawn-linguine", "d-steak-chips"],
+        0: ["d-roast-chicken", "d-massaman", "d-roast-beef", "d-lasagne"]
+      },
+      lunch: {
+        1: ["l-thai-beef-salad", "l-salmon-poke", "l-teriyaki"],
+        2: ["l-caesar", "l-shawarma", "l-bulgogi"],
+        3: ["l-satay-noodle", "l-teriyaki", "l-prawn-egg"],
+        4: ["l-prawn-mango", "l-spicy-salmon", "l-shawarma"],
+        5: ["l-spicy-tuna-salad", "l-tuna-poke", "l-bulgogi"],
+        6: ["l-caesar", "l-thai-beef-salad", "l-salmon-poke"],
+        0: ["l-satay-noodle", "l-onigiri", "l-spicy-tuna-salad"]
+      },
+      breakfast: {
+        1: ["bf-eggs", "bf-oats"], 2: ["bf-oats", "bf-eggs"], 3: ["bf-eggs", "bf-oats"], 4: ["bf-oats", "bf-eggs"],
+        5: ["bf-eggs", "bf-oats"], 6: ["bf-oats", "bf-eggs"], 0: ["bf-eggs", "bf-oats"]
+      }
     }
   };
+  // Ingredients some people don't eat.
+  const TAGS = { pork: ["bacon", "pork-loin"] };
 
   const RECIPES = {};
   R.forEach(function (r) { RECIPES[r.id] = r; });
-  return { ING: ING, RECIPES: RECIPES, OPTIONS: OPTIONS };
+  return { ING: ING, RECIPES: RECIPES, OPTIONS: OPTIONS, TAGS: TAGS };
 })();

@@ -10,6 +10,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Gym-Bro</title>
+<script src="profile.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&display=swap">
@@ -140,6 +141,19 @@ nav.tabs button[aria-selected="true"]{color:var(--accent)}
 #timer.go .in{background:var(--ok);color:var(--surface)}
 .sync{font-size:12px;color:var(--muted)}
 .data-btns{display:flex;flex-wrap:wrap;gap:8px}
+#q-msg:empty,#sh-msg:empty{display:none}
+#sh-load{align-self:flex-start}
+.seg.wide{display:flex}
+.seg.wide button{flex:1}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+.share{gap:12px}
+.share textarea{width:100%;min-height:90px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--fg);font:13px ui-monospace,monospace;padding:8px}
+.share-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,180px);gap:10px;align-items:center;border-top:1px solid var(--line);padding-top:10px}
+.share-row b{display:block}
+.share-row small{display:block;font-size:12.5px;color:var(--muted)}
+.goal{margin:2px 0 0;font-size:14px;color:var(--muted)}
+.goal b{color:var(--accent)}
+@media (max-width:420px){.share-row{grid-template-columns:1fr}}
 .weigh .wrow{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
 .done-weigh{padding-block:10px}
 .done-weigh .wrow{align-items:center;font-size:14px}
@@ -210,12 +224,13 @@ nav.tabs button[aria-selected="true"]{color:var(--accent)}
 .method{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
+<script>(function(){var P=window.GB_PROFILE;if(!P)return;document.title=P.app;var m=document.createElement("meta");m.name="apple-mobile-web-app-title";m.content=P.app;document.head.appendChild(m);var m2=document.createElement("meta");m2.name="apple-mobile-web-app-capable";m2.content="yes";document.head.appendChild(m2);if(P.theme){var st=document.createElement("style");st.textContent=P.theme;document.head.appendChild(st)}if(P.themeColor){document.querySelectorAll('meta[name="theme-color"]').forEach(function(t){t.content=(t.media||"").indexOf("dark")>=0?P.themeColor.dark:P.themeColor.light})}})();</script>
 </head>
 <body>
 
 <header class="top">
   <div class="shell">
-    <div class="brand"><b>Gym-Bro</b><span id="status" class="num">Week 1 · Recomp · 2,750 kcal</span></div>
+    <div class="brand"><b id="brand-name">Gym-Bro</b><span id="status" class="num">Week 1 · Recomp · 2,750 kcal</span></div>
     <div class="seg" role="group" aria-label="Where you're training">
       <button id="m-gym" type="button" aria-pressed="true">Gym</button>
       <button id="m-home" type="button" aria-pressed="false">Home</button>
@@ -248,78 +263,44 @@ nav.tabs button[aria-selected="true"]{color:var(--accent)}
 "use strict";
 // ---------- Plan data ----------
 // [id, gym name, sets, lo, hi, home name, home lo, home hi, rest seconds, unit]
-const DAYS = {
-  1:{title:"Chest + back", focus:"Heavy bench and pull-ups, then chest and back size work", ex:[
-    ["bench","Barbell bench press",4,4,6,"DB floor press, 3-sec lowering",12,15,180,null,"H"],
-    ["pullup","Weighted pull-up",4,4,6,"Pull-ups or band pulldowns",6,12,180,null,"H"],
-    ["incline-press","Incline dumbbell press",3,8,12,"Incline DB press, 3-sec lowering",12,15,120],
-    ["row","Chest-supported row",3,8,12,"One-arm DB row",12,15,120],
-    ["fly","Cable fly",2,12,15,"DB fly on the floor",12,15,75],
-    ["lateral-mon","Lateral raise",3,12,20,"DB lateral raise, 5–10 kg",12,20,60]]},
-  2:{title:"Shoulders + arms", focus:"Heavy overhead press, then shoulders, traps and arms", ex:[
-    ["ohp","Standing overhead press",4,4,6,"Standing DB press",10,15,180,null,"H"],
-    ["shrug","Heavy barbell shrug",4,6,10,"DB shrug, 2-sec hold at top",20,25,120],
-    ["cable-lateral","Cable lateral raise",4,12,20,"DB lateral raise, leaning away",12,20,60],
-    ["cgbench","Close-grip bench press",3,6,10,"Diamond push-ups",10,20,120],
-    ["incline-curl","Incline dumbbell curl",3,8,12,"Incline dumbbell curl",10,15,75],
-    ["facepull","Face pull",3,15,20,"Band face pull or rear-delt fly",15,20,60],
-    ["neck-a","Neck curl + extension (each)",2,15,20,"Neck curl + extension, towel resistance",15,20,60]]},
-  3:{title:"Legs + deadlift", focus:"Heavy deadlift, then legs, grip, carries and an optional sled finisher", ex:[
-    ["deadlift","Deadlift (barbell or trap bar)",4,3,5,"DB Romanian deadlift",12,15,210,null,"H"],
-    ["squat","Back squat",3,6,8,"Goblet squat, 3-sec lowering",12,20,180],
-    ["bss","Bulgarian split squat",3,8,10,"Bulgarian split squat with DBs",10,12,120],
-    ["legcurl","Leg curl",2,10,12,"Single-leg glute bridge",12,15,75],
-    ["calf","Standing calf raise",3,12,15,"One-leg calf raise holding a DB",15,20,60],
-    ["carry","Heavy farmer's carry",4,30,40,"Farmer's carry, heaviest DBs",40,60,120,"m"],
-    ["sled","Sled push (optional)",4,20,20,"Walking lunges with DBs (optional)",20,20,90,"m"]]},
-  4:{rest:true, title:"Rest", focus:"8–10k steps, stretch, sleep"},
-  5:{title:"Chest + back", focus:"Heavy dips and rows, then chest, back and arms", ex:[
-    ["dips","Weighted dips",4,6,8,"Push-ups to failure",10,30,150,null,"H"],
-    ["bb-row","Barbell row",4,6,8,"One-arm DB row, heavy",8,12,150,null,"H"],
-    ["flat-db","Flat dumbbell press",3,8,12,"DB floor press, 3-sec lowering",12,15,120],
-    ["pulldown","Neutral-grip lat pulldown",3,10,12,"Band pulldowns or pull-ups",8,15,90],
-    ["pecdeck","Pec deck",2,12,15,"DB fly on the floor",12,15,60],
-    ["reardelt","Rear-delt fly",3,15,20,"Bent-over DB fly",15,20,60],
-    ["hammer","Hammer curl",2,10,15,"Hammer curl",12,15,60],
-    ["neck-b","Neck curl + extension (each)",2,15,20,"Neck curl + extension, towel resistance",15,20,60]]},
-  6:{title:"Shoulders + traps", focus:"Heavy rack pulls, then shoulders, traps and arms", ex:[
-    ["rackpull","Rack pull from the knee",3,5,5,"Heavy DB shrug, slow",15,20,180,null,"H"],
-    ["db-ohp","Seated dumbbell shoulder press",3,8,12,"Seated DB shoulder press",12,15,120],
-    ["lateral-myo","Lateral raise (myo-reps)",4,15,20,"DB lateral raise, lighter",15,20,60],
-    ["heavy-shrug","Dumbbell shrug",3,10,15,"DB shrug, slow",20,25,90],
-    ["upright","Wide-grip upright row",3,12,12,"DB upright row to lower chest",12,15,75],
-    ["ez-curl","EZ-bar curl",3,8,12,"DB curl, 3-sec lowering",10,15,75],
-    ["skull","Skull crusher",3,10,12,"DB skull crusher",12,15,75]]},
-  0:{rest:true, title:"Rest", focus:"8–10k steps, Sunday food prep"}
-};
+const P=window.GB_PROFILE;
+const DAYS=P.days;
 const ORDER=[1,2,3,4,5,6,0];
 const DNAME=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const DFULL=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 
 const CREATORS=[["Tasty Shreds","Tasty Shreds"],["Remington James","Remington James fakeaway"],["Will Tennyson","Will Tennyson fast food"],["Jalalsamfit","Jalalsamfit stealth health"],["The Protein Chef","The Protein Chef"]];
-const MAIN_LIFTS=[["bench","Bench press"],["ohp","Overhead press"],["deadlift","Deadlift"],["squat","Back squat"],["pullup","Pull-up (added kg)"],["dips","Dips (added kg)"],["bb-row","Barbell row"],["rackpull","Rack pull"]];
-const E1RM_LIFTS=[["bench","Bench"],["ohp","Overhead press"],["deadlift","Deadlift"],["squat","Squat"]];
+const MAIN_LIFTS=P.mainLifts;
+const E1RM_LIFTS=P.e1rm;
 const GUIDES=window.GB_GUIDES||{};
 
 // ---------- Food: recipes, choices, shopping, prep ----------
 const FD=window.BB_DATA||{ING:{},RECIPES:{},OPTIONS:{dinner:{},lunch:{},breakfast:{}}};
-const ING=FD.ING, RECIPES=FD.RECIPES, OPTS=FD.OPTIONS;
+const ING=FD.ING, RECIPES=FD.RECIPES, OPTS=(FD.OPTIONS&&FD.OPTIONS[P.menuSet])||{dinner:{},lunch:{},breakfast:{}}, TAGS=FD.TAGS||{};
+const CAT={"Protein":"p","Dairy and eggs":"p","Carbs":"c","Sauces and cupboard":"c","Fruit and veg":"v"};
+function scaleOf(i,sc){const n=ING[i];sc=sc||P.scales;return n?(sc[CAT[n[1]]]!=null?sc[CAT[n[1]]]:1):1}
+function excludedBy(id,ex){const r=RECIPES[id];if(!r)return true;return (ex||[]).some(t=>(TAGS[t]||[]).some(i=>r.ing.some(x=>x[0]===i)))}
+function allowedForMe(id){return !excludedBy(id,P.exclude)}
 const LIQUID={"milk":1,"skimmed-milk":1,"egg-whites":1,"gravy":1};
 const AISLES=["Protein","Carbs","Dairy and eggs","Fruit and veg","Sauces and cupboard"];
 const SLOTNAME={breakfast:"Breakfast",lunch:"Lunch",dinner:"Dinner",snack:"Snack"};
 const macroCache={};
 function macros(id){if(macroCache[id])return macroCache[id];const r=RECIPES[id];let k=0,p=0,c=0,f=0;
-  (r?r.ing:[]).forEach(([i,g])=>{const n=ING[i];if(!n)return;k+=n[2]*g/100;p+=n[3]*g/100;c+=n[4]*g/100;f+=n[5]*g/100});
+  (r?r.ing:[]).forEach(([i,g0])=>{const n=ING[i];if(!n)return;const g=g0*scaleOf(i);k+=n[2]*g/100;p+=n[3]*g/100;c+=n[4]*g/100;f+=n[5]*g/100});
   return macroCache[id]={k:Math.round(k),p:Math.round(p),c:Math.round(c),f:Math.round(f)}}
-function choice(slot,dow){if(slot==="snack")return "snack";const opts=(OPTS[slot]||{})[dow]||[];const c=get("menu",{});const v=c[slot+dow];return (v&&opts.indexOf(v)>=0)?v:opts[0]}
-function setChoice(slot,dow,id){const c=Object.assign({},get("menu",{}));c[slot+dow]=id;save("menu",c)}
+function choice(slot,dow){if(slot==="snack")return "snack";const opts=(OPTS[slot]||{})[dow]||[];const c=get("menu",{});const v=c[slot+dow];return (v&&RECIPES[v]&&RECIPES[v].slot===slot&&allowedForMe(v))?v:opts[0]}
+function setChoice(slot,dow,id,ts){const c=Object.assign({},get("menu",{}));c[slot+dow]=id;save("menu",c);const t=Object.assign({},get("menuT",{}));t[slot+dow]=ts||Date.now();save("menuT",t)}
+function optionsFor(slot,dow){const own=((OPTS[slot]||{})[dow]||[]).slice();const pt=partner();
+  if(slot!=="dinner"||!sameDinner()||!pt)return own;
+  const other=(((FD.OPTIONS[pt.set]||{}).dinner||{})[dow]||[]);const u=own.concat(other.filter(x=>own.indexOf(x)<0));
+  return u.filter(id=>!excludedBy(id,P.exclude)&&!excludedBy(id,pt.ex))}
 function dayMenu(dow){return ["breakfast","lunch","dinner","snack"].map(s=>({slot:s,id:choice(s,dow)}))}
 function dayTotals(dow){let k=0,p=0;dayMenu(dow).forEach(m=>{const x=macros(m.id);k+=x.k;p+=x.p});return {k:k,p:p}}
 function singular(w){return w.replace(/s$/,"")}
 function roundG(g){return g<20?Math.round(g):Math.round(g/5)*5}
 function amount(id,g){const n=ING[id];if(!n)return Math.round(g)+" g";
   if(n[6]){const cnt=g/n[6];const r=Math.round(cnt*2)/2;
-    if(Math.abs(cnt-Math.round(cnt))<0.1){const c=Math.round(cnt);return c+" "+(c===1?singular(n[7]):n[7])}
+    if(Math.abs(cnt-Math.round(cnt))<0.1&&Math.round(cnt)>0){const c=Math.round(cnt);return c+" "+(c===1?singular(n[7]):n[7])}
     return roundG(g)+" g (about "+r+" "+(r<=1?singular(n[7]):n[7])+")"}
   return roundG(g)+(LIQUID[id]?" ml":" g")}
 function shopAmount(id,g){const n=ING[id];
@@ -327,17 +308,22 @@ function shopAmount(id,g){const n=ING[id];
   const u=LIQUID[id]?["ml","L"]:["g","kg"];
   if(g>=1000)return (Math.ceil(g/100)/10).toFixed(1).replace(/\.0$/,"")+" "+u[1];
   return (g<50?Math.ceil(g/5)*5:Math.ceil(g/10)*10)+" "+u[0]}
+function partnerChoice(pt,slot,dow){if(slot==="snack")return "snack";if(slot==="dinner"&&sameDinner())return choice("dinner",dow);
+  const v=(pt.m||{})[slot+dow];const def=((((FD.OPTIONS[pt.set]||{})[slot])||{})[dow]||[])[0];return (v&&RECIPES[v]&&!excludedBy(v,pt.ex))?v:def}
 function shopList(){const agg={},uses={};
-  ORDER.forEach(d=>dayMenu(d).forEach(m=>{const r=RECIPES[m.id];if(!r)return;r.ing.forEach(([i,g])=>{agg[i]=(agg[i]||0)+g;(uses[i]=uses[i]||{})[r.name]=1})}));
+  const add=(id,sc)=>{const r=RECIPES[id];if(!r)return;r.ing.forEach(([i,g])=>{agg[i]=(agg[i]||0)+g*scaleOf(i,sc);(uses[i]=uses[i]||{})[r.name]=1})};
+  ORDER.forEach(d=>dayMenu(d).forEach(m=>add(m.id,P.scales)));
+  const pt=together()?partner():null;
+  if(pt)ORDER.forEach(d=>["breakfast","lunch","dinner","snack"].forEach(s=>add(partnerChoice(pt,s,d),pt.sc)));
   return AISLES.map(a=>[a,Object.keys(agg).filter(i=>ING[i]&&ING[i][1]===a).sort((x,y)=>ING[x][0]<ING[y][0]?-1:1).map(i=>({id:i,name:ING[i][0],amt:shopAmount(i,agg[i]),uses:Object.keys(uses[i])}))]).filter(x=>x[1].length)}
 function prepList(){const out=[];const days=[1,2,3,4,5,6];
   let sushi=0,jas=0;const lunches={};
-  days.forEach(d=>{const id=choice("lunch",d);const r=RECIPES[id];(lunches[id]=lunches[id]||[]).push(DNAME[d]);r.ing.forEach(([i,g])=>{if(i==="sushi-rice")sushi+=g;if(i==="jasmine-rice")jas+=g})});
+  days.forEach(d=>{const id=choice("lunch",d);const r=RECIPES[id];(lunches[id]=lunches[id]||[]).push(DNAME[d]);r.ing.forEach(([i,g])=>{if(i==="sushi-rice")sushi+=g*scaleOf(i);if(i==="jasmine-rice")jas+=g*scaleOf(i)})});
   if(sushi)out.push("Cook "+roundG(sushi)+" g dry sushi rice and season it"+(jas?", plus "+roundG(jas)+" g jasmine or basmati":"")+" for Monday to Saturday lunches");
   else if(jas)out.push("Cook "+roundG(jas)+" g dry jasmine or basmati for Monday to Saturday lunches");
   Object.keys(lunches).forEach(id=>{const r=RECIPES[id],n=lunches[id].length;
     const main=r.ing.find(([i])=>ING[i]&&ING[i][1]==="Protein"&&i!=="whey");
-    out.push(r.name+" × "+n+" ("+lunches[id].join(", ")+"): "+(r.prep||"portion into tubs")+(main?". That's "+amount(main[0],main[1]*n)+" "+ING[main[0]][0].toLowerCase():""))});
+    out.push(r.name+" × "+n+" ("+lunches[id].join(", ")+"): "+(r.prep||"portion into tubs")+(main?". That's "+amount(main[0],main[1]*n*scaleOf(main[0]))+" "+ING[main[0]][0].toLowerCase():""))});
   ORDER.forEach(d=>{const r=RECIPES[choice("dinner",d)];if(r&&r.prep)out.push(DFULL[d]+"'s "+r.name.toLowerCase()+": "+r.prep)});
   out.push("Tub up lunches with sauces in separate pots. Freeze Thursday to Saturday's; reheat rice until piping hot");
   return out}
@@ -354,7 +340,7 @@ const fmtN=n=>n.toLocaleString("en-GB");
 
 // ---------- Storage: this phone only ----------
 const cache={};
-const LS="banebuild:";
+const LS=P.storage;
 let storageOK=true;
 function lsGet(k){try{const v=localStorage.getItem(LS+k);return v?JSON.parse(v):null}catch(e){return null}}
 function lsSet(k,v){try{localStorage.setItem(LS+k,JSON.stringify(v));storageOK=true}catch(e){storageOK=false}}
@@ -375,8 +361,8 @@ function settings(){return get("settings",{mode:"gym",start:null})}
 function mode(){return settings().mode||"gym"}
 function startDate(){return settings().start||TODAY}
 function weekNo(){const days=Math.floor((parse(TODAY)-parse(startDate()))/864e5);return Math.max(1,Math.floor(days/7)+1)}
-function phase2(){return weekNo()>12}
-function kcalTarget(){return phase2()?3200:2750}
+function phase(){const w=weekNo();return P.phases.find(x=>x.until==null||w<=x.until)||P.phases[P.phases.length-1]}
+function kcalTarget(){return phase().kcal}
 function exKey(id){return "ex-"+id+"-"+mode()}
 function hist(id){return get(exKey(id),{h:[]}).h||[]}
 function todayEntry(id,sets){const h=hist(id);let e=h.find(x=>x.d===TODAY);if(!e){e={d:TODAY,sets:Array.from({length:sets},()=>({w:"",r:"",done:false}))}}return e}
@@ -391,7 +377,7 @@ function repsLabel(x){return x.unit==="m"?(x.lo===x.hi?x.lo+" m":x.lo+"–"+x.hi
 function restLabel(s){if(s<120)return s+" s";const m=s/60;return (Number.isInteger(m)?m:m.toFixed(1))+" min"}
 
 function renderStatus(){
-  $("#status").textContent="Week "+weekNo()+" · "+(phase2()?"Lean bulk":"Recomp")+" · "+fmtN(kcalTarget())+" kcal";
+  $("#status").textContent="Week "+weekNo()+" · "+phase().name+" · "+fmtN(kcalTarget())+" kcal";$("#brand-name").textContent=P.app;
   $("#m-gym").setAttribute("aria-pressed",mode()==="gym");$("#m-home").setAttribute("aria-pressed",mode()==="home");
   document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===tab));
 }
@@ -441,16 +427,16 @@ function mealsBlock(dow,interactive){
       '<div class="meal-main"><div class="lbl">'+SLOTNAME[m.slot]+'</div><button type="button" class="linkish" data-recipe="'+m.id+'" data-dow="'+dow+'" data-slot="'+m.slot+'">'+esc(r?r.name:"")+'</button>'+
       (m.slot!=="snack"?'<button type="button" class="swap" data-swap="'+m.slot+'" data-dow="'+dow+'">Swap</button>':'')+'</div>'+
       '<div class="k num">'+x.k+' kcal<br>'+x.p+' g P</div></div>'}).join("");
-  const tot=dayTotals(dow), tgtK=kcalTarget(), tgtP=200;
+  const tot=dayTotals(dow), tgtK=kcalTarget(), tgtP=P.protein;
   const meters=interactive?'<div class="totals"><div class="meter"><div class="row"><span>Calories</span><span class="num"><b>'+fmtN(kc)+'</b> / '+fmtN(tgtK)+'</span></div><div class="bar"><i style="width:'+Math.min(100,kc/tgtK*100)+'%"></i></div></div>'+
     '<div class="meter"><div class="row"><span>Protein</span><span class="num"><b>'+pr+'</b> / '+tgtP+' g</span></div><div class="bar"><i style="width:'+Math.min(100,pr/tgtP*100)+'%"></i></div></div></div>':'';
-  return '<section class="card">'+meters+'<div>'+rows+'</div><p class="rest-note num">This menu: '+fmtN(tot.k)+' kcal · '+tot.p+' g protein. Tap a meal for its recipe.'+(phase2()?' Phase 2: add about 450 kcal a day, mostly rice, pasta and oats.':'')+'</p></section>';
+  return '<section class="card">'+meters+'<div>'+rows+'</div><p class="rest-note num">This menu: '+fmtN(tot.k)+' kcal · '+tot.p+' g protein. Tap a meal for its recipe.'+(phase().mealNote?' '+esc(phase().mealNote):'')+'</p></section>';
 }
 
 function renderToday(){
   const dow=new Date().getDay(), D=DAYS[dow];
   let h='<div><div class="eyebrow">'+DFULL[dow]+' · '+fmtDate(TODAY)+'</div><h1 class="day">'+esc(D.title)+'</h1><p class="lead">'+esc(D.focus)+'</p></div>';
-  if(weekNo()===12||weekNo()===13){h+='<div class="banner"><b>Checkpoint:</b> week 12 is here. Check your waist and switch to the lean bulk at about 3,200 kcal.</div>'}
+  if(P.banner&&P.banner.weeks.indexOf(weekNo())>=0){h+='<div class="banner">'+P.banner.text+'</div>'}
   h+=weighInCard();
   if(D.rest){
     const nx=ORDER[(ORDER.indexOf(dow)+1)%7];
@@ -470,7 +456,7 @@ function renderWeek(){
   let body='<div><div class="eyebrow">'+DFULL[weekSel]+'</div><h1 class="day">'+esc(D.title)+'</h1><p class="lead">'+esc(D.focus)+'</p></div>';
   if(!D.rest){body+='<section class="card"><ul class="list">'+D.ex.map(e=>{const x=exRow(e);return '<li><span>'+esc(x.name)+'</span><span class="num">'+x.sets+' × '+repsLabel(x)+'</span></li>'}).join("")+'</ul></section>'}
   body+='<h2 class="sec">Food</h2>'+mealsBlock(weekSel,false);
-  return '<div><div class="eyebrow">This week</div><h1 class="day">5 sessions</h1><p class="lead">Push, pull, legs, then shoulders and arms, then chest and traps.</p></div>'+strip+body;
+  return '<div><div class="eyebrow">This week</div><h1 class="day">'+esc(P.weekIntro.title)+'</h1><p class="lead">'+esc(P.weekIntro.lead)+'</p></div>'+strip+body;
 }
 
 function recipeBtn(id,dow,slot){const r=RECIPES[id],x=macros(id);return '<button type="button" class="rrow" data-recipe="'+id+'"'+(dow!=null?' data-dow="'+dow+'" data-slot="'+slot+'"':'')+'><span>'+esc(r.name)+(r.tag?' <em>'+esc(r.tag)+'</em>':'')+'</span><span class="num">'+x.k+' kcal · '+x.p+' g P</span></button>'}
@@ -479,7 +465,7 @@ function renderFood(){
   const chk=(key,label,sub)=>'<div class="check'+(shop[key]?' on':'')+'" data-shop="'+esc(key)+'" role="checkbox" tabindex="0" aria-checked="'+!!shop[key]+'"><span class="box" aria-hidden="true" style="'+(shop[key]?'background:var(--ok);border-color:var(--ok)':'')+'">✓</span><span>'+label+(sub?'<small class="uses">'+esc(sub)+'</small>':'')+'</span></div>';
   const menu=ORDER.map(d=>{const tot=dayTotals(d);return '<div class="mday"><div class="mday-h"><b>'+DFULL[d]+'</b><span class="num">'+fmtN(tot.k)+' kcal · '+tot.p+' g P</span></div>'+
     ["lunch","dinner"].map(s=>{const id=choice(s,d);return '<div class="mrow"><span class="lbl">'+SLOTNAME[s]+'</span><button type="button" class="linkish" data-recipe="'+id+'" data-dow="'+d+'" data-slot="'+s+'">'+esc(RECIPES[id].name)+'</button><button type="button" class="swap" data-swap="'+s+'" data-dow="'+d+'">Swap</button></div>'}).join("")+'</div>'}).join("");
-  const all=id=>Object.keys(RECIPES).filter(k=>RECIPES[k].slot===id);
+  const all=id=>Object.keys(RECIPES).filter(k=>RECIPES[k].slot===id&&allowedForMe(k));
   const lib='<details class="card lib"><summary>Dinners ('+all("dinner").length+')</summary>'+all("dinner").map(i=>recipeBtn(i)).join("")+'</details>'+
     '<details class="card lib"><summary>Lunch bowls ('+all("lunch").length+')</summary>'+all("lunch").map(i=>recipeBtn(i)).join("")+'</details>'+
     '<details class="card lib"><summary>Breakfast and snack</summary>'+all("breakfast").concat(all("snack")).map(i=>recipeBtn(i)).join("")+'</details>';
@@ -487,8 +473,9 @@ function renderFood(){
   const prep=prepList().map((p,i)=>chk("p:"+p,(i+1)+". "+esc(p))).join("");
   return '<div><div class="eyebrow">Food</div><h1 class="day">This week’s menu</h1><p class="lead">Swap any lunch or dinner. The shopping list and Sunday prep update to match.</p></div>'+
     '<section class="card">'+menu+'</section>'+
+    '<h2 class="sec">Share with your partner</h2>'+shareCard()+
     '<h2 class="sec">Recipes</h2>'+lib+
-    '<h2 class="sec">Shopping list</h2><section class="card"><p class="rest-note">Totals for all 7 days of your current menu. Check the cupboard items before you buy.</p>'+lists+'</section>'+
+    '<h2 class="sec">Shopping list</h2><section class="card"><p class="rest-note">'+(together()?'<b>Together:</b> your 7 days plus '+esc(partner().who)+'’s, at each person’s portions. ':'Totals for all 7 days of your current menu. ')+'Check the cupboard items before you buy.</p>'+lists+'</section>'+
     '<h2 class="sec">Sunday prep</h2><section class="card">'+prep+'<p class="rest-note">Shopping and prep ticks clear themselves every Monday.</p><button type="button" class="btn ghost small" id="clear-shop" style="align-self:flex-start">Clear ticks now</button></section>'+
     '<h2 class="sec">Recipe creators</h2><div class="links">'+CREATORS.map(c=>'<a href="https://www.youtube.com/results?search_query='+encodeURIComponent(c[1])+'" target="_blank" rel="noopener">'+esc(c[0])+'</a>').join("")+'</div>'+
     '<p class="rest-note">Swaps that matter: air fryer, 5% mince or chicken, light mayo and yoghurt sauces, measured oil.</p>';
@@ -501,20 +488,23 @@ function closeSheet(){sheet=null;$("#sheet").hidden=true;document.body.style.ove
 function renderSheet(){if(!sheet)return;const T=$("#sheet-title"),B=$("#sheet-body");
   if(sheet.mode==="swap"){const cur=choice(sheet.slot,sheet.dow);
     T.textContent=DFULL[sheet.dow]+" "+SLOTNAME[sheet.slot].toLowerCase();
-    B.innerHTML='<p class="rest-note">Pick one. Your shopping list and prep update straight away.</p>'+OPTS[sheet.slot][sheet.dow].map(id=>{const r=RECIPES[id],x=macros(id),on=id===cur;
+    B.innerHTML='<p class="rest-note">Pick one. Your shopping list and prep update straight away.'+(sheet.slot==="dinner"&&sameDinner()&&partner()?' Same dinner is on: this list has both your options, and '+esc(partner().who)+' gets your pick next time you share menus.':'')+'</p>'+optionsFor(sheet.slot,sheet.dow).map(id=>{const r=RECIPES[id],x=macros(id),on=id===cur;
       return '<div class="opt'+(on?' on':'')+'"><div class="opt-top"><b>'+esc(r.name)+'</b>'+(on?'<span class="chip ok">Current</span>':'')+'</div>'+
         '<div class="opt-meta num">'+x.k+' kcal · '+x.p+' g protein · '+x.c+' g carbs · '+x.f+' g fat'+(r.time?' · '+esc(r.time):'')+'</div>'+
         '<div class="data-btns">'+(on?'':'<button type="button" class="btn small" data-choose="'+id+'">Choose</button>')+'<button type="button" class="btn ghost small" data-recipe="'+id+'" data-dow="'+sheet.dow+'" data-slot="'+sheet.slot+'" data-from="swap">Recipe</button></div></div>'}).join("");
     return}
-  const r=RECIPES[sheet.id], x=macros(sheet.id), s=sheet.serv||1;
+  const r=RECIPES[sheet.id], x=macros(sheet.id), s=sheet.serv||1, pt=partner(), both=!!(pt&&sameDinner()&&r.slot==="dinner"&&!excludedBy(r.id,pt.ex));
   T.textContent=r.name;
-  const canUse=sheet.dow!=null&&sheet.slot&&sheet.slot!=="snack"&&(OPTS[sheet.slot][sheet.dow]||[]).indexOf(r.id)>=0&&choice(sheet.slot,sheet.dow)!==r.id;
+  const canUse=sheet.dow!=null&&sheet.slot&&sheet.slot!=="snack"&&optionsFor(sheet.slot,sheet.dow).indexOf(r.id)>=0&&choice(sheet.slot,sheet.dow)!==r.id;
   B.innerHTML=(sheet.from==="swap"?'<button type="button" class="btn ghost small" data-back>‹ Back to options</button>':'')+
     '<div class="rmeta">'+[r.time,r.tag,SLOTNAME[r.slot]].filter(Boolean).map(esc).join(" · ")+'</div>'+
     '<div class="tiles num"><div><b>'+x.k+'</b><span>kcal</span></div><div><b>'+x.p+' g</b><span>protein</span></div><div><b>'+x.c+' g</b><span>carbs</span></div><div><b>'+x.f+' g</b><span>fat</span></div></div>'+
-    '<p class="rest-note">Per serving, worked out from the weights below. Raw weights unless stated; rice and pasta are dry.</p>'+
+    '<p class="rest-note">Your portion, worked out from the weights below. Raw weights unless stated; rice and pasta are dry.</p>'+
     '<div class="serv"><span>Servings</span><button type="button" class="btn ghost small" data-serv="-1" aria-label="Fewer servings">−</button><b class="num">'+s+'</b><button type="button" class="btn ghost small" data-serv="1" aria-label="More servings">+</button></div>'+
-    '<h3 class="rh">Ingredients</h3><ul class="list ing">'+r.ing.map(([i,g])=>'<li><span>'+esc(ING[i]?ING[i][0]:i)+'</span><span class="num">'+esc(amount(i,g*s))+'</span></li>').join("")+'</ul>'+
+    (both?'<p class="rest-note">Same dinner: amounts for you and '+esc(pt.who)+'. Cook the total.</p>':'')+
+    '<h3 class="rh">Ingredients</h3><ul class="list ing">'+r.ing.map(([i,g])=>both?
+      '<li><span>'+esc(ING[i]?ING[i][0]:i)+'<small class="uses">You '+esc(amount(i,g*s*scaleOf(i)))+' · '+esc(pt.who)+' '+esc(amount(i,g*s*scaleOf(i,pt.sc)))+'</small></span><span class="num">'+esc(amount(i,g*s*(scaleOf(i)+scaleOf(i,pt.sc))))+'</span></li>':
+      '<li><span>'+esc(ING[i]?ING[i][0]:i)+'</span><span class="num">'+esc(amount(i,g*s*scaleOf(i)))+'</span></li>').join("")+'</ul>'+
     '<h3 class="rh">Method</h3><ol class="method">'+r.method.map(m=>'<li>'+esc(m)+'</li>').join("")+'</ol>'+
     (r.prep?'<p class="banner"><b>Sunday prep:</b> '+esc(r.prep)+'.</p>':'')+
     (canUse?'<button type="button" class="btn" data-choose="'+r.id+'">Use for '+DFULL[sheet.dow]+' '+SLOTNAME[sheet.slot].toLowerCase()+'</button>':'');
@@ -562,8 +552,7 @@ function saveBody(d,w,wa){const all=get("progress",{e:[]}).e||[];const old=all.f
   ensureStart();save("progress",{e:pr.sort((a,b)=>a.d<b.d?-1:1).slice(-800)})}
 function weekStatus(){const wa=weekAvgs();if(wa.length<2)return null;const a=wa[wa.length-2],b=wa[wa.length-1];if(b.n<3||a.n<3)return {a:a,b:b,chg:Math.round((b.avg-a.avg)*10)/10,cls:"muted",txt:"Needs 3+ weigh-ins in both weeks"};
   const c=Math.round((b.avg-a.avg)*10)/10;let cls="ok",txt="On track";
-  if(!phase2()){if(c>-0.2){cls="warn";txt="Slower than target"}else if(c<-0.8){cls="warn";txt="Faster than target: eat a little more"}}
-  else{if(c<0.1){cls="warn";txt="Not gaining yet"}else if(c>0.5){cls="warn";txt="Gaining fast: trim portions"}}
+  const ph=phase();if(c>ph.trend[1]){cls="warn";txt=ph.high}else if(c<ph.trend[0]){cls="warn";txt=ph.low}
   return {a:a,b:b,chg:c,cls:cls,txt:txt}}
 function weighInCard(){const all=bodyEntries();const t=all.find(x=>x.d===TODAY);const wa=weekAvgs();const cur=wa.length?wa[wa.length-1]:null;
   const isSun=new Date().getDay()===0;const needWaist=isSun&&!(t&&t.waist!=null);
@@ -577,7 +566,7 @@ function renderProgress(){
   const pr=get("progress",{e:[]}).e||[];
   const sorted=pr.slice().sort((a,b)=>a.d<b.d?-1:1);
   const first=sorted[0], last=sorted[sorted.length-1];
-  let h='<div><div class="eyebrow">Progress · week '+weekNo()+' of 12</div><h1 class="day">'+(phase2()?"Lean bulk":"Recomp")+'</h1><p class="lead">Weigh in every morning and measure your waist every Sunday. The app averages your weight by week, so daily ups and downs don’t matter. Waist down with lifts up means it’s working.</p></div>';
+  let h='<div><div class="eyebrow">Progress · week '+weekNo()+(P.planWeeks&&weekNo()<=P.planWeeks?' of '+P.planWeeks:'')+'</div><h1 class="day">'+esc(phase().name)+'</h1><p class="lead">Weigh in every morning and measure your waist every Sunday. The app averages your weight by week, so daily ups and downs don’t matter. Waist down with lifts up means it’s working.</p></div>';
   h+='<section class="card"><div class="form">'+
     '<label for="p-date">Date<input id="p-date" type="date" value="'+TODAY+'"></label>'+
     '<label for="p-w">Weight (kg)<input id="p-w" type="number" inputmode="decimal" step="0.1" placeholder="'+(last&&last.w?last.w:"e.g. 95.0")+'"></label>'+
@@ -587,17 +576,19 @@ function renderProgress(){
   const wks=weekAvgs(), st=weekStatus(), wkp=wks.map(x=>({d:x.wk,v:x.avg}));
   const stat=wks.length?'<div class="wstats num"><div><span>This week</span><b>'+wks[wks.length-1].avg+' kg</b><small>'+wks[wks.length-1].n+' weigh-in'+(wks[wks.length-1].n===1?'':'s')+'</small></div>'+
     (st?'<div><span>Last week</span><b>'+st.a.avg+' kg</b><small>'+st.a.n+' weigh-ins</small></div><div><span>Change</span><b>'+(st.chg>0?"+":"")+st.chg+' kg</b><small class="chip '+st.cls+'">'+esc(st.txt)+'</small></div>':'')+'</div>':'';
-  h+='<h2 class="sec">Weight (weekly average)</h2><section class="card chart">'+stat+(wkp.length>=2?lineChart(wkp,"Weekly average weight in kg",1)+'<p class="rest-note">Each point is one week\u2019s average, dated from its Monday. Target: '+(phase2()?'up 0.1–0.4 kg a week':'down 0.25–0.5 kg a week')+'.</p>':'<p class="empty">Weigh in each morning. Your weekly average line starts after two weeks.</p>')+'</section>';
+  const goal=P.goalWeight&&wks.length?'<p class="goal num"><b>Goal '+P.goalWeight+' kg</b> · '+Math.max(0,Math.round((wks[wks.length-1].avg-P.goalWeight)*10)/10)+' kg to go</p>':'';
+  h+='<h2 class="sec">Weight (weekly average)</h2><section class="card chart">'+stat+goal+(wkp.length>=2?lineChart(wkp,"Weekly average weight in kg",1)+'<p class="rest-note">Each point is one week\u2019s average, dated from its Monday. Target: '+esc(phase().trendText)+'.</p>':'<p class="empty">Weigh in each morning. Your weekly average line starts after two weeks.</p>')+'</section>';
   h+='<h2 class="sec">Waist</h2><section class="card chart">'+(cp.length>=2?lineChart(cp,"Waist in cm",1)+'<p class="rest-note num">'+cp[0].v.toFixed(1)+' → '+cp[cp.length-1].v.toFixed(1)+' cm ('+((cp[cp.length-1].v-cp[0].v)>=0?"+":"")+(cp[cp.length-1].v-cp[0].v).toFixed(1)+')</p>':'<p class="empty">Measure at the navel, relaxed, every Sunday. Two entries draw the line.</p>')+'</section>';
   // checkpoints
   const waistDrop=(cp.length>=2)?cp[0].v-cp[cp.length-1].v:null;
-  const cps=[[4,2,"Waist down 2 cm, weight down 1–2 kg"],[8,3,"Waist down 3–4 cm, dumbbells feel light"],[12,5,"Waist down 5–8 cm, around 92–94 kg. Switch to lean bulk"]];
+  const wDrop=wks.length>=2?wks[0].avg-wks[wks.length-1].avg:null;
+  const cps=P.checkpoints;
   h+='<h2 class="sec">Checkpoints</h2><section class="card">'+cps.map(c=>{
     const wk=weekNo(); let chip;
-    if(waistDrop!=null&&waistDrop>=c[1])chip='<span class="chip ok">Hit</span>';
+    if((c[1]!=null&&waistDrop!=null&&waistDrop>=c[1])||(c[2]!=null&&wDrop!=null&&wDrop>=c[2]))chip='<span class="chip ok">Hit</span>';
     else if(wk<c[0])chip='<span class="chip muted">Week '+c[0]+'</span>';
     else chip='<span class="chip warn">Not yet</span>';
-    return '<div class="cp"><span class="w num">WK '+c[0]+'</span><span>'+esc(c[2])+'</span>'+chip+'</div>'}).join("")+'</section>';
+    return '<div class="cp"><span class="w num">WK '+c[0]+'</span><span>'+esc(c[3])+'</span>'+chip+'</div>'}).join("")+'</section>';
   // lifts
   const rows=MAIN_LIFTS.map(l=>{const hh=hist(l[0]).filter(e=>bestSet(e));if(!hh.length)return null;const a=bestSet(hh[0]),b=bestSet(hh[hh.length-1]);
     return '<tr><td>'+esc(l[1])+'</td><td class="num">'+a.w+' × '+a.r+'</td><td class="num">'+b.w+' × '+b.r+'</td><td class="num">'+(b.w-a.w>=0?"+":"")+(b.w-a.w)+' kg</td></tr>'}).filter(Boolean);
@@ -680,13 +671,61 @@ $("#view").addEventListener("click",ev=>{
 $("#view").addEventListener("keydown",ev=>{const sh=ev.target.closest("[data-shop]");if(sh&&(ev.key===" "||ev.key==="Enter")){ev.preventDefault();toggleShop(sh.dataset.shop)}});
 function toggleShop(k){const s={t:Object.assign({},shopState().t),wk:THIS_MONDAY};s.t[k]=!s.t[k];if(!s.t[k])delete s.t[k];save("shop",s);const y=window.scrollY;render();window.scrollTo(0,y)}
 
+// ---------- Sharing menus with a partner ----------
+function partner(){return get("partner",null)}
+function shareSet(){return get("shareset",{together:false,same:false})}
+function together(){return !!shareSet().together&&!!partner()}
+function sameDinner(){return !!shareSet().same&&!!partner()}
+function b64e(t){return btoa(unescape(encodeURIComponent(t)))}
+function b64d(t){return decodeURIComponent(escape(atob(t)))}
+function menuCode(){const m={};["breakfast","lunch","dinner"].forEach(sl=>ORDER.forEach(d=>{m[sl+d]=choice(sl,d)}));
+  const body={v:1,who:P.person,app:P.app,set:P.menuSet,sc:P.scales,ex:P.exclude,m:m,t:get("menuT",{}),at:Date.now()};
+  return "GYMMENU:"+b64e(JSON.stringify(body))}
+function shareMessage(){return P.app+" menu from "+P.person+". Open your app, go to Food, tap Paste partner's menu.\n\n"+menuCode()}
+function loadCode(text){const mt=String(text||"").match(/GYMMENU:([A-Za-z0-9+/=]+)/);if(!mt)return {err:"No menu code found. Copy the whole message your partner sent, then try again."};
+  let j;try{j=JSON.parse(b64d(mt[1]))}catch(e){return {err:"That code is incomplete. Ask your partner to copy their menu again."}}
+  if(!j||!j.m||!j.set)return {err:"That code isn't a menu code."};
+  if(j.app===P.app&&j.who===P.person)return {err:"That's your own menu. Paste the code your partner sent you."};
+  const pt={who:j.who||"Partner",app:j.app,set:j.set,sc:j.sc||{p:1,c:1,v:1},ex:j.ex||[],m:j.m,t:j.t||{},at:j.at||Date.now(),got:TODAY};
+  save("partner",pt);
+  let moved=0;
+  if(shareSet().same){const mine=get("menuT",{});ORDER.forEach(d=>{const k="dinner"+d,id=pt.m[k],tt=pt.t[k]||0;
+    if(id&&tt>(mine[k]||0)&&RECIPES[id]&&allowedForMe(id)&&choice("dinner",d)!==id){setChoice("dinner",d,id,tt);moved++}})}
+  return {ok:true,who:pt.who,moved:moved}}
+function shareCard(){const pt=partner(),ss=shareSet();
+  const status=pt?'<p class="rest-note">'+esc(pt.who)+'’s menu loaded '+fmtDate(pt.got)+'. Paste again whenever they change it.</p>':'<p class="rest-note">Send your menu with Copy my menu, then paste the code your partner sends back. Nothing is shared until you do.</p>';
+  const seg=(id,on,a,b,dis)=>'<div class="seg wide" role="group"><button type="button" data-ss="'+id+'" data-v="0" aria-pressed="'+!on+'"'+(dis?' disabled':'')+'>'+a+'</button><button type="button" data-ss="'+id+'" data-v="1" aria-pressed="'+on+'"'+(dis?' disabled':'')+'>'+b+'</button></div>';
+  return '<section class="card share">'+
+    '<div class="data-btns"><button type="button" class="btn" id="sh-copy">Copy my menu</button><button type="button" class="btn ghost" id="sh-paste">Paste partner’s menu</button></div>'+
+    '<textarea id="sh-text" hidden aria-label="Paste your partner’s menu code here" placeholder="Paste the message here"></textarea>'+
+    '<button type="button" class="btn small" id="sh-load" hidden>Load menu</button>'+
+    '<p class="rest-note" id="sh-msg" aria-live="polite"></p>'+status+
+    '<div class="share-row"><span><b>Shopping list</b><small>'+(pt?'Together adds '+esc(pt.who)+'’s week to yours, for one shop.':'Load a partner’s menu to shop together.')+'</small></span>'+seg("together",!!(ss.together&&pt),"Just mine","Together",!pt)+'</div>'+
+    '<div class="share-row"><span><b>Same dinner</b><small>'+(pt?'Dinners match. Whoever changed a dinner most recently wins when you share. Recipes show both portions.':'Load a partner’s menu first.')+'</small></span>'+seg("same",!!(ss.same&&pt),"Off","On",!pt)+'</div>'+
+    '</section>'}
+$("#view").addEventListener("click",async ev=>{
+  const id=ev.target.id;
+  if(id==="sh-copy"){const t=shareMessage();
+    try{await navigator.clipboard.writeText(t);$("#sh-msg").textContent="Copied. Paste it into WhatsApp or Messages to your partner."}
+    catch(e){const ta=$("#sh-text");ta.hidden=false;ta.readOnly=true;ta.value=t;ta.focus();ta.select();$("#sh-msg").textContent="Your phone blocked copying. The message is selected above: long-press and choose Copy."}
+    return}
+  if(id==="sh-paste"){let t="";try{t=await navigator.clipboard.readText()}catch(e){}
+    if(t&&/GYMMENU:/.test(t)){finishLoad(t);return}
+    const ta=$("#sh-text");ta.hidden=false;ta.readOnly=false;ta.value="";$("#sh-load").hidden=false;ta.focus();$("#sh-msg").textContent="Long-press the box, choose Paste, then tap Load menu.";return}
+  if(id==="sh-load"){finishLoad($("#sh-text").value);return}
+  const sb=ev.target.closest("[data-ss]");
+  if(sb&&!sb.disabled){const ss=Object.assign({},shareSet());ss[sb.dataset.ss]=sb.dataset.v==="1";save("shareset",ss);const y=window.scrollY;render();window.scrollTo(0,y);return}
+});
+function finishLoad(t){const r=loadCode(t);if(r.err){const m=$("#sh-msg");if(m)m.textContent=r.err;return}
+  const y=window.scrollY;render();window.scrollTo(0,y);const m=$("#sh-msg");if(m)m.textContent=r.who+"’s menu loaded."+(r.moved?" "+r.moved+" dinner"+(r.moved>1?"s":"")+" updated to match.":"")}
+
 // ---------- Your data: copy, backup, restore ----------
 function exName(e,m){return m==="home"?e[5]:e[1]}
 function exTarget(e,m){const lo=m==="home"?e[6]:e[3],hi=m==="home"?e[7]:e[4];return e[2]+"x"+(lo===hi?lo:lo+"-"+hi)+(e[9]==="m"?" m":"")}
 function buildSummary(){
   const L=[];
-  L.push("GYM-BRO DATA (exported "+TODAY+")");
-  L.push("Plan start "+startDate()+" | week "+weekNo()+" | "+(phase2()?"Phase 2 lean bulk":"Phase 1 recomp")+" | target "+kcalTarget()+" kcal, 200 g protein | currently training at "+mode());
+  L.push(P.app.toUpperCase()+" DATA (exported "+TODAY+")");
+  L.push("Plan start "+startDate()+" | week "+weekNo()+" | "+phase().label+" | target "+kcalTarget()+" kcal, "+P.protein+" g protein | currently training at "+mode());
   const pr=(get("progress",{e:[]}).e||[]).slice().sort((a,b)=>a.d<b.d?-1:1);
   L.push("");L.push("WEEKLY AVERAGE WEIGHT (week starting, kg, weigh-ins)");const wa=weekAvgs();if(wa.length)wa.forEach(x=>L.push(x.wk+", "+x.avg+", "+x.n));else L.push("No weigh-ins yet");
   L.push("");L.push("BODY, DAILY (date, weight kg, waist cm)");
@@ -715,9 +754,9 @@ $("#view").addEventListener("click",async ev=>{
     catch(e){const ta=$("#d-text");ta.hidden=false;ta.value=text;ta.focus();ta.select();msg("Your phone blocked copying. The text is selected above: long-press and choose Copy.")}
     return}
   if(id==="d-backup"){const data=allData();delete data.backup;
-    const blob=new Blob([JSON.stringify({app:"gym-bro",v:1,exported:TODAY,data:data},null,1)],{type:"application/json"});
-    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="gym-bro-backup-"+TODAY+".json";document.body.appendChild(a);a.click();a.remove();
-    setTimeout(()=>URL.revokeObjectURL(a.href),4000);save("backup",TODAY);msg("Backup saved to your Downloads folder as gym-bro-backup-"+TODAY+".json.");return}
+    const blob=new Blob([JSON.stringify({app:P.slug,v:1,exported:TODAY,data:data},null,1)],{type:"application/json"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=P.slug+"-backup-"+TODAY+".json";document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000);save("backup",TODAY);msg("Backup saved to "+P.backupWhere+" as "+P.slug+"-backup-"+TODAY+".json.");return}
   if(id==="d-restore"){$("#d-file").click();return}
   if(id==="d-apply"&&pendingRestore){
     try{for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i);if(k&&k.indexOf(LS)===0)localStorage.removeItem(k)}}catch(e){}
@@ -729,11 +768,11 @@ $("#view").addEventListener("click",async ev=>{
 $("#view").addEventListener("change",ev=>{
   if(ev.target.id!=="d-file")return;const f=ev.target.files&&ev.target.files[0];if(!f)return;
   const r=new FileReader();
-  r.onload=()=>{try{const j=JSON.parse(r.result);if((j.app!=="gym-bro"&&j.app!=="bane-build")||!j.data)throw new Error("x");
+  r.onload=()=>{try{const j=JSON.parse(r.result);if([P.slug].concat(P.legacySlugs||[]).indexOf(j.app)<0||!j.data)throw new Error("x");
       pendingRestore=j.data;const el=$("#d-msg");
       el.innerHTML="Backup from "+esc(fmtDate(j.exported||TODAY))+" found. Restoring replaces everything on this phone. "+
         '<span class="data-btns" style="margin-top:8px"><button type="button" class="btn small" id="d-apply">Replace my data</button><button type="button" class="btn ghost small" id="d-cancel">Cancel</button></span>'}
-    catch(e){msg("That file isn’t a Gym-Bro backup. Choose the gym-bro-backup file from your Downloads.")}};
+    catch(e){msg("That file isn’t a "+P.app+" backup. Choose the "+P.slug+"-backup file from "+P.backupWhere+".")}};
   r.onerror=()=>msg("Couldn’t read that file. Try choosing it again.");
   r.readAsText(f);ev.target.value="";
 });

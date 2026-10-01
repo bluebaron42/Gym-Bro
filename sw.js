@@ -1,6 +1,6 @@
 // Gym-Bro offline cache. Bump VERSION when you upload a new index.html.
-const VERSION = "gym-bro-v5";
-const CORE = ["./", "index.html", "data.js", "guides.js", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
+const VERSION = "gym-bro-v6";
+const CORE = ["./", "index.html", "profile.js", "data.js", "guides.js", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));
