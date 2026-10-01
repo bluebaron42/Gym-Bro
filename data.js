@@ -44,6 +44,7 @@ window.BB_DATA = (function () {
     "mozzarella": ["Light mozzarella", "Dairy and eggs", 165, 20, 1, 9],
     "parmesan": ["Parmesan", "Dairy and eggs", 390, 33, 0, 28],
     "pecorino": ["Pecorino", "Dairy and eggs", 390, 28, 0, 30],
+    "skyr": ["Skyr (plain)", "Dairy and eggs", 65, 11, 4, 0.2],
     "quark": ["Quark", "Dairy and eggs", 70, 12, 4, 0.2],
     "cream-cheese": ["Light cream cheese", "Dairy and eggs", 150, 7, 5, 11],
     "cheese-slice": ["Light cheese slices", "Dairy and eggs", 250, 20, 5, 15, 20, "slices"],
@@ -65,6 +66,7 @@ window.BB_DATA = (function () {
     "apple": ["Apples", "Fruit and veg", 52, 0.3, 14, 0.2, 150, "apples"],
     "beansprouts": ["Beansprouts", "Fruit and veg", 30, 3, 4, 0.2],
     "lime": ["Limes", "Fruit and veg", 30, 0.7, 10, 0.2, 65, "limes"],
+    "strawberries": ["Strawberries (frozen is fine)", "Fruit and veg", 32, 0.7, 7.7, 0.3],
     "mango": ["Mango", "Fruit and veg", 60, 0.8, 15, 0.4],
     "avocado": ["Avocado", "Fruit and veg", 160, 2, 9, 15],
     "corn": ["Sweetcorn (frozen or tin)", "Fruit and veg", 86, 3.3, 19, 1.4],
@@ -93,6 +95,7 @@ window.BB_DATA = (function () {
     "coconut-light": ["Light coconut milk", "Sauces and cupboard", 75, 0.7, 2.5, 7],
     "green-curry-paste": ["Thai green curry paste", "Sauces and cupboard", 110, 2, 12, 6],
     "curry-paste": ["Curry paste (tikka, jalfrezi or katsu)", "Sauces and cupboard", 150, 3, 15, 9],
+    "coffee": ["Coffee (espresso or strong brew)", "Sauces and cupboard", 2, 0.1, 0, 0, null, null, "fixed"],
     "fish-sauce": ["Fish sauce", "Sauces and cupboard", 35, 5, 4, 0],
     "peanuts": ["Roasted peanuts", "Sauces and cupboard", 590, 26, 13, 49],
     "kidney-beans": ["Kidney beans (tin, drained)", "Sauces and cupboard", 100, 7, 15, 0.5],
@@ -114,27 +117,44 @@ window.BB_DATA = (function () {
       method: ["Cook the oats in the milk for 3–4 minutes.", "Take off the heat and stir the whey in so it doesn't go grainy.", "Top with berries, peanut butter and honey."] },
 
     // ---- Snack ----
-    { id: "snack", slot: "snack", name: "Yoghurt bowl, plus a shake", time: "2 min",
-      ing: [["greek-yog", 300], ["honey", 15], ["berries", 80], ["granola", 40], ["whey", 30], ["apple", 150]],
-      method: ["Yoghurt with honey, berries and granola mid-afternoon.", "Whey shake with water and an apple after training or in the evening."] },
-    { id: "s-choc-mousse", slot: "snack", name: "Chocolate protein mousse, plus a shake", time: "5 min", tag: "Sweet",
-      ing: [["quark", 250], ["whey", 60], ["cocoa", 10], ["honey", 10], ["berries", 60], ["dark-choc", 10]],
-      method: ["Whisk quark, half the whey, cocoa and honey until thick and smooth.", "Top with berries and grated dark chocolate. Chill 20 minutes if you can.", "Shake the rest of the whey with water later on."] },
+    { id: "snack", slot: "snack", name: "Yoghurt bowl and an apple", time: "2 min",
+      ing: [["greek-yog", 300], ["honey", 15], ["berries", 80], ["granola", 40], ["apple", 150]],
+      method: ["Greek yoghurt with honey, berries and granola.", "An apple on the side, or sliced in."] },
+    { id: "s-choc-mousse", slot: "snack", name: "Chocolate protein mousse", time: "5 min", tag: "Sweet",
+      ing: [["quark", 250], ["whey", 30], ["cocoa", 10], ["honey", 10], ["berries", 60], ["dark-choc", 10]],
+      method: ["Whisk quark, whey, cocoa and honey until thick and smooth.", "Top with berries and grated dark chocolate. Chill 20 minutes if you can."] },
     { id: "s-brownie", slot: "snack", name: "Protein brownies with yoghurt", time: "Batch: 25 min", tag: "Sweet",
       ing: [["oats", 30], ["whey", 30], ["cocoa", 12], ["eggs", 25], ["honey", 15], ["dark-choc", 10], ["greek-yog", 200], ["berries", 60]],
       method: ["Blitz oats to flour; mix with whey, cocoa, egg, honey and a splash of milk to a thick batter.", "Fold in chopped dark chocolate; bake in a lined tin at 180°C for 15–18 minutes, still fudgy in the middle.", "Two squares per serving with Greek yoghurt and berries."] },
-    { id: "s-cheesecake", slot: "snack", name: "Berry cheesecake pot, plus a shake", time: "5 min", tag: "Sweet",
-      ing: [["quark", 200], ["cream-cheese", 30], ["whey", 60], ["honey", 10], ["berries", 80], ["digestives", 15]],
-      method: ["Crush a digestive into the bottom of a jar.", "Whisk quark, cream cheese, half the whey and honey; spoon over.", "Top with berries. Shake the rest of the whey with water later on."] },
-    { id: "s-bark", slot: "snack", name: "Frozen yoghurt bark, plus a shake", time: "Batch: 10 min + freezing", tag: "Sweet",
-      ing: [["greek-yog", 250], ["honey", 15], ["berries", 80], ["dark-choc", 15], ["granola", 20], ["whey", 30]],
-      method: ["Mix yoghurt and honey; spread 1 cm thick on a lined tray.", "Scatter berries, granola and chopped dark chocolate; freeze 3 hours.", "Snap into shards. Shake the whey with water later on."] },
+    { id: "s-cheesecake", slot: "snack", name: "Berry cheesecake pot", time: "5 min", tag: "Sweet",
+      ing: [["quark", 200], ["cream-cheese", 30], ["whey", 30], ["honey", 10], ["berries", 80], ["digestives", 15]],
+      method: ["Crush a digestive into the bottom of a jar.", "Whisk quark, cream cheese, whey and honey; spoon over.", "Top with berries."] },
+    { id: "s-bark", slot: "snack", name: "Frozen yoghurt bark", time: "Batch: 10 min + freezing", tag: "Sweet",
+      ing: [["greek-yog", 300], ["honey", 15], ["berries", 80], ["dark-choc", 15], ["granola", 20]],
+      method: ["Mix yoghurt and honey; spread 1 cm thick on a lined tray.", "Scatter berries, granola and chopped dark chocolate; freeze 3 hours.", "Snap into shards."] },
     { id: "s-crumble", slot: "snack", name: "Apple crumble pot with vanilla yoghurt", time: "Batch: 20 min", tag: "Sweet",
       ing: [["apple", 150], ["honey", 10], ["oats", 30], ["peanut-butter", 10], ["greek-yog", 250], ["whey", 30]],
       method: ["Dice the apple and microwave with cinnamon and half the honey for 2 minutes.", "Crumble: oats, peanut butter and the rest of the honey, toasted in a dry pan or baked at 180°C for 8 minutes.", "Stir whey (vanilla if you have it) into the yoghurt; layer apple, yoghurt and crumble."] },
-    { id: "s-pbj", slot: "snack", name: "PB and jam rice cakes, plus a milkshake", time: "3 min", tag: "Sweet",
-      ing: [["rice-cakes", 32], ["peanut-butter", 20], ["jam", 20], ["whey", 40], ["milk", 250]],
-      method: ["Spread 4 rice cakes with peanut butter and jam.", "Blend or shake whey with cold milk and ice."] },
+    { id: "s-pbj", slot: "snack", name: "PB and jam rice cakes with yoghurt", time: "3 min", tag: "Sweet",
+      ing: [["rice-cakes", 32], ["peanut-butter", 20], ["jam", 20], ["greek-yog", 200], ["berries", 50]],
+      method: ["Spread 4 rice cakes with peanut butter and jam.", "Greek yoghurt with berries on the side."] },
+
+    // ---- Morning shakes (blender, made fresh before work) ----
+    { id: "sh-choc-pb", slot: "shake", name: "Chocolate peanut butter shake", time: "3 min", tag: "Shake",
+      ing: [["milk", 300], ["skyr", 150], ["cocoa", 10], ["peanut-butter", 20], ["honey", 10]],
+      method: ["Into the blender: milk, skyr, cocoa, peanut butter, honey and a big handful of ice.", "Blend 30–40 seconds until thick and frothy.", "Optional: 1 scoop chocolate whey for +24 g protein. Stir in your 5 g creatine."] },
+    { id: "sh-strawberry", slot: "shake", name: "Strawberry cheesecake shake", time: "3 min", tag: "Shake",
+      ing: [["greek-yog", 200], ["milk", 200], ["strawberries", 150], ["digestives", 15], ["honey", 10]],
+      method: ["Into the blender: yoghurt, milk, frozen strawberries, honey, a few drops of vanilla and half the digestive.", "Blend until smooth; crumble the rest of the biscuit on top.", "Optional: 1 scoop vanilla whey for +24 g protein. Stir in your 5 g creatine."] },
+    { id: "sh-mocha", slot: "shake", name: "Iced mocha shake", time: "4 min", tag: "Shake",
+      ing: [["coffee", 60], ["milk", 250], ["skyr", 150], ["cocoa", 8], ["honey", 15]],
+      method: ["Make a double espresso or 60 ml strong coffee and let it cool for a minute.", "Into the blender with milk, skyr, cocoa, honey and a big handful of ice; blend until frothy.", "Doubles as your pre-gym coffee. Optional: 1 scoop chocolate whey. Stir in your 5 g creatine."] },
+    { id: "sh-lassi", slot: "shake", name: "Mango lassi", time: "3 min", tag: "Shake",
+      ing: [["greek-yog", 250], ["milk", 150], ["mango", 150], ["honey", 10]],
+      method: ["Into the blender: yoghurt, milk, frozen mango, honey, a pinch of ground cardamom and a pinch of salt.", "Blend until smooth and thick.", "Optional: 1 scoop vanilla whey. Stir in your 5 g creatine."] },
+    { id: "sh-berry-oat", slot: "shake", name: "Berry oat smoothie", time: "3 min", tag: "Shake",
+      ing: [["milk", 250], ["skyr", 150], ["berries", 120], ["oats", 30], ["honey", 5]],
+      method: ["Into the blender: oats first, then milk, skyr, frozen berries, honey and a pinch of cinnamon.", "Blend 45 seconds so the oats go smooth.", "Optional: 1 scoop vanilla whey. Stir in your 5 g creatine."] },
 
     // ---- Lunch bowls ----
     { id: "l-salmon-poke", slot: "lunch", name: "Salmon poke bowl", time: "15 min",
@@ -375,6 +395,9 @@ window.BB_DATA = (function () {
     }
   };
   // Snack options are the same for both apps; the first is the day's default.
+  const SHAKES = { 1: "sh-choc-pb", 2: "sh-mocha", 3: "sh-strawberry", 4: "sh-berry-oat", 5: "sh-lassi", 6: "sh-choc-pb", 0: "sh-strawberry" };
+  const ALL_SHAKES = ["sh-choc-pb", "sh-mocha", "sh-strawberry", "sh-berry-oat", "sh-lassi"];
+  ["bro", "gyal"].forEach(function (k) { OPTIONS[k].shake = {}; for (let d = 0; d < 7; d++) { OPTIONS[k].shake[d] = [SHAKES[d]].concat(ALL_SHAKES.filter(function (x) { return x !== SHAKES[d]; })); } });
   const SNACKS = { 1: "s-choc-mousse", 2: "s-brownie", 3: "s-cheesecake", 4: "s-bark", 5: "s-crumble", 6: "s-pbj", 0: "snack" };
   const ALL_SNACKS = ["s-choc-mousse", "s-brownie", "s-cheesecake", "s-bark", "s-crumble", "s-pbj", "snack"];
   ["bro", "gyal"].forEach(function (k) { OPTIONS[k].snack = {}; for (let d = 0; d < 7; d++) { OPTIONS[k].snack[d] = [SNACKS[d]].concat(ALL_SNACKS.filter(function (x) { return x !== SNACKS[d]; })); } });
@@ -434,13 +457,18 @@ window.BB_DATA = (function () {
     "d-chilli": ["Per portion: brown the mince hard; add 60 g onion, 60 g peppers and 1 garlic clove; stir in 1 tsp cumin, 1 tsp smoked paprika, ½ tsp chilli powder, ½ tsp dried oregano, ¼ tsp cinnamon and 1 tsp tomato purée; add 200 g chopped tomatoes, 100 ml beef stock and the beans; simmer 30 min. A square of dark chocolate at the end deepens it. Season, portion with rice", "Microwave until steaming, yoghurt on top. 5 min"],
     "d-massaman": ["Per portion: brown the beef in batches; fry 25 g massaman (or curry) paste 1 min; add 120 ml light coconut milk, 150 ml water, 50 g onion, 5 ml fish sauce, 1 tsp honey, a cinnamon stick and a bay leaf; simmer low 1½ hours. Add the potato chunks for the last 30 min. Portion with rice; peanuts in a bag", "Microwave until steaming, peanuts on top. 5 min"],
 
-    "s-choc-mousse": ["Per pot: whisk 250 g quark, 30 g chocolate whey, 10 g cocoa and 10 g honey until thick and smooth; spoon into a jar, berries on top, grate over the dark chocolate. Makes up to Wednesday's; make the rest Wednesday night", "Grab a pot. Shake the other 30 g whey with water later. 1 min"],
+    "s-choc-mousse": ["Per pot: whisk 250 g quark, 30 g chocolate whey, 10 g cocoa and 10 g honey until thick and smooth; spoon into a jar, berries on top, grate over the dark chocolate. Makes up to Wednesday's; make the rest Wednesday night", "Grab a pot, a few berries on top. 1 min"],
     "s-brownie": ["Per 2 squares: blitz 30 g oats to flour; mix with 30 g chocolate whey, 12 g cocoa, ½ beaten egg, 15 g honey, a pinch of salt and baking powder and enough milk for a thick batter; fold in 10 g chopped dark chocolate. Bake the whole batch in a lined tin at 180°C for 15–18 min until just set. Cool, cut, bag (fridge 5 days or freeze)", "Two squares with Greek yoghurt and berries. 1 min"],
-    "s-cheesecake": ["Per pot: crush a digestive into the jar; whisk 200 g quark, 30 g light cream cheese, 30 g vanilla whey, 10 g honey and a few drops of vanilla until smooth; spoon over; top with berries. Keeps 3 days; make the rest Wednesday night", "Grab a pot. Shake the other 30 g whey with water later. 0 min"],
-    "s-bark": ["For the tray: mix the Greek yoghurt with the honey and a few drops of vanilla; spread 1 cm thick on a lined tray; scatter berries, granola and chopped dark chocolate; freeze 3 hours, snap into shards and bag", "Snap off a portion; shake the whey with water. 0 min"],
+    "s-cheesecake": ["Per pot: crush a digestive into the jar; whisk 200 g quark, 30 g light cream cheese, 30 g vanilla whey, 10 g honey and a few drops of vanilla until smooth; spoon over; top with berries. Keeps 3 days; make the rest Wednesday night", "Grab a pot. 0 min"],
+    "s-bark": ["For the tray: mix the Greek yoghurt with the honey and a few drops of vanilla; spread 1 cm thick on a lined tray; scatter berries, granola and chopped dark chocolate; freeze 3 hours, snap into shards and bag", "Snap off a portion. 0 min"],
     "s-crumble": ["Crumble jar per portion: rub 30 g oats with 10 g peanut butter, 5 g honey and a pinch each of cinnamon and salt; bake at 180°C for 8–10 min until golden. Apple per portion: dice and cook with 5 g honey, ½ tsp cinnamon and a splash of water for 5 min; portion. Vanilla yoghurt: stir the whey into the Greek yoghurt; portion", "Layer apple, yoghurt and crumble. 2 min"],
-    "s-pbj": ["Nothing to prep", "Spread 4 rice cakes with peanut butter and jam; shake the whey with cold milk. 3 min"],
-    "snack": ["Nothing to prep", "Yoghurt, honey, berries and granola; shake the whey with water. 2 min"]
+    "sh-choc-pb": ["Made fresh each morning", "Blend with ice 30–40 s. 3 min"],
+    "sh-strawberry": ["Made fresh each morning", "Blend with ice until smooth. 3 min"],
+    "sh-mocha": ["Made fresh each morning", "Brew the coffee, blend with ice until frothy. 4 min"],
+    "sh-lassi": ["Made fresh each morning", "Blend until smooth and thick. 3 min"],
+    "sh-berry-oat": ["Made fresh each morning", "Blend 45 s so the oats go smooth. 3 min"],
+    "s-pbj": ["Nothing to prep", "Spread 4 rice cakes with peanut butter and jam; yoghurt and berries on the side. 3 min"],
+    "snack": ["Nothing to prep", "Yoghurt, honey, berries and granola; an apple. 2 min"]
   };
 
   // Prep components per recipe, per standard portion. The app pools these across the week's menu
@@ -594,7 +622,7 @@ window.BB_DATA = (function () {
     "s-brownie": [["T", "Protein brownie batter", "Blitz the oats to flour, mix everything to a thick batter, fold in the chopped chocolate, spread in a lined tin", "30 g oats; 30 g chocolate whey; 12 g cocoa; 0.5 x egg; 15 g honey; 10 g dark chocolate; 1 pinch baking powder; 2 tbsp milk"],
       ["O", 180, 16, "Protein brownies (still fudgy in the middle); cool and cut into squares"]],
     "s-cheesecake": [["T", "Cheesecake pots", "Crush a digestive into each jar; whisk the filling smooth, spoon over, berries on top", "200 g quark; 30 g light cream cheese; 30 g vanilla whey; 10 g honey; 1 x digestive"]],
-    "s-bark": [["T", "Yoghurt bark", "Mix the yoghurt and honey, spread 1 cm thick on a lined tray, scatter berries, granola and chopped chocolate; freeze 3 hours, then snap and bag", "250 g greek yoghurt; 15 g honey; 80 g berries; 20 g granola; 15 g dark chocolate"]],
+    "s-bark": [["T", "Yoghurt bark", "Mix the yoghurt and honey, spread 1 cm thick on a lined tray, scatter berries, granola and chopped chocolate; freeze 3 hours, then snap and bag", "300 g greek yoghurt; 15 g honey; 80 g berries; 20 g granola; 15 g dark chocolate"]],
     "s-crumble": [["T", "Crumble topping", "Rub together and spread on a tray", "30 g oats; 10 g peanut butter; 5 g honey; 1 pinch cinnamon"], ["O", 180, 10, "Crumble topping, until golden"],
       ["H", "Cinnamon apple", 6, "Dice the apple and cook with the honey, cinnamon and a splash of water for 5 min", "1 x apple; 5 g honey; 0.5 tsp cinnamon"],
       ["T", "Vanilla yoghurt pots", "Stir the whey into the yoghurt", "250 g greek yoghurt; 30 g vanilla whey"]],

@@ -10,7 +10,8 @@ window.GB_PROFILE = {
   storage: "banebuild:",
   menuSet: "bro",
   // Portion scale by food group: p = protein and dairy, c = carbs, fats and sauces, v = fruit and veg.
-  scales: { p: 1, c: 1, v: 1 },
+  // Carbs trimmed slightly so the menu, morning shake included, lands near 2,750 kcal.
+  scales: { p: 1, c: 0.88, v: 1 },
   exclude: [],
   protein: 200,
   planWeeks: 12,
