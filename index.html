@@ -696,12 +696,14 @@ function renderProgress(){
   const pr=get("progress",{e:[]}).e||[];
   const sorted=pr.slice().sort((a,b)=>a.d<b.d?-1:1);
   const first=sorted[0], last=sorted[sorted.length-1];
-  let h='<div><div class="eyebrow">Progress · week '+weekNo()+(P.planWeeks&&weekNo()<=P.planWeeks?' of '+P.planWeeks:'')+'</div><h1 class="day">'+esc(phase().name)+'</h1><p class="lead">Weigh in every morning and measure your waist every Sunday. The app averages your weight by week, so daily ups and downs don’t matter. Waist down with lifts up means it’s working.</p></div>';
-  h+='<section class="card"><div class="form">'+
+  let h='<div><div class="eyebrow">Progress · week '+weekNo()+(P.planWeeks&&weekNo()<=P.planWeeks?' of '+P.planWeeks:'')+'</div><h1 class="day">'+esc(phase().name)+'</h1><p class="lead">Your morning weigh-ins from the Today tab are averaged by week here, so daily ups and downs don’t matter. Add your waist once a week.</p></div>';
+  const lastWaist=sorted.filter(x=>x.waist!=null).slice(-1)[0];
+  h+='<section class="card"><div class="wrow" style="display:flex;justify-content:space-between;align-items:baseline;gap:10px"><b>Waist measurement</b><span class="rest-note num">'+(lastWaist?'Last: '+lastWaist.waist+' cm on '+fmtDate(lastWaist.d):'Once a week')+'</span></div>'+
+    '<div class="form" style="grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) auto">'+
     '<label for="p-date">Date<input id="p-date" type="date" value="'+TODAY+'"></label>'+
-    '<label for="p-w">Weight (kg)<input id="p-w" type="number" inputmode="decimal" step="0.1" placeholder="'+(last&&last.w?last.w:"e.g. 95.0")+'"></label>'+
-    '<label for="p-waist">Waist (cm)<input id="p-waist" type="number" inputmode="decimal" step="0.5" placeholder="'+(last&&last.waist?last.waist:"at navel")+'"></label></div>'+
-    '<button type="button" class="btn" id="p-save">Save entry</button><p class="rest-note" id="p-msg">Enter today\u2019s morning weight. Add your waist on Sundays. Change the date to fill in a day you missed.</p></section>';
+    '<label for="p-waist">Waist (cm)<input id="p-waist" type="number" inputmode="decimal" step="0.5" placeholder="'+(lastWaist?lastWaist.waist:"at navel")+'"></label>'+
+    '<button type="button" class="btn" id="p-save">Save</button></div>'+
+    '<p class="rest-note" id="p-msg">Sunday morning, at the navel, relaxed, before food. Your daily weight goes in on the Today tab.</p></section>';
   const wp=sorted.filter(x=>x.w).map(x=>({d:x.d,v:Number(x.w)})), cp=sorted.filter(x=>x.waist).map(x=>({d:x.d,v:Number(x.waist)}));
   const wks=weekAvgs(), st=weekStatus(), wkp=wks.map(x=>({d:x.wk,v:x.avg}));
   const stat=wks.length?'<div class="wstats num"><div><span>This week</span><b>'+wks[wks.length-1].avg+' kg</b><small>'+wks[wks.length-1].n+' weigh-in'+(wks[wks.length-1].n===1?'':'s')+'</small></div>'+
@@ -790,9 +792,9 @@ $("#view").addEventListener("click",ev=>{
   const go=ev.target.closest("[data-go]"); if(go){tab=go.dataset.go;render();window.scrollTo(0,0);return}
   const sh=ev.target.closest("[data-shop]"); if(sh){toggleShop(sh.dataset.shop);return}
   if(ev.target.id==="clear-shop"){const b=ev.target;if(b.dataset.armed){save("shop",{t:{},wk:THIS_MONDAY});render()}else{b.dataset.armed="1";b.textContent="Tap again to clear all ticks";setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.textContent="Clear ticks now"}},4000)}return}
-  if(ev.target.id==="p-save"){const d=$("#p-date").value||TODAY,w=$("#p-w").value,wa=$("#p-waist").value;
-    if(!w&&!wa){$("#p-msg").textContent="Enter a weight, a waist measurement, or both.";return}
-    saveBody(d,w,wa); render(); return}
+  if(ev.target.id==="p-save"){const d=$("#p-date").value||TODAY,wa=$("#p-waist").value;
+    if(!wa){$("#p-msg").textContent="Enter your waist measurement in centimetres first.";return}
+    saveBody(d,"",wa); render(); return}
   if(ev.target.id==="q-save"){const wEl=$("#q-w"),waEl=$("#q-waist");const w=wEl?wEl.value:"",wa=waEl?waEl.value:"";
     if(!w&&!wa){$("#q-msg").textContent="Enter your weight first.";return}
     saveBody(TODAY,w,wa);const y=window.scrollY;render();window.scrollTo(0,y);return}
