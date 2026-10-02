@@ -141,7 +141,10 @@ nav.tabs button[aria-selected="true"]{color:var(--accent)}
 #timer.go .in{background:var(--ok);color:var(--surface)}
 .sync{font-size:12px;color:var(--muted)}
 .data-btns{display:flex;flex-wrap:wrap;gap:8px}
-#q-msg:empty,#sh-msg:empty,#shop-msg:empty{display:none}
+#q-msg:empty,#sh-msg:empty,#shop-msg:empty,#m-msg:empty{display:none}
+.missed{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:8px}
+.missed summary{cursor:pointer;font-weight:600;color:var(--accent);font-size:14px}
+.missed[open] summary{margin-bottom:8px}
 .pl{margin:4px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:5px;font-size:13.5px;color:var(--fg);font-weight:400}
 .pl li b{font-weight:700}
 .pl .plh{list-style:none;margin:4px 0 0 -18px;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
@@ -692,6 +695,7 @@ function weighInCard(){const all=bodyEntries();const t=all.find(x=>x.d===TODAY);
     (needWaist?'<label for="q-waist">Waist, Sunday (cm)<input id="q-waist" type="number" inputmode="decimal" step="0.5" placeholder="at navel"></label>':'')+
     '<button type="button" class="btn" id="q-save">Save</button></div><p class="rest-note" id="q-msg"></p></section>'}
 
+let missedMsg="";
 function renderProgress(){
   const pr=get("progress",{e:[]}).e||[];
   const sorted=pr.slice().sort((a,b)=>a.d<b.d?-1:1);
@@ -709,7 +713,9 @@ function renderProgress(){
   const stat=wks.length?'<div class="wstats num"><div><span>This week</span><b>'+wks[wks.length-1].avg+' kg</b><small>'+wks[wks.length-1].n+' weigh-in'+(wks[wks.length-1].n===1?'':'s')+'</small></div>'+
     (st?'<div><span>Last week</span><b>'+st.a.avg+' kg</b><small>'+st.a.n+' weigh-ins</small></div><div><span>Change</span><b>'+(st.chg>0?"+":"")+st.chg+' kg</b><small class="chip '+st.cls+'">'+esc(st.txt)+'</small></div>':'')+'</div>':'';
   const goal=P.goalWeight&&wks.length?'<p class="goal num"><b>Goal '+P.goalWeight+' kg</b> · '+Math.max(0,Math.round((wks[wks.length-1].avg-P.goalWeight)*10)/10)+' kg to go</p>':'';
-  h+='<h2 class="sec">Weight (weekly average)</h2><section class="card chart">'+stat+goal+(wkp.length>=2?lineChart(wkp,"Weekly average weight in kg",1)+'<p class="rest-note">Each point is one week\u2019s average, dated from its Monday. Target: '+esc(phase().trendText)+'.</p>':'<p class="empty">Weigh in each morning. Your weekly average line starts after two weeks.</p>')+'</section>';
+  h+='<h2 class="sec">Weight (weekly average)</h2><section class="card chart">'+stat+goal+(wkp.length>=2?lineChart(wkp,"Weekly average weight in kg",1)+'<p class="rest-note">Each point is one week\u2019s average, dated from its Monday. Target: '+esc(phase().trendText)+'.</p>':'<p class="empty">Weigh in each morning. Your weekly average line starts after two weeks.</p>')+
+    '<details class="missed"'+(missedMsg?' open':'')+'><summary>Add a missed weigh-in</summary><div class="form" style="grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) auto"><label for="m-date">Date<input id="m-date" type="date" max="'+TODAY+'" value="'+iso(new Date(Date.now()-864e5))+'"></label><label for="m-w">Weight (kg)<input id="m-w" type="number" inputmode="decimal" step="0.1" placeholder="kg"></label><button type="button" class="btn" id="m-save">Add</button></div><p class="rest-note" id="m-msg" aria-live="polite">'+esc(missedMsg)+'</p></details>'+
+    '</section>';missedMsg="";
   h+='<h2 class="sec">Waist</h2><section class="card chart">'+(cp.length>=2?lineChart(cp,"Waist in cm",1)+'<p class="rest-note num">'+cp[0].v.toFixed(1)+' → '+cp[cp.length-1].v.toFixed(1)+' cm ('+((cp[cp.length-1].v-cp[0].v)>=0?"+":"")+(cp[cp.length-1].v-cp[0].v).toFixed(1)+')</p>':'<p class="empty">Measure at the navel, relaxed, every Sunday. Two entries draw the line.</p>')+'</section>';
   // checkpoints
   const waistDrop=(cp.length>=2)?cp[0].v-cp[cp.length-1].v:null;
@@ -795,6 +801,11 @@ $("#view").addEventListener("click",ev=>{
   if(ev.target.id==="p-save"){const d=$("#p-date").value||TODAY,wa=$("#p-waist").value;
     if(!wa){$("#p-msg").textContent="Enter your waist measurement in centimetres first.";return}
     saveBody(d,"",wa); render(); return}
+  if(ev.target.id==="m-save"){const d=$("#m-date").value,w=$("#m-w").value;const m=$("#m-msg");
+    if(!d||d>TODAY){m.textContent="Pick a date that isn\u2019t in the future.";return}
+    if(!w||Number(w)<30||Number(w)>300){m.textContent="Enter the weight in kilograms, for example 96.4.";return}
+    const had=(get("progress",{e:[]}).e||[]).find(x=>x.d===d&&x.w!=null);
+    saveBody(d,w,"");missedMsg=(had?"Updated ":"Added ")+Number(w)+" kg for "+fmtDate(d)+".";const y=window.scrollY;render();window.scrollTo(0,y);return}
   if(ev.target.id==="q-save"){const wEl=$("#q-w"),waEl=$("#q-waist");const w=wEl?wEl.value:"",wa=waEl?waEl.value:"";
     if(!w&&!wa){$("#q-msg").textContent="Enter your weight first.";return}
     saveBody(TODAY,w,wa);const y=window.scrollY;render();window.scrollTo(0,y);return}
