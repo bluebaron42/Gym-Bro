@@ -205,6 +205,16 @@ window.BB_DATA = (function () {
   // The menu a new week starts from (0 = Sunday).
   const DEFAULTS = {"dinner":{"0":"d-meatballs", "1":"d-ragu", "2":"d-smash", "3":"d-fried-rice", "4":"d-peri-peri", "5":"d-bigmac", "6":"d-carbonara"},"snack":{"0":"s-bark", "1":"s-brownie", "2":"s-brownie", "3":"s-brownie", "4":"s-brownie", "5":"s-bark", "6":"s-bark"},"lunch":{"blue":{"0":"l-tuna-poke", "1":"l-teriyaki", "2":"l-teriyaki", "3":"l-teriyaki", "4":"l-ragu-box", "5":"l-ragu-box", "6":"l-ragu-box"},"harriett":{"0":"l-spicy-tuna-salad", "1":"l-shawarma", "2":"l-shawarma", "3":"l-shawarma", "4":"l-green-curry", "5":"l-green-curry", "6":"l-green-curry"}},"breakfast":{"blue":{"0":"bf-eggs", "1":"bf-eggs", "2":"bf-oats", "3":"bf-eggs", "4":"bf-oats", "5":"bf-eggs", "6":"bf-oats"},"harriett":{"0":"bf-eggs", "1":"bf-eggs", "2":"bf-oats", "3":"bf-eggs", "4":"bf-oats", "5":"bf-eggs", "6":"bf-oats"}},"shake":{"blue":{"0":"sh-strawberry", "1":"sh-choc-pb", "2":"sh-mocha", "3":"sh-strawberry", "4":"sh-berry-oat", "5":"sh-lassi", "6":"sh-choc-pb"},"harriett":{"0":"sh-strawberry", "1":"sh-choc-pb", "2":"sh-mocha", "3":"sh-strawberry", "4":"sh-berry-oat", "5":"sh-lassi", "6":"sh-choc-pb"}}};
 
+  // One-off weeks that start from something other than DEFAULTS. Delete an entry once its week has passed
+  // (tests/data-check.js fails when one is more than two weeks old).
+  // Week of 5 Oct 2026: prepped and shopped before the household update, so it keeps Blue's menu from then.
+  const PRESETS = { "2026-10-05": {
+    dinner: {"1": "d-gyros", "2": "d-philly", "3": "d-fried-rice", "4": "d-doner", "5": "d-bigmac", "6": "d-lasagne", "0": "d-meatballs"},
+    snack: {"1": "s-choc-mousse", "2": "s-brownie", "3": "s-cheesecake", "4": "s-bark", "5": "s-crumble", "6": "s-pbj", "0": "snack"},
+    lunch: {blue: {"1": "l-teriyaki", "2": "l-bulgogi", "3": "l-prawn-egg", "4": "l-spicy-salmon", "5": "l-shawarma", "6": "l-prawn-egg", "0": "l-tuna-poke"}},
+    shake: {blue: {"1": "sh-choc-pb", "2": "sh-mocha", "3": "sh-strawberry", "4": "sh-berry-oat", "5": "sh-lassi", "6": "sh-choc-pb", "0": "sh-strawberry"}}
+  } };
+
   // Recipes: ing = grams per full portion. sea = [label, list] seasoning groups not covered by a Sunday component.
   // method = from scratch, no amounts (they are in the lists). finish = on the day, after Sunday prep.
   // Dinners: type fresh | head | sunday. Lunches: late freeze | split | no (Monday to Wednesday only).
@@ -642,5 +652,5 @@ window.BB_DATA = (function () {
 
   const RECIPES = {};
   R.forEach(function (r) { RECIPES[r.id] = r; });
-  return { ING: ING, ALIAS: ALIAS, CUPBOARD: CUPBOARD, TRIM: TRIM, PACKS: PACKS, HOUSE: HOUSE, DEFAULTS: DEFAULTS, RECIPES: RECIPES, VEG_EACH: VEG_EACH, BATCH_CARBS: BATCH_CARBS, NO_BATCH: NO_BATCH };
+  return { ING: ING, ALIAS: ALIAS, CUPBOARD: CUPBOARD, TRIM: TRIM, PACKS: PACKS, HOUSE: HOUSE, DEFAULTS: DEFAULTS, PRESETS: PRESETS, RECIPES: RECIPES, VEG_EACH: VEG_EACH, BATCH_CARBS: BATCH_CARBS, NO_BATCH: NO_BATCH };
 })();

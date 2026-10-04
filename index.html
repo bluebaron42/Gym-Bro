@@ -318,11 +318,13 @@ function macros(id,who){who=who||ME;const key=id+"|"+who;if(macroCache[key])retu
   return macroCache[key]={k:Math.round(k),p:Math.round(p),c:Math.round(c),f:Math.round(f)}}
 // Menu choices live in one object per week: shared and my own slots as slot+day, the other person's as "p:"+slot+day.
 function menuKey(slot,dow,who){return (isShared(slot)||(who||ME)===ME?"":"p:")+slot+dow}
-function allowed(id,slot,dow,who){const r=RECIPES[id];if(!r||r.slot!==slot)return false;
-  if(r.kind&&eaters(slot,who).some(w=>person(w).skip.indexOf(r.kind)>=0))return false;
-  if(slot==="lunch"&&dow>=4&&r.late==="no")return false;return true}
-function defaultFor(slot,dow,who){return isShared(slot)?DEF[slot][dow]:DEF[slot][who||ME][dow]}
-function choice(slot,dow,who){who=who||ME;const v=menuFor(viewWk)[menuKey(slot,dow,who)];return allowed(v,slot,dow,who)?v:defaultFor(slot,dow,who)}
+// fits = this person can have this dish in this slot. allowed = fits, and can be picked for that day (lunch keeping rule).
+function fits(id,slot,who){const r=RECIPES[id];if(!r||r.slot!==slot)return false;
+  return !(r.kind&&eaters(slot,who).some(w=>person(w).skip.indexOf(r.kind)>=0))}
+function allowed(id,slot,dow,who){return fits(id,slot,who)&&!(slot==="lunch"&&dow>=4&&RECIPES[id].late==="no")}
+function defaultFor(slot,dow,who){who=who||ME;const ps=((FD.PRESETS||{})[viewWk]||{})[slot];const v=ps&&(isShared(slot)?ps[dow]:(ps[who]||{})[dow]);
+  return fits(v,slot,who)?v:isShared(slot)?DEF[slot][dow]:DEF[slot][who][dow]}
+function choice(slot,dow,who){who=who||ME;const v=menuFor(viewWk)[menuKey(slot,dow,who)];return fits(v,slot,who)?v:defaultFor(slot,dow,who)}
 function setChoice(slot,days,id,who){const all=Object.assign({},allMenus());const m=Object.assign({},menuFor(viewWk));
   days.forEach(d=>{if(allowed(id,slot,d,who))m[menuKey(slot,d,who)]=id});all[viewWk]=m;
   Object.keys(all).sort().slice(0,-8).forEach(k=>delete all[k]);save("menus",all)}
@@ -938,7 +940,7 @@ function loadCode(text){const o=pname(OTHER);const mt=String(text||"").match(/GY
   if(j.id===ME||(!j.id&&j.who===P.person))return {err:"That's your own menu. Paste the code "+o+" sent you."};
   const wk=/^\d{4}-\d{2}-\d{2}$/.test(j.wk||"")?j.wk:THIS_MONDAY;
   const all=Object.assign({},allMenus());const m=Object.assign({},menuFor(wk));
-  SLOTS.forEach(sl=>ORDER.forEach(d=>{const id=j.m[sl+d];if(allowed(id,sl,d,OTHER))m[menuKey(sl,d,OTHER)]=id}));
+  SLOTS.forEach(sl=>ORDER.forEach(d=>{const id=j.m[sl+d];if(fits(id,sl,OTHER))m[menuKey(sl,d,OTHER)]=id}));
   all[wk]=m;save("menus",all);const got=Object.assign({},get("sharegot",{}));got[wk]=TODAY;Object.keys(got).sort().slice(0,-6).forEach(k=>delete got[k]);save("sharegot",got);
   if(wk===THIS_MONDAY||wk===NEXT_MONDAY)foodWk=wk;
   return {ok:true,who:o,wk:wk}}

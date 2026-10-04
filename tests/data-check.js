@@ -32,6 +32,11 @@ Object.keys(D.ALIAS).forEach((n) => { if (!D.ING[D.ALIAS[n][0]]) fail("alias " +
 // The default week must be valid for the people eating it.
 const H = D.HOUSE, ok = (id, slot, dow, who) => { const r = R[id]; if (!r || r.slot !== slot) return false; const eat = H.shared.indexOf(slot) >= 0 ? H.order : [who]; if (r.kind && eat.some((w) => H.people[w].skip.indexOf(r.kind) >= 0)) return false; return !(slot === "lunch" && dow >= 4 && r.late === "no"); };
 ["breakfast", "shake", "lunch", "dinner", "snack"].forEach((slot) => H.order.forEach((w) => [0, 1, 2, 3, 4, 5, 6].forEach((d) => { const id = H.shared.indexOf(slot) >= 0 ? D.DEFAULTS[slot][d] : D.DEFAULTS[slot][w][d]; if (!ok(id, slot, d, w)) fail("default " + slot + " day " + d + " for " + w + " is not allowed: " + id); })));
+Object.keys(D.PRESETS || {}).forEach((wk) => {
+  if ((Date.now() - new Date(wk).getTime()) / 864e5 > 21) fail("preset for the week of " + wk + " has passed: delete it from data.js");
+  Object.keys(D.PRESETS[wk]).forEach((slot) => { const sh = H.shared.indexOf(slot) >= 0, sets = sh ? { all: D.PRESETS[wk][slot] } : D.PRESETS[wk][slot];
+    Object.keys(sets).forEach((w) => Object.keys(sets[w]).forEach((d) => { const r = R[sets[w][d]]; if (!r || r.slot !== slot) fail("preset " + wk + " " + slot + " day " + d + ": bad dish " + sets[w][d]); })); });
+});
 const n = (f) => Object.values(R).filter(f).length;
 console.log("dinners " + n((r) => r.slot === "dinner") + " (fresh " + n((r) => r.type === "fresh") + ", head " + n((r) => r.type === "head") + ", sunday " + n((r) => r.type === "sunday") + "), lunches " + n((r) => r.slot === "lunch") + ", treats " + n((r) => r.slot === "snack"));
 console.log(bad ? bad + " problem(s)" : "All checks passed"); process.exit(bad ? 1 : 0);
