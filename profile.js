@@ -6,13 +6,8 @@ window.GB_PROFILE = {
   slug: "gym-bro",
   legacySlugs: ["bane-build"],
   person: "Blue",
-  partnerName: "Harriett",
+  me: "blue", // who this phone belongs to; the household itself is in data.js
   storage: "banebuild:",
-  menuSet: "bro",
-  // Portion scale by food group: p = protein and dairy, c = carbs, fats and sauces, v = fruit and veg.
-  // Carbs trimmed slightly so the menu, morning shake included, lands near 2,750 kcal.
-  scales: { p: 1, c: 0.88, v: 1 },
-  exclude: [],
   protein: 200,
   planWeeks: 12,
   weightUnit: "kg",

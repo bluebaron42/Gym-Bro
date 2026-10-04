@@ -26,16 +26,17 @@ The repository is public, so anyone with the link can see the plan. Your logged 
 
 Your data is lost if you uninstall the app or clear Chrome's site data, so keep a recent backup.
 
-## Sharing menus with your partner
+## Planning food for the household
 
-- **Food tab → Copy my menu**, then send the message on WhatsApp.
-- When your partner sends theirs, copy the whole message, then **Food tab → Paste partner's menu**.
-- **Shopping list: Together** combines both weeks into one list; **Just mine** shows only yours.
+- Dinners and treats are one choice for both of you. Breakfast, shake and lunch are each person's own.
+- **Food tab → Harriett's meals** lets you plan her meals on your phone, so the shopping list and Sunday prep cover you both.
+- **Shopping list** defaults to **Household**; switch to **Just me** or **Just Harriett** if you need one person's list.
+- To keep the two phones in step: **Copy this week's menu**, send the message, and the other person taps **Paste** on their Food tab.
 
 `index.html`, `data.js` and `guides.js` are shared with Gym-Gyal. `profile.js` holds the settings that make this app yours.
 
-## Updating the app later
+## Updates
 
-When I send you an update zip, unzip it, then in your repository tap **Add file → Upload files**, drop in every file from the zip and tap **Commit changes**. Same-named files are replaced. I bump the version in `sw.js` for you each time.
+Claude pushes updates straight to this repository. Open the app with signal and it updates itself; if not, close it fully and reopen. Your logs, menu choices and ticks are kept.
 
-Give GitHub a minute or two, then open the app with signal. If you don't see the change, close it fully and reopen. Your logs, menu choices and ticks are kept.
+Before each push Claude runs `node tests/data-check.js` and `python3 gym-bro/tests/app-check.py`.

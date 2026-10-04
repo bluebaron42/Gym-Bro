@@ -1,28 +1,37 @@
 // Run with: node tests/data-check.js   Checks the recipe data hangs together.
 global.window = {}; require("../data.js"); const D = window.BB_DATA; const R = D.RECIPES; let bad = 0;
 const fail = (m) => { bad++; console.log("FAIL " + m); };
-const used = new Set(), ingUsed = new Set();
-["bro", "gyal"].forEach((set) => Object.keys(D.OPTIONS[set]).forEach((slot) => Object.keys(D.OPTIONS[set][slot]).forEach((d) => D.OPTIONS[set][slot][d].forEach((id) => {
-  used.add(id);
-  if (!R[id]) return fail(set + " " + slot + " " + d + ": unknown recipe " + id);
-  if (R[id].slot !== slot) fail(id + " is on the " + slot + " menu but is a " + R[id].slot);
-  if (slot === "lunch" && d >= 4 && R[id].late === "no") fail(id + " cannot be a Thursday to Saturday lunch (" + set + ")");
-}))));
+const SPRE = /^([\d.]+)\s*(g|ml|tsp|tbsp|clove|x|pinch)\s+(.+)$/, SIDX = { L: 4, M: 4, B: 3, X: 3, S: 2, H: 4, T: 3 }, IGNORE = { "water": 1, "hot water": 1 };
+const ingUsed = new Set();
 Object.values(R).forEach((r) => {
-  if (!used.has(r.id)) fail(r.id + " is on no menu");
   r.ing.forEach(([i, g]) => { ingUsed.add(i); if (!D.ING[i]) fail(r.id + ": unknown ingredient " + i); if (!(g > 0)) fail(r.id + ": bad amount for " + i); });
+  if (!(r.method && r.method.length)) fail(r.id + ": no method");
   if (r.slot === "dinner" && ["fresh", "head", "sunday"].indexOf(r.type) < 0) fail(r.id + ": dinner needs a type");
+  if (r.slot === "dinner" && r.kind) fail(r.id + ": a shared dinner cannot be something one person skips");
   if (r.slot === "lunch" && ["freeze", "split", "no"].indexOf(r.late) < 0) fail(r.id + ": lunch needs late");
-  if (r.slot === "dinner" && D.TAGS.pork.some((i) => r.ing.some((x) => x[0] === i))) fail(r.id + ": pork in a dinner");
-  const prep = D.PREP[r.id], comp = D.COMP[r.id];
-  if (r.type === "fresh" && comp) fail(r.id + ": cook-fresh dinner has Sunday components");
-  if (r.type === "fresh" && !(prep && prep[0] === "" && prep[1])) fail(r.id + ": cook-fresh dinner needs an on-the-day recipe");
-  if ((r.type === "head" || r.type === "sunday") && !(comp && prep && prep[0] && prep[1])) fail(r.id + ": needs Sunday components and both prep texts");
-  if (r.type === "head" && comp.some((c) => "OHL".indexOf(c[0]) >= 0)) fail(r.id + ": head-start dinner is being cooked on Sunday");
-  if (r.slot === "lunch" && r.id !== "l-onigiri" && !(comp && comp.some((c) => c[0] === "P"))) fail(r.id + ": lunch needs a pack line");
+  if (r.type === "fresh" && (r.comp || r.finish)) fail(r.id + ": cook-fresh dinner has Sunday prep");
+  if ((r.type === "head" || r.type === "sunday") && !(r.comp && r.finish)) fail(r.id + ": needs Sunday components and a finish step");
+  if (r.type === "head" && r.comp.some((c) => "OHL".indexOf(c[0]) >= 0)) fail(r.id + ": head-start dinner is being cooked on Sunday");
+  if (r.slot === "lunch" && r.id !== "l-onigiri" && !(r.comp && r.comp.some((c) => c[0] === "P") && r.finish)) fail(r.id + ": lunch needs a pack line and a finish step");
+  // Seasoning lists: every item is a known shopping ingredient or cupboard item, and the ingredient list covers what the lists use.
+  const strs = []; (r.comp || []).forEach((t) => { const s = t[SIDX[t[0]]]; if (typeof s === "string" && s) strs.push(s); }); (r.sea || []).forEach((g) => strs.push(g[1]));
+  const need = {}, zest = {};
+  strs.forEach((s) => s.split(";").map((x) => x.trim()).filter(Boolean).forEach((x) => {
+    const m = x.match(SPRE); if (!m) return fail(r.id + ": cannot read seasoning item '" + x + "'");
+    const q = +m[1], u = m[2], n = m[3]; if (IGNORE[n]) return;
+    const al = D.ALIAS[n]; if (!al) { if (!D.CUPBOARD[n]) fail(r.id + ": '" + n + "' is neither an ingredient nor a cupboard item"); return; }
+    const per = (u === "g" || u === "ml") ? 1 : al[1][u]; if (per == null) return fail(r.id + ": no " + u + " weight for " + n);
+    if (al[2] === "zest") zest[al[0]] = (zest[al[0]] || 0) + q * per; else need[al[0]] = (need[al[0]] || 0) + q * per;
+  }));
+  Object.keys(zest).forEach((k) => { need[k] = Math.max(need[k] || 0, zest[k]); });
+  Object.keys(need).forEach((k) => { const e = r.ing.find((x) => x[0] === k); if (!e) fail(r.id + ": uses " + k + " but it is not in the ingredients"); else if (need[k] > e[1] * 1.03 + 0.3) fail(r.id + ": lists use " + need[k].toFixed(1) + " g " + k + " but the ingredients have " + e[1]); });
 });
-["PREP", "COMP"].forEach((k) => Object.keys(D[k]).forEach((id) => { if (!R[id]) fail(k + " has an entry for a missing recipe: " + id); }));
 Object.keys(D.ING).forEach((i) => { if (!ingUsed.has(i)) fail("unused ingredient " + i); });
+Object.keys(D.ALIAS).forEach((n) => { if (!D.ING[D.ALIAS[n][0]]) fail("alias " + n + " points at a missing ingredient"); });
+["TRIM", "PACKS"].forEach((t) => Object.keys(D[t]).forEach((i) => { if (!D.ING[i]) fail(t + " has unknown ingredient " + i); }));
+// The default week must be valid for the people eating it.
+const H = D.HOUSE, ok = (id, slot, dow, who) => { const r = R[id]; if (!r || r.slot !== slot) return false; const eat = H.shared.indexOf(slot) >= 0 ? H.order : [who]; if (r.kind && eat.some((w) => H.people[w].skip.indexOf(r.kind) >= 0)) return false; return !(slot === "lunch" && dow >= 4 && r.late === "no"); };
+["breakfast", "shake", "lunch", "dinner", "snack"].forEach((slot) => H.order.forEach((w) => [0, 1, 2, 3, 4, 5, 6].forEach((d) => { const id = H.shared.indexOf(slot) >= 0 ? D.DEFAULTS[slot][d] : D.DEFAULTS[slot][w][d]; if (!ok(id, slot, d, w)) fail("default " + slot + " day " + d + " for " + w + " is not allowed: " + id); })));
 const n = (f) => Object.values(R).filter(f).length;
 console.log("dinners " + n((r) => r.slot === "dinner") + " (fresh " + n((r) => r.type === "fresh") + ", head " + n((r) => r.type === "head") + ", sunday " + n((r) => r.type === "sunday") + "), lunches " + n((r) => r.slot === "lunch") + ", treats " + n((r) => r.slot === "snack"));
 console.log(bad ? bad + " problem(s)" : "All checks passed"); process.exit(bad ? 1 : 0);
