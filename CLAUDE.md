@@ -88,7 +88,7 @@ not been measured in a real prep session.
 its time and the newest wins. Rules are in `firebase-rules.json` and are pasted into the Firebase console by Blue
 (project `gym-app-6c933`). The sandbox can read the database with the key through a web fetch but cannot write to it.
 
-**Timers**: ticking a timed run-sheet step starts a shared timer. The alarm is reliable only while the app is in
+**Timers**: ticking an oven or hob run-sheet step starts a shared timer (nothing for marinating, cooling, cold jobs or the Instant Pot, which has its own). The alarm is reliable only while the app is in
 front, so the app keeps the screen awake. Lock-screen notifications are best effort; a guaranteed one would need a push server.
 
 **Ordering the shop**: Blue gives the household key in chat, you read `h/<key>.json`, save it to a file, and run

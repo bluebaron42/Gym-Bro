@@ -72,6 +72,9 @@ try:
                         live = [y for y in ks if y["s"] < x["d"] and y["d"] > x["s"]]
                         if len([y for y in live if y["s"] <= x["s"]]) > cap: fail(f"{tag}: {kit} over capacity at {x['id']}")
                         if kit == "oven" and any(y["temp"] != x["temp"] for y in live): fail(f"{tag}: oven at two temperatures at once ({x['id']})")
+                timed = pg.eval_on_selector_all("[data-timer]", "els=>els.map(e=>e.dataset.kit+'|'+e.dataset.step)")
+                for x in timed:
+                    if x.split("|")[0] not in ("oven", "hob"): fail(f"{tag}: a timer is offered for something not on the hob or in the oven: {x}")
                 missing = [r for r in prepped if any(c[0] == "P" for c in D["RECIPES"][r]["comp"]) and ("P|" + r) not in by]
                 if missing: fail(f"{tag}: no boxing step for {missing}")
             txt = pg.inner_text("#view")
