@@ -343,10 +343,16 @@ function menuKey(slot,dow,who){return (isShared(slot)||(who||ME)===ME?"":"p:")+s
 function fits(id,slot,who){const r=RECIPES[id];if(!r||r.slot!==slot)return false;
   return !(r.kind&&eaters(slot,who).some(w=>person(w).skip.indexOf(r.kind)>=0))}
 function allowed(id,slot,dow,who){return fits(id,slot,who)&&!(slot==="lunch"&&dow>=4&&RECIPES[id].late==="no")}
-function defaultFor(slot,dow,who){who=who||ME;const ps=((FD.PRESETS||{})[viewWk]||{})[slot];const v=ps&&(isShared(slot)?ps[dow]:(ps[who]||{})[dow]);
-  return fits(v,slot,who)?v:isShared(slot)?DEF[slot][dow]:DEF[slot][who][dow]}
-function choice(slot,dow,who){who=who||ME;const v=menuFor(viewWk)[menuKey(slot,dow,who)];return fits(v,slot,who)?v:defaultFor(slot,dow,who)}
-function setChoice(slot,days,id,who){const all=Object.assign({},allMenus()),old=all[viewWk]||{};const m=Object.assign({},menuFor(viewWk));
+// A week's meal, in order: what was chosen for that week; a one-off preset for that week; what the week before had
+// (a new week starts as a copy of the last one); the standard default.
+function choice(slot,dow,who){who=who||ME;const k=menuKey(slot,dow,who),own=allMenus()[viewWk];
+  if(own){if(fits(own[k],slot,who))return own[k]}
+  const ps=((FD.PRESETS||{})[viewWk]||{})[slot],pv=ps&&(isShared(slot)?ps[dow]:(ps[who]||{})[dow]);if(fits(pv,slot,who))return pv;
+  if(!own){const v=menuFor(viewWk)[k];if(fits(v,slot,who))return v}
+  return isShared(slot)?DEF[slot][dow]:DEF[slot][who][dow]}
+// The first change to a week fixes the whole week as it currently shows, so later edits to other weeks cannot shift it.
+function weekSnapshot(){const m={};SLOTS.forEach(sl=>ORDER.forEach(d=>(isShared(sl)?[ME]:HOUSE.order).forEach(w=>{m[menuKey(sl,d,w)]=choice(sl,d,w)})));return m}
+function setChoice(slot,days,id,who){const all=Object.assign({},allMenus()),old=all[viewWk]||{};const m=all[viewWk]?Object.assign({},all[viewWk]):weekSnapshot();
   days.forEach(d=>{if(allowed(id,slot,d,who))m[menuKey(slot,d,who)]=id});all[viewWk]=m;
   Object.keys(all).sort().slice(0,-8).forEach(k=>delete all[k]);save("menus",all);
   const out={},now=Date.now();Object.keys(m).forEach(k=>{if(old[k]!==m[k])out["m/"+viewWk+"/"+canon(k)]=m[k]+"@"+now});syncPush(out)}
@@ -701,7 +707,7 @@ function renderFood(){
     '<p class="rest-note" style="margin:0"><b>Sunday load:</b> '+["fresh","head","sunday"].map(t=>ORDER.filter(d=>(RECIPES[choice("dinner",d)]||{}).type===t).length+' '+DTYPE[t][0].toLowerCase()).join(" · ")+' dinners; '+HOUSE.order.map(w=>lunchN(w)+' lunch'+(lunchN(w)>1?'es':'')+' for '+(w===ME?'you':pname(w))).join(", ")+'; '+treatN+' batch treat'+(treatN===1?'':'s')+'.</p>'+menu+'<button type="button" class="btn ghost small" id="menu-reset" style="align-self:flex-start">Reset this menu to defaults</button></section>'+
     '<h2 class="sec">Sync with '+esc(pname(OTHER))+'</h2>'+syncCard()+
     '<h2 class="sec">Recipes</h2>'+lib+
-    '<h2 class="sec">Shopping list</h2><section class="card">'+seg("sv",shopView,[["house","Household"],[ME,"Just me"],[OTHER,"Just "+pname(OTHER)]])+'<p class="rest-note"><b>'+weekRange(viewWk)+'.</b> '+(shopView==="house"?'Everything both of you eat this week, at each person’s portions.':shopView===ME?'Only your portions.':'Only '+esc(poss(OTHER))+' portions.')+' Weights include an allowance for peel and trim; pack counts are a guide.</p><div class="data-btns"><button type="button" class="btn small" id="shop-send">Send to Claude</button><button type="button" class="btn ghost small" id="shop-copy">Copy shopping list</button></div><p class="rest-note" id="shop-msg" aria-live="polite"></p>'+lists+'</section>'+
+    '<h2 class="sec">Shopping list</h2><section class="card">'+seg("sv",shopView,[["house","Household"],[ME,"Just me"],[OTHER,"Just "+pname(OTHER)]])+'<p class="rest-note"><b>'+weekRange(viewWk)+'.</b> '+(shopView==="house"?'Everything both of you eat this week, at each person’s portions.':shopView===ME?'Only your portions.':'Only '+esc(poss(OTHER))+' portions.')+' Weights include an allowance for peel and trim; pack counts are a guide.</p><div class="data-btns"><button type="button" class="btn small" id="shop-copy">Copy shopping list</button></div><p class="rest-note" id="shop-msg" aria-live="polite"></p>'+lists+'</section>'+
     '<h2 class="sec">Sunday run sheet'+(viewWk===THIS_MONDAY?'':' for next week')+'</h2><section class="card">'+(RS.steps.length?
       '<div class="prep-est"><b>About '+hm(RS.total)+'</b><span>start to finish with '+(RS.cooks>1?'two of you':'one cook')+', for Monday '+fmtDate(viewWk)+' to Saturday</span></div>'+seg("cooks",String(nCooks),[["2","Two of us"],["1","One cook"]])+
       '<p class="rest-note">Work down the list. Times count from when you start; each step shows who does it and the hands-on minutes. Ticking a step that cooks, marinates or cools starts its timer on both phones. It covers both your lunches, the treats, and head start or Sunday batch dinners, and rebuilds whenever you swap a meal.</p>'+prep+
@@ -940,10 +946,8 @@ function shopText(){const shop=shopState().t||{},pantry=get("pantry",{});let ski
   const cup=SL.cup.filter(c=>!pantry[c.key]);if(cup.length){L.push("Seasonings not in the cupboard");cup.forEach(c=>L.push("- "+c.name+" (recipes use "+c.amt+")"));L.push("")}
   if(skipped)L.push("("+skipped+" ticked item"+(skipped>1?"s":"")+" left off as already got.)");
   return L.join("\n").trim()}
-$("#view").addEventListener("click",async ev=>{const send=ev.target.id==="shop-send";if(ev.target.id!=="shop-copy"&&!send)return;const m=$("#shop-msg");
-  const t=(send?"Please build my Asda basket from this "+P.app+" shopping list. Match each line to a product, round up to whole packs, and tell me anything you could not find.\n\n":"")+shopText();
-  if(send&&navigator.share){try{await navigator.share({text:t});m.textContent="Pick Claude in the share menu, then send.";return}catch(e){if(e&&e.name==="AbortError")return}}
-  try{await navigator.clipboard.writeText(t);m.textContent=send?"This phone can’t open the share menu, so the list is copied instead. Paste it into your Claude chat.":"Copied. Ticked items are left off."}
+$("#view").addEventListener("click",async ev=>{if(ev.target.id!=="shop-copy")return;const t=shopText();const m=$("#shop-msg");
+  try{await navigator.clipboard.writeText(t);m.textContent="Copied. Ticked items are left off."}
   catch(e){let ta=$("#shop-text");if(!ta){ta=document.createElement("textarea");ta.id="shop-text";ta.readOnly=true;ta.setAttribute("aria-label","Shopping list as text");ta.className="share-ta";m.after(ta)}ta.value=t;ta.focus();ta.select();m.textContent="Your phone blocked copying. The list is selected below: long-press and choose Copy."}});
 
 function suppList(){const m=new Date().getMonth();const L=[["creatine","Creatine monohydrate, 5 g","Any time. Stir it into your morning shake."]];

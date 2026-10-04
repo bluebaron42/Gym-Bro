@@ -97,6 +97,17 @@ try:
         if pg.inner_text("#view") != this_before: fail(f"{app}: this week's page changed after planning next week")
         if errs: fail(f"{app}: page errors {errs}")
         print(app, "rounds", rounds, "recipes exercised", len(seen))
+    # a one-off preset week beats what would be copied from the week before, and the first edit freezes the week as shown
+    pg = b.new_context(service_workers="block").new_page(); pg.clock.install(time="2026-10-06T09:00:00"); pg.goto("http://localhost:8765/gym-bro/index.html")
+    pg.evaluate("localStorage.setItem('banebuild:menus',JSON.stringify({'2026-09-28':{dinner5:'d-pizza',snack1:'s-crumble',lunch2:'l-shawarma','p:lunch2':'l-caesar'}}))"); pg.reload(); pg.click('[data-tab="food"]')
+    seen_now = pg.eval_on_selector_all("#view [data-recipe][data-slot]", "els=>els.map(e=>e.dataset.slot+e.dataset.dow+'='+e.dataset.recipe)")
+    for want in ("dinner5=d-bigmac", "snack1=s-choc-mousse", "lunch2=l-bulgogi"):
+        if want not in seen_now: fail(f"preset week: expected {want}")
+    pg.click('[data-who="harriett"]')
+    if "lunch2=l-caesar" not in pg.eval_on_selector_all("#view [data-recipe][data-slot]", "els=>els.map(e=>e.dataset.slot+e.dataset.dow+'='+e.dataset.recipe)"): fail("a new week did not start from last week's choice where there is no preset")
+    pg.click('[data-who="blue"]'); pg.click('[data-swap="dinner"][data-dow="1"]'); pg.locator('#sheet [data-choose="d-ragu"]').first.click()
+    wkm = json.loads(pg.evaluate("localStorage.getItem('banebuild:menus')"))["2026-10-05"]
+    if wkm.get("dinner5") != "d-bigmac" or wkm.get("dinner1") != "d-ragu" or wkm.get("p:lunch2") != "l-caesar": fail(f"first edit did not freeze the week as shown: {wkm}")
     # ---- sync between the two phones, against the stand-in database
     def phone(app):
         ctx = b.new_context(viewport={"width": 400, "height": 850}, service_workers="block"); ctx.add_init_script("window.GB_SYNC_URL='http://localhost:8766'")
@@ -153,10 +164,6 @@ try:
     until("timer did not ring when due", lambda: B.locator("#ktimers .kt.done").count() == 1)
     B.click("#ktimers [data-kt]")
     until("dismissing the timer did not clear it on both phones", lambda: A.locator("#ktimers .kt").count() == 0 and B.locator("#ktimers .kt").count() == 0)
-    # send to Claude: falls back to copying when the phone has no share menu
-    ca.grant_permissions(["clipboard-read", "clipboard-write"]); A.click("#shop-send"); time.sleep(0.3)
-    clip = A.evaluate("navigator.clipboard.readText()")
-    if "Asda basket" not in clip or "Shopping list, week of" not in clip: fail("send to Claude: the list was not prepared")
     # reset reaches the other phone
     B.click("#menu-reset"); B.click("#menu-reset")
     until("menu reset did not reach the other phone", lambda: "dinner2" not in stored(A, "banebuild:", "menus")[WK])
