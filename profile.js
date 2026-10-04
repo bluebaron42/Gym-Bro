@@ -15,6 +15,7 @@ window.GB_PROFILE = {
   exclude: [],
   protein: 200,
   planWeeks: 12,
+  weightUnit: "kg",
   goalWeight: null,
   phases: [
     { until: 12, name: "Recomp", label: "Phase 1 recomp", kcal: 2750, trend: [-0.8, -0.2], trendText: "down 0.25–0.5 kg a week",

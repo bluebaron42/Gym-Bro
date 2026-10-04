@@ -31,7 +31,6 @@ Your data is lost if you uninstall the app or clear Chrome's site data, so keep 
 - **Food tab → Copy my menu**, then send the message on WhatsApp.
 - When your partner sends theirs, copy the whole message, then **Food tab → Paste partner's menu**.
 - **Shopping list: Together** combines both weeks into one list; **Just mine** shows only yours.
-- **Same dinner: On** keeps dinners matched; the most recent change wins when you share.
 
 `index.html`, `data.js` and `guides.js` are shared with Gym-Gyal. `profile.js` holds the settings that make this app yours.
 
