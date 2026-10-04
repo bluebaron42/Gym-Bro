@@ -63,6 +63,9 @@ h2.sec{font-family:var(--display);font-weight:700;font-size:22px;text-transform:
 .chip.plate::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--plate-ink);opacity:.9;box-shadow:inset 0 0 0 2px var(--plate)}
 .chip.ok{background:var(--ok-soft);color:var(--ok)}
 .chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.dt-fresh{background:var(--ok-soft);color:var(--ok)}
+.chip.dt-head{background:var(--warn-soft);color:var(--warn)}
+.chip.dt-sunday{background:var(--plate);color:var(--plate-ink)}
 .chip.muted{background:var(--sunk);color:var(--muted)}
 .sets{display:flex;flex-direction:column;gap:6px}
 .set{display:grid;grid-template-columns:40px 1fr auto 1fr 44px;align-items:center;gap:6px}
@@ -103,9 +106,6 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
 .list li span:last-child{color:var(--muted);white-space:nowrap}
 .check{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start;padding:7px 0;cursor:pointer}
 .check.on span{color:var(--muted);text-decoration:line-through}
-.fk h3{margin:0;font-size:16px}
-.fk .d{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--plate)}
-.fk p{margin:2px 0 0;color:var(--muted);font-size:14px}
 .links{display:flex;flex-wrap:wrap;gap:8px}
 .links a{color:var(--accent);font-weight:600;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:6px 12px;background:var(--surface);font-size:14px}
 .form{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:end}
@@ -335,10 +335,10 @@ function shopList(){const agg={},uses={};
   if(pt)ORDER.forEach(d=>["breakfast","shake","lunch","dinner","snack"].forEach(s=>add(partnerChoice(pt,s,d),pt.sc)));
   return AISLES.map(a=>[a,Object.keys(agg).filter(i=>ING[i]&&ING[i][1]===a).sort((x,y)=>ING[x][0]<ING[y][0]?-1:1).map(i=>({id:i,name:ING[i][0],amt:shopAmount(i,agg[i]),uses:Object.keys(uses[i])}))]).filter(x=>x[1].length)}
 function prepList(){
-  const days=[1,2,3,4,5,6];const pt=null;
+  const days=[1,2,3,4,5,6];
   const COMPD=FD.COMP||{},VEGE=FD.VEG_EACH||{};
-  const use={};const addUse=(id,slot,d,sc,who)=>{if(!RECIPES[id])return;const u=use[id]=use[id]||{slot:slot,days:[],scs:[],boxes:[]};if(u.days.indexOf(d)<0)u.days.push(d);u.scs.push(sc);u.boxes.push({d:d,who:who})};
-  days.forEach(d=>["lunch","dinner","snack"].forEach(sl=>{const id=choice(sl,d);addUse(id,sl,d,P.scales,"me")}));
+  const use={};const addUse=(id,slot,d,sc)=>{if(!RECIPES[id])return;const u=use[id]=use[id]||{slot:slot,days:[],scs:[],boxes:[]};if(u.days.indexOf(d)<0)u.days.push(d);u.scs.push(sc);u.boxes.push({d:d})};
+  days.forEach(d=>["lunch","dinner","snack"].forEach(sl=>{const id=choice(sl,d);if(RECIPES[id]&&RECIPES[id].type==="fresh")return;addUse(id,sl,d,P.scales)}));
   // ---- helpers ----
   const SPRE=/^([\d.]+)\s*(g|ml|tsp|tbsp|clove|x|pinch)\s+(.+)$/;
   const parse=str=>(str||"").split(";").map(x=>x.trim()).filter(Boolean).map(x=>{const m=x.match(SPRE);return m?{q:+m[1],u:m[2],n:m[3]}:null}).filter(Boolean);
@@ -365,7 +365,7 @@ function prepList(){
   const pname2=id=>ING[id]?ING[id][0].toLowerCase():id;
   // ---- pool components ----
   const LONG={},VEG={},MAR={},BR={},SH={},SA={},OV={},HB={},TR={},PK={};
-  const HP={"Carbonara meat":["bacon","chicken-breast"],"Pad thai chicken":["chicken-breast"],"Pasta bake sauce":["chicken-breast","bacon"],"Chicken fried rice":["chicken-breast"]};
+  const HP={"Pasta bake sauce":["chicken-breast","turkey-rashers"]};
   Object.keys(use).forEach(id=>{const r=RECIPES[id],u=use[id],comps=COMPD[id]||[];
     u.scs.forEach((sc,ix)=>{const f=lots(sc);
       comps.forEach(t=>{const k=t[0];
@@ -378,15 +378,15 @@ function prepList(){
         else if(k==="S"){const o=SA[t[1]]=SA[t[1]]||{sp:{},sim:t[3]||0,bl:!!t[4],d:[],n:0};o.n++;addSp(o.sp,t[2],f);o.d.push(dish(id))}
         else if(k==="O"){const ov=OV[t[1]]=OV[t[1]]||{};const o=ov[t[3]]=ov[t[3]]||{min:t[2],n:0,d:[],p:{}};o.n++;o.d.push(dish(id));const mp=/oats|brownie|crumble|crouton|lasagne|pasta bake|meatball/i.test(t[3])?null:mainP(r);if(mp)o.p[mp]=(o.p[mp]||0)+gOf(r,mp,sc)}
         else if(k==="H"){const o=HB[t[1]]=HB[t[1]]||{min:t[2],m:t[3],sp:{},d:[],n:0,p:{}};o.n++;if(t[4])addSp(o.sp,t[4],f);o.d.push(dish(id));
-          const ps=HP[t[1]]||(/^(Boil eggs|Steam|Cinnamon apple|Spicy rice|Beans|Salt and pepper veg|Philly onions|Sweet and sour|Tikka masala sauce)/.test(t[1])?[]:[mainP(r)]);ps.forEach(mp=>{if(mp)o.p[mp]=(o.p[mp]||0)+gOf(r,mp,sc)})}
+          const ps=HP[t[1]]||(/^(Boil eggs|Steam|Cinnamon apple|Tikka masala sauce)/.test(t[1])?[]:[mainP(r)]);ps.forEach(mp=>{if(mp)o.p[mp]=(o.p[mp]||0)+gOf(r,mp,sc)})}
         else if(k==="T"){const o=TR[t[1]]=TR[t[1]]||{m:t[2],sp:{},n:0,days:[]};o.n++;addSp(o.sp,t[3],f);const bd=u.boxes[ix].d;if(o.days.indexOf(bd)<0)o.days.push(bd)}
-        else if(k==="P"){const b=u.boxes[ix];(PK[b.d]=PK[b.d]||[]).push({sl:u.slot,name:r.name,id:id,what:t[1],who:b.who})}
+        else if(k==="P"){const b=u.boxes[ix];(PK[b.d]=PK[b.d]||[]).push({sl:u.slot,name:r.name,id:id,what:t[1]})}
       })})});
   const out=[];let total=10;
   const mins=m=>m<60?m+" min":Math.floor(m/60)+" h"+(m%60?" "+(m%60)+" min":"");
   const amt=(p)=>Object.keys(p).filter(i=>p[i]>0).map(i=>amount(i,p[i])+" "+pname2(i)).join(" + ");
   // carbs
-  const carb={};Object.keys(use).forEach(id=>{if(NO_BATCH.indexOf(id)>=0)return;RECIPES[id].ing.forEach(([i,g])=>{if(BATCH.indexOf(i)<0)return;use[id].scs.forEach(sc=>{carb[i]=(carb[i]||0)+g*scaleOf(i,sc)})})});
+  const carb={};Object.keys(use).forEach(id=>{if(onDay(id))return;RECIPES[id].ing.forEach(([i,g])=>{if(BATCH.indexOf(i)<0)return;use[id].scs.forEach(sc=>{carb[i]=(carb[i]||0)+g*scaleOf(i,sc)})})});
   // 1. long cooks + equipment plan
   const longs=Object.keys(LONG).map(k=>Object.assign({k:k},LONG[k])).sort((a,b)=>b.min-a.min);
   let ipBusy=false;const L1=[];
@@ -406,7 +406,7 @@ function prepList(){
   if(carb.potatoes)C.push("<b>Potatoes</b>: cut "+shopAmount("potatoes",carb.potatoes)+" into chips or cubes; boil 5 min, drain, steam-dry, cool, bag by meal (air-fry on the day).");
   
   // 2. veg
-  const V=[];const tVeg=Object.keys(VEG).length;
+  const V=[];
   if(tally.garlic>=1)V.push("<b>Garlic</b>: peel and grate "+Math.ceil(tally.garlic)+" cloves into a small covered bowl. Every recipe below draws from it.");
   if(tally.ginger>0)V.push("<b>Ginger</b>: grate "+fr(tally.ginger)+" tsp (about "+Math.max(2,Math.round(tally.ginger*1.5))+" cm).");
   ["lemon","lime"].forEach(c=>{if(tally[c]>0)V.push("<b>"+(c==="lemon"?"Lemons":"Limes")+"</b>: zest first if needed, then juice "+Math.max(1,Math.ceil(tally[c]-0.15))+".")});
@@ -427,8 +427,8 @@ function prepList(){
   if(cold.length){S.push("## Cold: whisk in jars or pots");cold.forEach(k=>{S.push("<b>"+k+"</b> ("+list(SA[k].d)+"): "+spText(SA[k].sp)+".");total+=3})}
   if(hot.length){S.push("## Cooked: run these side by side on the hob");hot.forEach(k=>{const o=SA[k];S.push("<b>"+k+"</b> ("+list(o.d)+", simmer "+o.sim+" min"+(o.bl?", then blend":"")+"): "+spText(o.sp)+".");total+=4+(o.bl?2:0)})}
   // 6. treats
-  const T=Object.keys(TR).map(k=>{const o=TR[k];total+=5+o.n;const late=/pots/i.test(k)&&o.days.some(d=>d>3);
-    return "<b>"+k+"</b>, "+o.n+" portion"+(o.n>1?"s":"")+" ("+o.days.sort().map(d=>DNAME[d]).join(", ")+"): "+spText(o.sp)+". "+o.m+"."+(late?" Pots keep 3 days: make Thursday to Saturday's on Wednesday night.":"")});
+  const T=Object.keys(TR).map(k=>{const o=TR[k];total+=5+o.n;
+    return "<b>"+k+"</b>, "+o.n+" portion"+(o.n>1?"s":"")+" ("+o.days.sort().map(d=>DNAME[d]).join(", ")+"): "+spText(o.sp)+". "+o.m+"."});
   // 7. cook by equipment
   const K=[];
   ovTemps.forEach(tp=>{const items=OV[tp];const mx=Math.max(...Object.values(items).map(o=>o.min));
@@ -440,25 +440,27 @@ function prepList(){
   const PKL=[];let boxes=0;
   // Per-box weights: cooked weight for batch carbs and meat, with the raw or dry weight alongside.
   const YIELD={"sushi-rice":2.3,"jasmine-rice":2.6,pasta:2.2,penne:2.2,"rice-noodles":2.5};
-  const RAWP={"chicken-breast":.75,"chicken-thigh":.72,"beef-mince":.75,"lamb-mince":.72,"beef-shin":.65,steak:.8,topside:.75,"pork-loin":.75,bacon:.7,salmon:.85};
-  const SHORT={"jasmine-rice":"jasmine or basmati rice",pasta:"pasta",penne:"penne","rice-noodles":"rice noodles","chicken-thigh":"chicken thigh","beef-mince":"beef mince","lamb-mince":"lamb mince",steak:"sirloin steak",topside:"beef topside","pork-loin":"pork loin",bacon:"bacon medallions",tuna:"drained tuna",prawns:"king prawns",eggs:"egg","egg-whites":"egg whites","greek-yog":"Greek yoghurt",broccoli:"broccoli",greens:"pak choi or greens",edamame:"edamame",peas:"peas",berries:"berries",strawberries:"strawberries",corn:"sweetcorn","kidney-beans":"kidney beans",brioche:"brioche bun",wrap:"wrap","sub-roll":"sub roll","pizza-base":"pizza base",mozzarella:"mozzarella","cheese-slice":"cheese slice"};
+  const RAWP={"chicken-breast":.75,"chicken-thigh":.72,"beef-mince":.75,"lamb-mince":.72,"beef-shin":.65,steak:.8,"turkey-rashers":.75,salmon:.85};
+  const SHORT={"jasmine-rice":"jasmine or basmati rice",pasta:"pasta",penne:"penne","rice-noodles":"rice noodles","chicken-thigh":"chicken thigh","beef-mince":"beef mince","lamb-mince":"lamb mince",steak:"sirloin steak","turkey-rashers":"turkey rashers",tuna:"drained tuna",prawns:"king prawns",eggs:"egg","egg-whites":"egg whites","greek-yog":"Greek yoghurt",broccoli:"broccoli",greens:"pak choi or greens",edamame:"edamame",peas:"peas",berries:"berries",strawberries:"strawberries",corn:"sweetcorn","kidney-beans":"kidney beans",brioche:"brioche bun",wrap:"wrap","sub-roll":"sub roll","pizza-base":"pizza base",mozzarella:"mozzarella","cheese-slice":"cheese slice"};
   const sname=i=>SHORT[i]||ING[i][0].replace(/\s*\(.*\)/,"").split(",")[0].toLowerCase();
-  const perBox=id=>{const r=RECIPES[id],nb=NO_BATCH.indexOf(id)>=0,a=[];
+  const perBox=id=>{const r=RECIPES[id],nb=onDay(id),a=[];
     r.ing.forEach(([i,g0])=>{const n=ING[i];if(!n||i==="whey"||i==="garlic"||i==="lime"||i==="panko"||i==="cornflour")return;const cat=n[1];
       if(cat==="Sauces and cupboard"&&i!=="kidney-beans"&&i!=="peanuts")return;const g=g0*scaleOf(i,P.scales);if(g<=0)return;
       if(YIELD[i])a.push(nb?roundG(g)+" g dry "+sname(i)+" (cook on the day)":"about "+roundG(g*YIELD[i])+" g cooked "+sname(i)+" ("+roundG(g)+" g dry)");
       else if(i==="potatoes")a.push(roundG(g)+" g potatoes (raw weight)");
       else if(RAWP[i])a.push("about "+roundG(g*RAWP[i])+" g cooked "+sname(i)+" ("+roundG(g)+" g raw)");
-      else if(n[6]){const c=Math.max(.5,Math.round(g/n[6]*2)/2);const nm=sname(i).replace(/s$/,"");a.push((c+"").replace(/\.5$/,"½").replace(/^0½/,"½")+" "+nm+(c>1?"s":""))}
+      else if(n[6]){const c=Math.max(.5,Math.round(g/n[6]*2)/2);const u=singular(n[7]||""),own=sname(i).indexOf(u)>=0,nm=own?sname(i).replace(/s$/,""):u;a.push((c+"").replace(/\.5$/,"½").replace(/^0½/,"½")+" "+nm+(c>1?"s":"")+(own?"":" of "+sname(i)))}
       else a.push(roundG(g)+" g "+sname(i))});
     return a.length?"<i>Per box: "+a.join(", ")+".</i>":""};
   const riceName=(id,w)=>{const r=RECIPES[id];const has=k=>r.ing.some(x=>x[0]===k);const nm=has("sushi-rice")?"sushi rice":has("jasmine-rice")?"jasmine or basmati rice":null;
     return nm?w.replace(/(^|, |; |and )(seasoned |lime |spicy )?rice\b(?! noodles)/g,(m,a,b)=>a+(b||"")+nm):w};
   PKL.push("<b>Cool first</b>: spread rice, noodles and pasta on trays and get them boxed and into the fridge within 1 hour; everything else within 90 minutes. Lids on only once cold. Weigh cooked food into the boxes using the per-box weights below.");
-  days.forEach(d=>{const it=PK[d];if(!it||!it.length)return;const store=d<=3?"fridge":"freezer";
-    const grp={};it.forEach(b=>{const k=b.sl+"|"+b.name;(grp[k]=grp[k]||{sl:b.sl,name:b.name,id:b.id,what:b.what,me:0,pt:0})[b.who]++});
-    PKL.push("<b>"+DFULL[d]+" ("+store+")</b>: "+Object.values(grp).map(g=>{boxes+=g.me+g.pt;return SLOTNAME[g.sl].toLowerCase()+", "+g.name+": "+riceName(g.id,g.what)+". "+perBox(g.id)}).join("<br>"))});
-  PKL.push("Label every box with the day. Each night, move the next day's freezer boxes to the fridge. Reheat until piping hot all the way through.");
+  const storeOf=(g,d)=>{const r=RECIPES[g.id];if(d<=3)return "fridge";
+    if(r.slot==="lunch"&&r.late==="split")return "freeze the cooked part; cut or mix the fresh part on the day";return "freezer"};
+  days.forEach(d=>{const it=PK[d];if(!it||!it.length)return;
+    const grp={};it.forEach(b=>{const k=b.sl+"|"+b.name;if(!grp[k]){grp[k]={sl:b.sl,name:b.name,id:b.id,what:b.what};boxes++}});
+    PKL.push("<b>"+DFULL[d]+"</b>: "+Object.values(grp).map(g=>SLOTNAME[g.sl].toLowerCase()+", "+g.name+" ("+storeOf(g,d)+"): "+riceName(g.id,g.what)+". "+(RECIPES[g.id].type==="head"?"":perBox(g.id))).join("<br>"))});
+  PKL.push("Label every box and bag with the day. Each night, move the next day's freezer boxes and bags to the fridge. Reheat cooked food until piping hot all the way through.");
   total+=10+boxes;
   const longMax=longs.length?longs[0].min+15:0;const wall=Math.round(Math.max(total,longMax)/5)*5;
   const push=(t,d,m)=>{if(d.length)out.push({t:t+(m?" · about "+mins(Math.max(5,Math.round(m/5)*5)):""),d:d})};
@@ -473,6 +475,11 @@ function prepList(){
   push("Cool, portion and pack",PKL,10+boxes);
   out.estimate=wall;
   return out}
+
+// Dinner types: what Sunday does for each dinner.
+const DTYPE={fresh:["Cook fresh","Nothing on Sunday. Cooked from scratch on the night."],head:["Head start","Marinade, coating or sauce on Sunday. Cooked on the night."],sunday:["Sunday batch","Cooked and portioned on Sunday. Reheat on the night."]};
+const typeChip=r=>r&&DTYPE[r.type]?'<span class="chip dt-'+r.type+'">'+DTYPE[r.type][0]+'</span>':'';
+const onDay=id=>{const r=RECIPES[id];return !!r&&(r.type==="fresh"||r.type==="head"||NO_BATCH.indexOf(id)>=0)};
 
 // ---------- Helpers ----------
 const $=s=>document.querySelector(s);
@@ -581,7 +588,7 @@ function mealsBlock(dow,interactive){
     if(t[key]){kc+=x.k;pr+=x.p}
     return '<div class="meal">'+(interactive?'<button type="button" class="box" data-meal="'+key+'" aria-pressed="'+!!t[key]+'" aria-label="Ate '+esc(SLOTNAME[m.slot])+'">✓</button>':'<span></span>')+
       '<div class="meal-main"><div class="lbl">'+SLOTNAME[m.slot]+'</div><button type="button" class="linkish" data-recipe="'+m.id+'" data-dow="'+dow+'" data-slot="'+m.slot+'">'+esc(r?r.name:"")+'</button>'+
-      '<button type="button" class="swap" data-swap="'+m.slot+'" data-dow="'+dow+'">Swap</button>'+(PREPD[m.id]&&m.slot!=="breakfast"?'<small class="onday">'+esc(PREPD[m.id][1])+'</small>':'')+'</div>'+
+      '<button type="button" class="swap" data-swap="'+m.slot+'" data-dow="'+dow+'">Swap</button>'+(m.slot==="dinner"&&RECIPES[m.id].type==="fresh"?'<small class="onday">Cook fresh tonight · '+esc(RECIPES[m.id].time)+'. Tap for the recipe.</small>':(PREPD[m.id]&&m.slot!=="breakfast"?'<small class="onday">'+esc(PREPD[m.id][1])+'</small>':''))+'</div>'+
       '<div class="k num">'+x.k+' kcal<br>'+x.p+' g P</div></div>'}).join("");
   const tot=dayTotals(dow), tgtK=kcalTarget(), tgtP=P.protein;
   const meters=interactive?'<div class="totals"><div class="meter"><div class="row"><span>Calories</span><span class="num"><b>'+fmtN(kc)+'</b> / '+fmtN(tgtK)+'</span></div><div class="bar"><i style="width:'+Math.min(100,kc/tgtK*100)+'%"></i></div></div>'+
@@ -615,7 +622,7 @@ function renderWeek(){
   return '<div><div class="eyebrow">This week</div><h1 class="day">'+esc(P.weekIntro.title)+'</h1><p class="lead">'+esc(P.weekIntro.lead)+'</p></div>'+strip+body;
 }
 
-function recipeBtn(id,dow,slot){const r=RECIPES[id],x=macros(id);return '<button type="button" class="rrow" data-recipe="'+id+'"'+(dow!=null?' data-dow="'+dow+'" data-slot="'+slot+'"':'')+'><span>'+esc(r.name)+(r.tag?' <em>'+esc(r.tag)+'</em>':'')+'</span><span class="num">'+x.k+' kcal · '+x.p+' g P</span></button>'}
+function recipeBtn(id,dow,slot){const r=RECIPES[id],x=macros(id);return '<button type="button" class="rrow" data-recipe="'+id+'"'+(dow!=null?' data-dow="'+dow+'" data-slot="'+slot+'"':'')+'><span>'+esc(r.name)+(r.tag?' <em>'+esc(r.tag)+'</em>':'')+(DTYPE[r.type]?' '+typeChip(r):'')+'</span><span class="num">'+x.k+' kcal · '+x.p+' g P</span></button>'}
 function renderFood(){
   const shop=shopState().t||{};
   const chk=(key,label,sub)=>'<div class="check'+(shop[key]?' on':'')+'" data-shop="'+esc(key)+'" role="checkbox" tabindex="0" aria-checked="'+!!shop[key]+'"><span class="box" aria-hidden="true" style="'+(shop[key]?'background:var(--ok);border-color:var(--ok)':'')+'">✓</span><span>'+label+(sub?'<small class="uses">'+esc(sub)+'</small>':'')+'</span></div>';
@@ -633,11 +640,11 @@ function renderFood(){
   return '<div><div class="eyebrow">Food · '+weekRange(viewWk)+'</div><h1 class="day">'+(isNext?"Next":"This")+' week’s menu</h1></div>'+
     '<div class="seg wide wk" role="group" aria-label="Which week"><button type="button" data-wk="'+THIS_MONDAY+'" aria-pressed="'+!isNext+'">This week</button><button type="button" data-wk="'+NEXT_MONDAY+'" aria-pressed="'+isNext+'">Next week</button></div>'+
     '<p class="lead" style="margin:0">'+(isNext?(planned?'Your plan for next week. ':'Starts as a copy of this week. ')+'Changes here don’t touch this week’s meals. It becomes this week on Monday.':'What you’re eating now. Switch to Next week to plan and shop ahead.')+' The shopping list, Sunday prep and shared menu below all follow the week shown.</p>'+
-    '<section class="card">'+menu+'<button type="button" class="btn ghost small" id="menu-reset" style="align-self:flex-start">Reset this menu to defaults</button></section>'+
+    '<section class="card"><p class="rest-note" style="margin:0"><b>Dinners this week:</b> '+["fresh","head","sunday"].map(t=>ORDER.filter(d=>(RECIPES[choice("dinner",d)]||{}).type===t).length+' '+DTYPE[t][0].toLowerCase()).join(" · ")+'. Only head start and Sunday batch dinners add to Sunday prep.</p>'+menu+'<button type="button" class="btn ghost small" id="menu-reset" style="align-self:flex-start">Reset this menu to defaults</button></section>'+
     '<h2 class="sec">Share with '+esc(pname())+'</h2>'+shareCard()+
     '<h2 class="sec">Recipes</h2>'+lib+
     '<h2 class="sec">Shopping list</h2><section class="card"><p class="rest-note"><b>'+weekRange(viewWk)+'.</b> '+(together()?'<b>Together:</b> your 7 days plus '+esc(partner().who)+'’s, at each person’s portions. ':'Totals for all 7 days of your current menu. ')+'Check the cupboard items before you buy.</p><div class="data-btns"><button type="button" class="btn small" id="shop-copy">Copy shopping list</button></div><p class="rest-note" id="shop-msg" aria-live="polite"></p>'+lists+'</section>'+
-    '<h2 class="sec">Sunday prep'+(viewWk===THIS_MONDAY?'':' for next week')+'</h2><section class="card"><div class="prep-est"><b>About '+(prepEst>=60?Math.floor(prepEst/60)+' h '+(prepEst%60?(prepEst%60)+' min':''):prepEst+' min')+'</b><span>estimated prep for Monday '+fmtDate(viewWk)+' to Saturday</span></div><p class="rest-note">Work down the stations in order: like jobs are batched together, and the long cooks run in the background. It rebuilds whenever you swap a meal. Each meal\u2019s on-the-day step is on the Today tab.</p>'+prep+'<p class="rest-note">Shopping and prep ticks clear themselves every Monday.</p><button type="button" class="btn ghost small" id="clear-shop" style="align-self:flex-start">Clear ticks now</button></section>'+
+    '<h2 class="sec">Sunday prep'+(viewWk===THIS_MONDAY?'':' for next week')+'</h2><section class="card"><div class="prep-est"><b>About '+(prepEst>=60?Math.floor(prepEst/60)+' h '+(prepEst%60?(prepEst%60)+' min':''):prepEst+' min')+'</b><span>estimated prep for Monday '+fmtDate(viewWk)+' to Saturday</span></div><p class="rest-note">Covers lunches, treats, and any head start or Sunday batch dinners; cook-fresh dinners need nothing today. It rebuilds whenever you swap a meal. Each meal\u2019s on-the-day step is on the Today tab.</p>'+prep+'<p class="rest-note">Shopping and prep ticks clear themselves every Monday.</p><button type="button" class="btn ghost small" id="clear-shop" style="align-self:flex-start">Clear ticks now</button></section>'+
     '<h2 class="sec">Recipe creators</h2><div class="links">'+CREATORS.map(c=>'<a href="https://www.youtube.com/results?search_query='+encodeURIComponent(c[1])+'" target="_blank" rel="noopener">'+esc(c[0])+'</a>').join("")+'</div>'+
     '<p class="rest-note">Swaps that matter: air fryer, 5% mince or chicken, light mayo and yoghurt sauces, measured oil.</p>';
 }
@@ -650,7 +657,7 @@ function renderSheet(){if(!sheet)return;const T=$("#sheet-title"),B=$("#sheet-bo
   if(sheet.mode==="swap"){const cur=choice(sheet.slot,sheet.dow);
     T.textContent=DFULL[sheet.dow]+" "+SLOTNAME[sheet.slot].toLowerCase();
     B.innerHTML='<p class="rest-note">Pick one. Your shopping list and prep update straight away.'+''+'</p>'+optionsFor(sheet.slot,sheet.dow).map(id=>{const r=RECIPES[id],x=macros(id),on=id===cur;
-      return '<div class="opt'+(on?' on':'')+'"><div class="opt-top"><b>'+esc(r.name)+'</b>'+(on?'<span class="chip ok">Current</span>':'')+'</div>'+
+      return '<div class="opt'+(on?' on':'')+'"><div class="opt-top"><b>'+esc(r.name)+'</b>'+(on?'<span class="chip ok">Current</span>':'')+'</div>'+(DTYPE[r.type]?'<div>'+typeChip(r)+'</div>':'')+
         '<div class="opt-meta num">'+x.k+' kcal · '+x.p+' g protein · '+x.c+' g carbs · '+x.f+' g fat'+(r.time?' · '+esc(r.time):'')+'</div>'+
         '<div class="data-btns">'+(on?'':'<button type="button" class="btn small" data-choose="'+id+'">Choose</button>')+'<button type="button" class="btn ghost small" data-recipe="'+id+'" data-dow="'+sheet.dow+'" data-slot="'+sheet.slot+'" data-from="swap">Recipe</button></div></div>'}).join("");
     return}
@@ -667,7 +674,8 @@ function renderSheet(){if(!sheet)return;const T=$("#sheet-title"),B=$("#sheet-bo
       '<li><span>'+esc(ING[i]?ING[i][0]:i)+'<small class="uses">You '+esc(amount(i,g*s*scaleOf(i)))+' · '+esc(pt.who)+' '+esc(amount(i,g*s*scaleOf(i,pt.sc)))+'</small></span><span class="num">'+esc(amount(i,g*s*(scaleOf(i)+scaleOf(i,pt.sc))))+'</span></li>':
       '<li><span>'+esc(ING[i]?ING[i][0]:i)+'</span><span class="num">'+esc(amount(i,g*s*scaleOf(i)))+'</span></li>').join("")+'</ul>'+
     '<h3 class="rh">Method</h3><ol class="method">'+r.method.map(m=>'<li>'+esc(m)+'</li>').join("")+'</ol>'+
-    (PREPD[r.id]?'<p class="banner"><b>Sunday:</b> '+esc(PREPD[r.id][0])+'.<br><b>On the day:</b> '+esc(PREPD[r.id][1])+'.</p>':(r.prep?'<p class="banner"><b>Sunday prep:</b> '+esc(r.prep)+'.</p>':''))+
+    (DTYPE[r.type]?'<p class="rest-note">'+typeChip(r)+' '+DTYPE[r.type][1]+'</p>':'')+
+    (PREPD[r.id]?'<p class="banner">'+(PREPD[r.id][0]?'<b>Sunday:</b> '+esc(PREPD[r.id][0])+'.<br><b>On the day:</b> ':'<b>In detail:</b> ')+esc(PREPD[r.id][1])+'.</p>':'')+
     (canUse?'<button type="button" class="btn" data-choose="'+r.id+'">Use for '+DFULL[sheet.dow]+' '+SLOTNAME[sheet.slot].toLowerCase()+'</button>':'');
 }
 document.addEventListener("click",ev=>{
@@ -741,7 +749,7 @@ function renderProgress(){
     '<label for="p-waist">Waist (cm)<input id="p-waist" type="number" inputmode="decimal" step="0.5" placeholder="'+(lastWaist?lastWaist.waist:"at navel")+'"></label>'+
     '<button type="button" class="btn" id="p-save">Save</button></div>'+
     '<p class="rest-note" id="p-msg">Sunday morning, at the navel, relaxed, before food. Your daily weight goes in on the Today tab.</p></section>';
-  const wp=sorted.filter(x=>x.w).map(x=>({d:x.d,v:Number(x.w)})), cp=sorted.filter(x=>x.waist).map(x=>({d:x.d,v:Number(x.waist)}));
+  const cp=sorted.filter(x=>x.waist).map(x=>({d:x.d,v:Number(x.waist)}));
   const wks=weekAvgs(), st=weekStatus(), wkp=wks.map(x=>({d:x.wk,v:wOut(x.avg)}));
   const stat=wks.length?'<div class="wstats num"><div><span>This week</span><b>'+wOut(wks[wks.length-1].avg)+' '+WU+'</b><small>'+wks[wks.length-1].n+' weigh-in'+(wks[wks.length-1].n===1?'':'s')+'</small></div>'+
     (st?'<div><span>Last week</span><b>'+wOut(st.a.avg)+' '+WU+'</b><small>'+st.a.n+' weigh-ins</small></div><div><span>Change</span><b>'+(wOut(st.b.avg-st.a.avg)>0?"+":"")+wOut(st.b.avg-st.a.avg)+' '+WU+'</b><small class="chip '+st.cls+'">'+esc(st.txt)+'</small></div>':'')+'</div>':'';
@@ -870,7 +878,7 @@ $("#view").addEventListener("click",ev=>{const b=ev.target.closest("[data-supp]"
 function partner(){const pt=get("partner",null);if(pt&&!pt.weeks){pt.weeks={};if(pt.m)pt.weeks[mondayOf(parse(pt.got||TODAY))]={m:pt.m,got:pt.got||TODAY}}return pt}
 function pname(){const pt=partner();return (pt&&pt.who&&pt.who!=="Partner")?pt.who:(P.partnerName||"your partner")}
 function pposs(){return pname()+"’s"}
-function shareSet(){return get("shareset",{together:false,same:false})}
+function shareSet(){return get("shareset",{together:false})}
 function together(){return !!shareSet().together&&!!partner()}
 function partnerMenu(pt,wk){const w=pt.weeks||{};if(w[wk])return Object.assign({wk:wk,exact:true},w[wk]);const prev=Object.keys(w).filter(k=>k<wk).sort().pop();return prev?Object.assign({wk:prev,exact:false},w[prev]):{m:{},wk:null,exact:false}}
 function b64e(t){return btoa(unescape(encodeURIComponent(t)))}
