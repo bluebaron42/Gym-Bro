@@ -142,6 +142,15 @@ nav.tabs button svg{width:22px;height:22px}
 nav.tabs button[aria-selected="true"]{color:var(--accent)}
 #timer{position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:6}
 #timer .shell{padding-block:0 8px}
+#ktimers{position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:6}
+#ktimers .shell{padding-block:0 8px;display:flex;flex-direction:column;gap:6px}
+#ktimers .kt{background:var(--fg);color:var(--bg);border-radius:12px;padding:8px 12px;display:flex;align-items:center;gap:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-size:13px}
+#ktimers .kt b{font-family:var(--display);font-size:22px;min-width:58px}
+#ktimers .kt span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ktimers .kt button{border:0;background:transparent;color:inherit;font:700 13px var(--body);padding:6px;cursor:pointer;opacity:.9}
+#ktimers .kt.done{background:var(--warn);color:#fff}
+body.has-kt main{padding-bottom:160px}
+.rs-timer{display:block;font-size:12.5px;color:var(--muted)}
 #timer .in{background:var(--fg);color:var(--bg);border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:12px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
 #timer .t{font-family:var(--display);font-size:30px;font-weight:700;min-width:70px}
 #timer .lb{flex:1;min-width:0;font-size:13px}
@@ -270,6 +279,7 @@ nav.tabs button[aria-selected="true"]{color:var(--accent)}
 
 <main class="shell" id="view"></main>
 
+<div id="ktimers" hidden></div>
 <div id="timer" hidden><div class="shell"><div class="in">
   <div class="t num" id="t-time">2:00</div>
   <div class="lb"><div id="t-label">Rest</div><div class="tb"><i id="t-bar" style="width:100%"></i></div></div>
@@ -333,9 +343,10 @@ function allowed(id,slot,dow,who){return fits(id,slot,who)&&!(slot==="lunch"&&do
 function defaultFor(slot,dow,who){who=who||ME;const ps=((FD.PRESETS||{})[viewWk]||{})[slot];const v=ps&&(isShared(slot)?ps[dow]:(ps[who]||{})[dow]);
   return fits(v,slot,who)?v:isShared(slot)?DEF[slot][dow]:DEF[slot][who][dow]}
 function choice(slot,dow,who){who=who||ME;const v=menuFor(viewWk)[menuKey(slot,dow,who)];return fits(v,slot,who)?v:defaultFor(slot,dow,who)}
-function setChoice(slot,days,id,who){const all=Object.assign({},allMenus());const m=Object.assign({},menuFor(viewWk));
+function setChoice(slot,days,id,who){const all=Object.assign({},allMenus()),old=all[viewWk]||{};const m=Object.assign({},menuFor(viewWk));
   days.forEach(d=>{if(allowed(id,slot,d,who))m[menuKey(slot,d,who)]=id});all[viewWk]=m;
-  Object.keys(all).sort().slice(0,-8).forEach(k=>delete all[k]);save("menus",all)}
+  Object.keys(all).sort().slice(0,-8).forEach(k=>delete all[k]);save("menus",all);
+  const out={},now=Date.now();Object.keys(m).forEach(k=>{if(old[k]!==m[k])out["m/"+viewWk+"/"+canon(k)]=m[k]+"@"+now});syncPush(out)}
 function pool(slot,dow,who){const T={fresh:0,head:1,sunday:2};
   return Object.keys(RECIPES).filter(id=>allowed(id,slot,dow,who)).sort((a,b)=>{const x=RECIPES[a],y=RECIPES[b];return ((T[x.type]||0)-(T[y.type]||0))||(x.name<y.name?-1:1)})}
 function dayMenu(dow,who){return SLOTS.map(s=>({slot:s,id:choice(s,dow,who)}))}
@@ -540,7 +551,7 @@ function setSync(m){syncMsg=m;const el=$("#sync");if(el)el.textContent=m}
 function saveSoon(k,v){save(k,v)}
 function allData(){const out={};try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf(LS)===0){out[k.slice(LS.length)]=lsGet(k.slice(LS.length))}}}catch(e){}return out}
 function mondayOf(d){const x=new Date(d);const off=(x.getDay()+6)%7;x.setDate(x.getDate()-off);return iso(x)}
-["partner","shareset"].forEach(k=>{try{localStorage.removeItem(LS+k)}catch(e){}}); // retired with the household update
+["partner","shareset","sharegot"].forEach(k=>{try{localStorage.removeItem(LS+k)}catch(e){}}); // retired with the household update
 const THIS_MONDAY=mondayOf(new Date());
 const NEXT_MONDAY=(()=>{const d=parse(THIS_MONDAY);d.setDate(d.getDate()+7);return iso(d)})();
 // Menus are kept per week (keyed by that week's Monday). Today and Week always read this week;
@@ -675,8 +686,8 @@ function renderFood(){
   const nCooks=get("cooks",2), RS=runSheet(nCooks), roleName={chef:pname(HOUSE.prep.chef),helper:pname(HOUSE.prep.helper)};
   const hm=m=>m>=60?Math.floor(m/60)+' h'+(m%60?' '+(m%60)+' min':''):m+' min';
   const prep=RS.steps.map(t=>{const key="r:"+t.id,on=!!shop[key];
-    return '<div class="check rs'+(on?' on':'')+'" data-shop="'+esc(key)+'" role="checkbox" tabindex="0" aria-checked="'+on+'" data-step="'+esc(t.id)+'" data-s="'+t.start+'" data-e="'+(t.end==null?t.start:t.end)+'" data-d="'+(t.done==null?t.start:t.done)+'" data-who="'+t.who+'" data-kit="'+(t.kit||"")+'" data-temp="'+(t.temp||"")+'" data-needs="'+esc(Object.keys(t.needs).join("~"))+'">'+
-      '<span class="box" aria-hidden="true" style="'+(on?'background:var(--ok);border-color:var(--ok)':'')+'">✓</span><span><span class="rs-h"><b class="num">'+RS.cl(t.start)+'</b>'+(RS.cooks>1?'<i class="who-'+t.who+'">'+esc(roleName[t.who])+'</i>':'')+(t.a?'<em class="num">'+t.a+' min</em>':'')+'</span>'+t.html+'</span></div>'}).join("");
+    return '<div class="check rs'+(on?' on':'')+'" data-shop="'+esc(key)+'" role="checkbox" tabindex="0" aria-checked="'+on+'" data-step="'+esc(t.id)+'" data-s="'+t.start+'" data-e="'+(t.end==null?t.start:t.end)+'" data-d="'+(t.done==null?t.start:t.done)+'" data-by="'+t.who+'" data-kit="'+(t.kit||"")+'" data-temp="'+(t.temp||"")+'" data-needs="'+esc(Object.keys(t.needs).join("~"))+'"'+(t.kind!=="N"&&t.w>=5?' data-timer="'+t.w+'" data-tl="'+esc((t.html.match(/<b>(.*?)<\/b>/)||["","Timer"])[1].replace(/<[^>]+>/g,""))+'"':'')+'>'+
+      '<span class="box" aria-hidden="true" style="'+(on?'background:var(--ok);border-color:var(--ok)':'')+'">✓</span><span><span class="rs-h"><b class="num">'+RS.cl(t.start)+'</b>'+(RS.cooks>1?'<i class="who-'+t.who+'">'+esc(roleName[t.who])+'</i>':'')+(t.a?'<em class="num">'+t.a+' min</em>':'')+'</span>'+t.html+(t.kind!=="N"&&t.w>=5?'<span class="rs-timer">'+(get("timers",{})[key]?'Timer running':on?'':'Tick when it goes on to start a '+t.w+' min timer')+'</span>':'')+'</span></div>'}).join("");
   const isNext=viewWk===NEXT_MONDAY, planned=!!allMenus()[viewWk];
   const seg=(attr,cur,opts)=>'<div class="seg wide" role="group">'+opts.map(o=>'<button type="button" data-'+attr+'="'+o[0]+'" aria-pressed="'+(cur===o[0])+'">'+esc(o[1])+'</button>').join("")+'</div>';
   const lunchN=w=>new Set([1,2,3,4,5,6].map(d=>choice("lunch",d,w))).size, treatN=new Set(ORDER.map(d=>choice("snack",d)).filter(id=>RECIPES[id].comp)).size;
@@ -685,12 +696,12 @@ function renderFood(){
     '<p class="lead" style="margin:0">'+(isNext?(planned?'The plan for next week. ':'Starts as a copy of this week. ')+'Changes here don’t touch this week’s meals. It becomes this week on Monday.':'What you’re eating now. Switch to Next week to plan and shop ahead.')+' Dinners and treats are the same for both of you; breakfast, shake and lunch are each person’s own.</p>'+
     '<section class="card">'+seg("who",who,[[ME,"My meals"],[OTHER,poss(OTHER)+" meals"]])+
     '<p class="rest-note" style="margin:0"><b>Sunday load:</b> '+["fresh","head","sunday"].map(t=>ORDER.filter(d=>(RECIPES[choice("dinner",d)]||{}).type===t).length+' '+DTYPE[t][0].toLowerCase()).join(" · ")+' dinners; '+HOUSE.order.map(w=>lunchN(w)+' lunch'+(lunchN(w)>1?'es':'')+' for '+(w===ME?'you':pname(w))).join(", ")+'; '+treatN+' batch treat'+(treatN===1?'':'s')+'.</p>'+menu+'<button type="button" class="btn ghost small" id="menu-reset" style="align-self:flex-start">Reset this menu to defaults</button></section>'+
-    '<h2 class="sec">Share with '+esc(pname(OTHER))+'</h2>'+shareCard()+
+    '<h2 class="sec">Sync with '+esc(pname(OTHER))+'</h2>'+syncCard()+
     '<h2 class="sec">Recipes</h2>'+lib+
     '<h2 class="sec">Shopping list</h2><section class="card">'+seg("sv",shopView,[["house","Household"],[ME,"Just me"],[OTHER,"Just "+pname(OTHER)]])+'<p class="rest-note"><b>'+weekRange(viewWk)+'.</b> '+(shopView==="house"?'Everything both of you eat this week, at each person’s portions.':shopView===ME?'Only your portions.':'Only '+esc(poss(OTHER))+' portions.')+' Weights include an allowance for peel and trim; pack counts are a guide.</p><div class="data-btns"><button type="button" class="btn small" id="shop-copy">Copy shopping list</button></div><p class="rest-note" id="shop-msg" aria-live="polite"></p>'+lists+'</section>'+
     '<h2 class="sec">Sunday run sheet'+(viewWk===THIS_MONDAY?'':' for next week')+'</h2><section class="card">'+(RS.steps.length?
       '<div class="prep-est"><b>About '+hm(RS.total)+'</b><span>start to finish with '+(RS.cooks>1?'two of you':'one cook')+', for Monday '+fmtDate(viewWk)+' to Saturday</span></div>'+seg("cooks",String(nCooks),[["2","Two of us"],["1","One cook"]])+
-      '<p class="rest-note">Work down the list. Times count from when you start; each step shows who does it and the hands-on minutes. It covers both your lunches, the treats, and head start or Sunday batch dinners, and rebuilds whenever you swap a meal.</p>'+prep+
+      '<p class="rest-note">Work down the list. Times count from when you start; each step shows who does it and the hands-on minutes. Ticking a step that cooks, marinates or cools starts its timer on both phones. It covers both your lunches, the treats, and head start or Sunday batch dinners, and rebuilds whenever you swap a meal.</p>'+prep+
       '<p class="rest-note"><b>Cooling and storing:</b> spread rice, noodles and pasta on trays and get them boxed and chilled within 1 hour, everything else within 90 minutes. Lids on only once cold. Label every box and bag with the day. Each night, move the next day’s freezer boxes to the fridge, and reheat cooked food until piping hot.</p>'
       :'<p class="empty">Nothing to prep for this menu: every dinner is cook-fresh and the lunches and treats need no Sunday work.</p>')+
     '<p class="rest-note">Shopping and prep ticks clear themselves every Monday.</p><button type="button" class="btn ghost small" id="clear-shop" style="align-self:flex-start">Clear ticks now</button></section>'+
@@ -897,8 +908,8 @@ $("#view").addEventListener("click",ev=>{
   if(mb){let md=get("meals",{d:TODAY,t:{}});if(md.d!==TODAY)md={d:TODAY,t:{}};md={d:TODAY,t:Object.assign({},md.t)};md.t[mb.dataset.meal]=!md.t[mb.dataset.meal];save("meals",md);const y=window.scrollY;render();window.scrollTo(0,y);return}
   const dy=ev.target.closest("[data-day]"); if(dy){weekSel=Number(dy.dataset.day);render();return}
   const go=ev.target.closest("[data-go]"); if(go){tab=go.dataset.go;render();window.scrollTo(0,0);return}
-  const sh=ev.target.closest("[data-shop]"); if(sh){toggleShop(sh.dataset.shop);return}
-  if(ev.target.id==="clear-shop"){const b=ev.target;if(b.dataset.armed){saveShop({t:{}});render()}else{b.dataset.armed="1";b.textContent="Tap again to clear all ticks";setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.textContent="Clear ticks now"}},4000)}return}
+  const sh=ev.target.closest("[data-shop]"); if(sh){toggleShop(sh.dataset.shop,sh);return}
+  if(ev.target.id==="clear-shop"){const b=ev.target;if(b.dataset.armed){const o={},now=Date.now();Object.keys(shopState().t).forEach(k=>{o["s/"+viewWk+"/"+enc(k)]=-now});saveShop({t:{}});syncPush(o);render()}else{b.dataset.armed="1";b.textContent="Tap again to clear all ticks";setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.textContent="Clear ticks now"}},4000)}return}
   if(ev.target.id==="p-save"){const d=$("#p-date").value||TODAY,wa=$("#p-waist").value;
     if(!wa){$("#p-msg").textContent="Enter your waist measurement in centimetres first.";return}
     saveBody(d,"",wa); render(); return}
@@ -914,7 +925,10 @@ $("#view").addEventListener("click",ev=>{
   if(ev.target.id==="p-start-save"){const v=$("#p-start").value;if(v){save("settings",Object.assign({},settings(),{start:v}));render()}return}
 });
 $("#view").addEventListener("keydown",ev=>{const sh=ev.target.closest("[data-shop],[data-pantry]");if(sh&&(ev.key===" "||ev.key==="Enter")){ev.preventDefault();sh.click()}});
-function toggleShop(k){const s={t:Object.assign({},shopState().t)};s.t[k]=!s.t[k];if(!s.t[k])delete s.t[k];saveShop(s);const y=window.scrollY;render();window.scrollTo(0,y)}
+function toggleShop(k,el){const s={t:Object.assign({},shopState().t)};s.t[k]=!s.t[k];if(!s.t[k])delete s.t[k];saveShop(s);const o={};o["s/"+viewWk+"/"+enc(k)]=(s.t[k]?1:-1)*Date.now();syncPush(o);
+  // a timed run-sheet step starts its timer when ticked and cancels it when unticked
+  if(el&&el.dataset.timer){if(s.t[k])setTimer(k,el.dataset.tl,Number(el.dataset.timer));else if(get("timers",{})[k])setTimer(k)}
+  const y=window.scrollY;render();window.scrollTo(0,y)}
 
 function shopText(){const shop=shopState().t||{},pantry=get("pantry",{});let skipped=0;const SL=shopList();
   const L=["Shopping list, week of "+fmtDate(viewWk)+" ("+(shopView==="house"?HOUSE.order.map(pname).join(" and "):pname(shopView)+" only")+")",""];
@@ -934,56 +948,131 @@ function suppCard(){const st=get("supp",{d:TODAY,t:{}});const t=st.d===TODAY?st.
 $("#view").addEventListener("click",ev=>{const b=ev.target.closest("[data-supp]");if(!b)return;let st=get("supp",{d:TODAY,t:{}});if(st.d!==TODAY)st={d:TODAY,t:{}};st={d:TODAY,t:Object.assign({},st.t)};st.t[b.dataset.supp]=!st.t[b.dataset.supp];
   const hist=Object.assign({},get("supphist",{}));hist[TODAY]=Object.keys(st.t).filter(k=>st.t[k]);save("supphist",hist);save("supp",st);const y=window.scrollY;render();window.scrollTo(0,y)});
 
-// ---------- Sharing the week's menu between the two phones ----------
-function b64e(t){return btoa(unescape(encodeURIComponent(t)))}
-function b64d(t){return decodeURIComponent(escape(atob(t)))}
-// The code carries the shared dinners and treats plus the sender's own breakfasts, shakes and lunches.
-function menuCode(){const m={};SLOTS.forEach(sl=>ORDER.forEach(d=>{m[sl+d]=choice(sl,d,ME)}));
-  return "GYMMENU:"+b64e(JSON.stringify({v:3,id:ME,who:P.person,wk:viewWk,m:m,at:Date.now()}))}
-function shareMessage(){return P.app+" menu for the week of "+fmtDate(viewWk)+" from "+P.person+". Open your app, go to Food, tap Paste "+poss(ME)+" menu.\n\n"+menuCode()}
-function loadCode(text){const o=pname(OTHER);const mt=String(text||"").match(/GYMMENU:([A-Za-z0-9+/=]+)/);if(!mt)return {err:"No menu code found. Copy the whole message "+o+" sent, then try again."};
-  let j;try{j=JSON.parse(b64d(mt[1]))}catch(e){return {err:"That code is incomplete. Ask "+o+" to copy their menu again."}}
-  if(!j||!j.m)return {err:"That code isn't a menu code."};
-  if(j.id===ME||(!j.id&&j.who===P.person))return {err:"That's your own menu. Paste the code "+o+" sent you."};
-  const wk=/^\d{4}-\d{2}-\d{2}$/.test(j.wk||"")?j.wk:THIS_MONDAY;
-  const all=Object.assign({},allMenus());const m=Object.assign({},menuFor(wk));
-  SLOTS.forEach(sl=>ORDER.forEach(d=>{const id=j.m[sl+d];if(fits(id,sl,OTHER))m[menuKey(sl,d,OTHER)]=id}));
-  all[wk]=m;save("menus",all);const got=Object.assign({},get("sharegot",{}));got[wk]=TODAY;Object.keys(got).sort().slice(0,-6).forEach(k=>delete got[k]);save("sharegot",got);
-  if(wk===THIS_MONDAY||wk===NEXT_MONDAY)foodWk=wk;
-  return {ok:true,who:o,wk:wk}}
-function shareCard(){const o=pname(OTHER),got=get("sharegot",{})[viewWk];
-  return '<section class="card share">'+
-    '<p class="rest-note" style="margin:0">You can plan '+esc(poss(OTHER))+' meals here yourself (switch to '+esc(poss(OTHER))+' meals above). Codes are for keeping the two phones in step: pasting '+esc(poss(OTHER))+' code takes their dinners, treats and their own meals for that week.</p>'+
-    '<div class="data-btns"><button type="button" class="btn" id="sh-copy">Copy '+(viewWk===NEXT_MONDAY?'next week’s':'this week’s')+' menu</button><button type="button" class="btn ghost" id="sh-paste">Paste '+esc(poss(OTHER))+' menu</button></div>'+
-    '<textarea id="sh-text" hidden aria-label="Paste '+esc(poss(OTHER))+' menu code here" placeholder="Paste the message here"></textarea>'+
-    '<button type="button" class="btn small" id="sh-load" hidden>Load menu</button>'+
-    '<p class="rest-note" id="sh-msg" aria-live="polite">'+(got?esc(o)+'’s menu for '+weekWord(viewWk)+' was loaded '+fmtDate(got)+'.':'')+'</p>'+
-    '</section>'}
+// ---------- Sync between the two phones ----------
+// Menus, shopping and prep ticks, the cupboard list, the cooks setting and kitchen timers are shared through a
+// small database. Body weight, training logs and meal ticks never leave the phone. Each phone holds a household
+// key (never in the code); every value carries the time it was set and the newest one wins.
+//   m/<week>/<field> = "dish@time"   r/<week> = time the week was reset   s/<week>/<tick> and p/<item> = ±time (minus = unticked)
+//   c = "cooks@time"   t/<id> = a running timer
+const SYNC_URL=window.GB_SYNC_URL||FD.SYNC_URL;
+let syncEs=null, syncState="off", syncBusy=false;
+const syncKey=()=>(get("sync",{})||{}).key||null;
+const mirror=()=>get("syncm",{});
+const tsOf=v=>typeof v==="number"?Math.abs(v):Number(String(v||"").split("@")[1])||0;
+const enc=k=>encodeURIComponent(k).replace(/\./g,"%2E"), dec=k=>decodeURIComponent(k);
+// A menu field as both phones name it: shared slots as "dinner1", personal ones as "blue:lunch1".
+const canon=k=>k.indexOf("p:")===0?OTHER+":"+k.slice(2):isShared(k.replace(/\d$/,""))?k:ME+":"+k;
+const localKey=c=>{const i=c.indexOf(":");if(i<0)return c;return (c.slice(0,i)===ME?"":"p:")+c.slice(i+1)};
+function syncPush(leaves){if(!syncKey())return;const m=Object.assign({},mirror()),q=Object.assign({},get("syncq",{}));
+  Object.keys(leaves).forEach(p=>{if(p.indexOf("t/")!==0)m[p]=leaves[p];q[p]=leaves[p]});lsSet("syncm",cache.syncm=m);lsSet("syncq",cache.syncq=q);syncFlush()}
+function syncFlush(){const key=syncKey(),q=get("syncq",{});if(!key||syncBusy||!Object.keys(q).length||navigator.onLine===false)return;syncBusy=true;const sent=Object.assign({},q);
+  fetch(SYNC_URL+"/h/"+key+".json",{method:"PATCH",body:JSON.stringify(sent)}).then(r=>{syncBusy=false;if(!r.ok){if(r.status===401||r.status===403)setSyncState("denied");return}
+    const now=Object.assign({},get("syncq",{}));Object.keys(sent).forEach(p=>{if(JSON.stringify(now[p])===JSON.stringify(sent[p]))delete now[p]});lsSet("syncq",cache.syncq=now);if(Object.keys(now).length)syncFlush()}).catch(()=>{syncBusy=false})}
+function setSyncState(s){syncState=s;const el=$("#sync-state");if(el)el.textContent=syncLabel()}
+function syncLabel(){return {off:"Not set up",connecting:"Connecting…",live:"Live: changes appear on both phones",offline:"Offline: changes are saved and will send when you have signal",denied:"The database refused this phone. Check the rules are published, then reconnect."}[syncState]}
+// Apply one value from the other phone if it is newer than what this phone has.
+function syncLeaf(path,val,changed){const seg=path.split("/");
+  if(seg[0]==="t"){const all=Object.assign({},get("timers",{})),id=dec(seg[1]||"");if(!id)return;if(val&&val.e){all[id]={l:String(val.l||"Timer"),e:Number(val.e),n:Number(val.n)||0}}else delete all[id];lsSet("timers",cache.timers=all);changed.t=1;return}
+  if(val==null)return;const m=mirror();if(m[path]!=null&&tsOf(m[path])>=tsOf(val))return;m[path]=val;cache.syncm=m;changed.m=1;
+  if(seg[0]==="m"){const wk=seg[1],k=localKey(seg[2]);if(tsOf(m["r/"+wk])>tsOf(val))return;const all=Object.assign({},allMenus());const w=Object.assign({},all[wk]||{});const id=String(val).split("@")[0];if(id)w[k]=id;else delete w[k];all[wk]=w;cache.menus=all;changed.menus=1}
+  else if(seg[0]==="r"){const wk=seg[1],all=Object.assign({},allMenus()),w={};Object.keys(all[wk]||{}).forEach(k=>{if(tsOf(m["m/"+wk+"/"+canon(k)])>tsOf(val))w[k]=all[wk][k]});all[wk]=w;cache.menus=all;changed.menus=1}
+  else if(seg[0]==="s"){const all=Object.assign({},get("shops",{})),st={t:Object.assign({},(all[seg[1]]||{t:{}}).t)},k=dec(seg[2]);if(val>0)st.t[k]=true;else delete st.t[k];all[seg[1]]=st;cache.shops=all;changed.shops=1}
+  else if(seg[0]==="p"){const p=Object.assign({},get("pantry",{})),k=dec(seg[1]);if(val>0)p[k]=1;else delete p[k];cache.pantry=p;changed.pantry=1}
+  else if(seg[0]==="c"){cache.cooks=Number(String(val).split("@")[0])||2;changed.cooks=1}}
+function syncWalk(path,data,changed){const leaf=data===null||typeof data!=="object"||(/^t\/[^/]+$/.test(path));
+  if(leaf){if(path)syncLeaf(path,data,changed);return}
+  Object.keys(data).forEach(k=>syncWalk((path?path+"/":"")+k,data[k],changed))}
+function syncEvent(ev,first){let j;try{j=JSON.parse(ev.data)}catch(e){return}if(!j)return;const changed={},base=String(j.path||"/").replace(/^\/+|\/+$/g,"");
+  if(base===""&&ev.type==="put"&&first){const all=Object.assign({},get("timers",{}));Object.keys(all).forEach(k=>{if(!(j.data&&j.data.t&&j.data.t[enc(k)]))delete all[k]});cache.timers=all;lsSet("timers",all)}
+  if(j.data===null&&/^t\//.test(base))syncLeaf(base,null,changed);else syncWalk(base,j.data,changed);
+  ["menus","shops","pantry","cooks"].forEach(k=>{if(changed[k])lsSet(k,cache[k])});if(changed.m)lsSet("syncm",cache.syncm);
+  if(first)syncSeed();
+  if(changed.t)timersChanged();
+  if(Object.keys(changed).length&&!document.querySelector("#view textarea:focus,#view input:focus")){const y=window.scrollY;render();window.scrollTo(0,y)}}
+// After the first full read, send anything this phone has that the household copy does not (time 1, so any real edit beats it).
+function syncSeed(){const m=mirror(),out={},recent=iso(new Date(parse(THIS_MONDAY).getTime()-14*864e5));
+  const all=allMenus();Object.keys(all).filter(wk=>wk>=recent).forEach(wk=>Object.keys(all[wk]).forEach(k=>{const p="m/"+wk+"/"+canon(k);if(m[p]==null)out[p]=all[wk][k]+"@1"}));
+  const sh=get("shops",{});Object.keys(sh).filter(wk=>wk>=recent).forEach(wk=>Object.keys(sh[wk].t||{}).forEach(k=>{const p="s/"+wk+"/"+enc(k);if(m[p]==null)out[p]=1}));
+  Object.keys(get("pantry",{})).forEach(k=>{const p="p/"+enc(k);if(m[p]==null)out[p]=1});
+  // forget weeks that are long gone
+  const mm=mirror();let cut=false;Object.keys(mm).forEach(p=>{const s=p.split("/");if("mrs".indexOf(s[0])>=0&&s[0].length===1&&s[1]<recent){delete mm[p];cut=true}});if(cut)lsSet("syncm",cache.syncm=mm);
+  if(Object.keys(out).length)syncPush(out);else syncFlush()}
+function syncStart(){if(syncEs){syncEs.close();syncEs=null}const key=syncKey();if(!key||!SYNC_URL||!window.EventSource){setSyncState("off");return}
+  setSyncState(navigator.onLine===false?"offline":"connecting");let first=true;
+  const es=syncEs=new EventSource(SYNC_URL+"/h/"+key+".json");
+  const on=ev=>{setSyncState("live");const f=first;first=false;syncEvent(ev,f)};
+  es.addEventListener("put",on);es.addEventListener("patch",on);
+  es.addEventListener("cancel",()=>setSyncState("denied"));es.addEventListener("auth_revoked",()=>setSyncState("denied"));
+  es.onopen=()=>{first=true};
+  es.onerror=()=>{if(syncState!=="denied")setSyncState(navigator.onLine===false?"offline":"connecting")}}
+window.addEventListener("online",()=>{syncFlush();if(syncKey()&&(!syncEs||syncEs.readyState===2))syncStart()});
+window.addEventListener("offline",()=>{if(syncKey())setSyncState("offline")});
+function newKey(){const a=new Uint8Array(24);crypto.getRandomValues(a);return Array.from(a,x=>"abcdefghijkmnpqrstuvwxyz23456789"[x%32]).join("")}
+function syncCard(){const key=syncKey(),o=pname(OTHER);
+  return '<section class="card share">'+(key?
+    '<p class="rest-note" style="margin:0"><b id="sync-state">'+esc(syncLabel())+'</b></p><p class="rest-note" style="margin:0">Menus, shopping and run-sheet ticks, the cupboard list and kitchen timers are shared with '+esc(poss(OTHER))+' phone. Weights, training logs and meal ticks stay on this phone.</p>'+
+    '<div class="data-btns"><button type="button" class="btn small" id="sy-show">Show link code</button><button type="button" class="btn ghost small" id="sy-stop">Stop syncing on this phone</button></div><textarea id="sy-text" hidden readonly class="share-ta" aria-label="Link code"></textarea>'
+    :'<p class="rest-note" style="margin:0">Link the two phones so menus, ticks and timers update on both. Set it up on one phone, then send the link code to '+esc(o)+' and join with it on the other. Weights, training logs and meal ticks are never shared.</p>'+
+    '<div class="data-btns"><button type="button" class="btn" id="sy-new">Set up sync</button><button type="button" class="btn ghost" id="sy-join">Join with a code</button></div>'+
+    '<textarea id="sy-text" hidden class="share-ta" aria-label="Paste the link code here" placeholder="Paste the link code here"></textarea><button type="button" class="btn small" id="sy-go" hidden>Join</button>')+
+    '<p class="rest-note" id="sy-msg" aria-live="polite"></p></section>'}
+function syncJoin(key){save("sync",{key:key});lsSet("syncm",cache.syncm={});lsSet("syncq",cache.syncq={});syncStart();render()}
 $("#view").addEventListener("click",async ev=>{
-  const id=ev.target.id;
-  if(id==="sh-copy"){const t=shareMessage();
-    try{await navigator.clipboard.writeText(t);$("#sh-msg").textContent="Copied. Paste it into WhatsApp or Messages to "+pname(OTHER)+"."}
-    catch(e){const ta=$("#sh-text");ta.hidden=false;ta.readOnly=true;ta.value=t;ta.focus();ta.select();$("#sh-msg").textContent="Your phone blocked copying. The message is selected above: long-press and choose Copy."}
-    return}
-  if(id==="sh-paste"){let t="";try{t=await navigator.clipboard.readText()}catch(e){}
-    if(t&&/GYMMENU:/.test(t)){finishLoad(t);return}
-    const ta=$("#sh-text");ta.hidden=false;ta.readOnly=false;ta.value="";$("#sh-load").hidden=false;ta.focus();$("#sh-msg").textContent="Long-press the box, choose Paste, then tap Load menu.";return}
-  if(id==="sh-load"){finishLoad($("#sh-text").value);return}
+  const id=ev.target.id, say=t=>{const m=$("#sy-msg");if(m)m.textContent=t};
+  const showCode=async()=>{const t="GYMSYNC:"+syncKey();const ta=$("#sy-text");ta.hidden=false;ta.value=t;
+    try{await navigator.clipboard.writeText(t);say("Link code copied. Send it to "+pname(OTHER)+"; on their phone: Food tab, Join with a code. Anyone with this code can change your menus, so only send it to them.")}
+    catch(e){ta.focus();ta.select();say("Long-press the code above and copy it, then send it to "+pname(OTHER)+".")}};
+  if(id==="sy-new"){syncJoin(newKey());showCode();return}
+  if(id==="sy-show"){showCode();return}
+  if(id==="sy-join"){let t="";try{t=await navigator.clipboard.readText()}catch(e){}
+    const mt=String(t).match(/GYMSYNC:([a-z0-9]{24,40})/);if(mt){syncJoin(mt[1]);return}
+    const ta=$("#sy-text");ta.hidden=false;$("#sy-go").hidden=false;ta.focus();say("Long-press the box, choose Paste, then tap Join.");return}
+  if(id==="sy-go"){const mt=String($("#sy-text").value).match(/GYMSYNC:([a-z0-9]{24,40})/);if(!mt){say("That isn’t a link code. Copy the whole code from the other phone.");return}syncJoin(mt[1]);return}
+  if(id==="sy-stop"){const b=ev.target;if(b.dataset.armed){if(syncEs){syncEs.close();syncEs=null}save("sync",{});lsSet("syncm",cache.syncm={});lsSet("syncq",cache.syncq={});syncState="off";render()}else{b.dataset.armed="1";b.textContent="Tap again to stop syncing";setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.textContent="Stop syncing on this phone"}},4000)}return}
   const keep=fn=>{const y=window.scrollY;fn();render();window.scrollTo(0,y)};
   const wb=ev.target.closest("[data-wk]");
   if(wb){foodWk=wb.dataset.wk;render();return}
   const whb=ev.target.closest("[data-who]:not([data-recipe]):not([data-swap])");
   if(whb){keep(()=>{menuWho=whb.dataset.who});return}
   const ckb=ev.target.closest("[data-cooks]");
-  if(ckb){keep(()=>save("cooks",Number(ckb.dataset.cooks)));return}
+  if(ckb){keep(()=>{const n=Number(ckb.dataset.cooks);save("cooks",n);syncPush({c:n+"@"+Date.now()})});return}
   const svb=ev.target.closest("[data-sv]");
   if(svb){keep(()=>{shopView=svb.dataset.sv});return}
   const pb=ev.target.closest("[data-pantry]");
-  if(pb){keep(()=>{const p=Object.assign({},get("pantry",{}));const k=pb.dataset.pantry;if(p[k])delete p[k];else p[k]=1;save("pantry",p)});return}
-  if(id==="menu-reset"){const b=ev.target;if(b.dataset.armed){const all=Object.assign({},allMenus());all[viewWk]={};save("menus",all);render()}else{b.dataset.armed="1";b.textContent="Tap again to reset "+weekWord(viewWk)+"’s menu";setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.textContent="Reset this menu to defaults"}},4000)}return}
+  if(pb){keep(()=>{const p=Object.assign({},get("pantry",{}));const k=pb.dataset.pantry;if(p[k])delete p[k];else p[k]=1;save("pantry",p);const o={};o["p/"+enc(k)]=(p[k]?1:-1)*Date.now();syncPush(o)});return}
+  if(id==="menu-reset"){const b=ev.target;if(b.dataset.armed){const all=Object.assign({},allMenus());all[viewWk]={};save("menus",all);const o={};o["r/"+viewWk]=Date.now();syncPush(o);render()}else{b.dataset.armed="1";b.textContent="Tap again to reset "+weekWord(viewWk)+"’s menu";setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.textContent="Reset this menu to defaults"}},4000)}return}
 });
-function finishLoad(t){const r=loadCode(t);if(r.err){const m=$("#sh-msg");if(m)m.textContent=r.err;return}
-  const y=window.scrollY;render();window.scrollTo(0,y);const m=$("#sh-msg");if(m)m.textContent=r.who+"’s menu for "+weekWord(r.wk)+" loaded."}
+
+// ---------- Kitchen timers ----------
+// Ticking a timed run-sheet step starts its timer. Timers are shared, so they ring on both phones.
+let ringCtx=null, ringInt=null;const notified={};
+function timersChanged(){renderTimers()}
+function setTimer(id,label,mins){const all=Object.assign({},get("timers",{}));const o={};
+  if(mins){all[id]={l:label,e:Date.now()+mins*60000,n:mins};o["t/"+enc(id)]=all[id]}else{delete all[id];delete notified[id];o["t/"+enc(id)]=null}
+  save("timers",all);syncPush(o);renderTimers();
+  if(mins){try{ringCtx=ringCtx||new (window.AudioContext||window.webkitAudioContext)();if(ringCtx.state==="suspended")ringCtx.resume()}catch(e){}
+    try{if(window.Notification&&Notification.permission==="default")Notification.requestPermission()}catch(e){}}}
+function beep(){try{if(!ringCtx)return;[0,0.22,0.44].forEach(d=>{const o=ringCtx.createOscillator(),g=ringCtx.createGain();o.frequency.value=880;o.connect(g);g.connect(ringCtx.destination);const t=ringCtx.currentTime+d;g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.5,t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+0.18);o.start(t);o.stop(t+0.2)})}catch(e){}}
+function renderTimers(){const el=$("#ktimers");if(!el)return;const all=get("timers",{}),ids=Object.keys(all).sort((a,b)=>all[a].e-all[b].e),now=Date.now();
+  // drop anything that finished more than two hours ago and was never dismissed
+  ids.filter(i=>now-all[i].e>72e5).forEach(i=>setTimer(i));
+  const live=ids.filter(i=>now-all[i].e<=72e5);el.hidden=!live.length;let ringing=false;
+  el.innerHTML='<div class="shell">'+live.map(i=>{const left=Math.round((all[i].e-now)/1000),done=left<=0;if(done)ringing=true;
+    if(done&&!notified[i]){notified[i]=1;try{if(navigator.vibrate)navigator.vibrate([400,200,400,200,400])}catch(e){}
+      try{if(window.Notification&&Notification.permission==="granted"&&navigator.serviceWorker)navigator.serviceWorker.ready.then(r=>r.showNotification("Timer done",{body:all[i].l,tag:"kt-"+i,renotify:true,requireInteraction:true,icon:"icon-192.png"})).catch(()=>{})}catch(e){}}
+    return '<div class="kt'+(done?' done':'')+'"><b class="num">'+(done?"Done":Math.floor(left/60)+":"+pad(left%60))+'</b><span>'+esc(all[i].l)+'</span><button type="button" data-kt="'+esc(i)+'">'+(done?"Dismiss":"Cancel")+'</button></div>'}).join("")+'</div>';
+  document.body.classList.toggle("has-kt",live.length>0);
+  if(ringing&&!ringInt){beep();ringInt=setInterval(beep,2500)}else if(!ringing&&ringInt){clearInterval(ringInt);ringInt=null}}
+setInterval(()=>{if(Object.keys(get("timers",{})).length)renderTimers()},1000);
+document.addEventListener("click",ev=>{const b=ev.target.closest("[data-kt]");if(!b)return;const id=b.dataset.kt;setTimer(id)});
+
+// ---------- Keep the screen awake while the app is open ----------
+let wakeLock=null;
+function keepAwake(){if(!("wakeLock" in navigator)||document.visibilityState!=="visible"||wakeLock)return;
+  navigator.wakeLock.request("screen").then(l=>{wakeLock=l;l.addEventListener("release",()=>{wakeLock=null})}).catch(()=>{})}
+document.addEventListener("visibilitychange",()=>{keepAwake();if(document.visibilityState==="visible"){renderTimers();syncFlush();if(syncKey()&&(!syncEs||syncEs.readyState===2))syncStart()}});
+document.addEventListener("click",keepAwake,{passive:true});
+keepAwake();
 
 // ---------- Your data: copy, backup, restore ----------
 function exName(e,m){return m==="home"?e[5]:e[1]}
@@ -1048,6 +1137,7 @@ $("#view").addEventListener("change",ev=>{
 render();
 
 // ---------- Offline + install ----------
+syncStart();renderTimers();
 if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{})})}
 })();
 </script>

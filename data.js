@@ -658,7 +658,10 @@ window.BB_DATA = (function () {
   const BATCH_CARBS = ["sushi-rice", "jasmine-rice", "pasta", "penne", "rice-noodles", "potatoes"];
   const NO_BATCH = ["l-onigiri"];
 
+  // Where the two phones meet to sync menus, ticks and timers. The household key is kept on the phones, never here.
+  const SYNC_URL = "https://gym-app-6c933-default-rtdb.europe-west1.firebasedatabase.app";
+
   const RECIPES = {};
   R.forEach(function (r) { RECIPES[r.id] = r; });
-  return { ING: ING, ALIAS: ALIAS, CUPBOARD: CUPBOARD, TRIM: TRIM, PACKS: PACKS, HOUSE: HOUSE, DEFAULTS: DEFAULTS, PRESETS: PRESETS, RECIPES: RECIPES, VEG_EACH: VEG_EACH, BATCH_CARBS: BATCH_CARBS, NO_BATCH: NO_BATCH };
+  return { ING: ING, ALIAS: ALIAS, CUPBOARD: CUPBOARD, TRIM: TRIM, PACKS: PACKS, SYNC_URL: SYNC_URL, HOUSE: HOUSE, DEFAULTS: DEFAULTS, PRESETS: PRESETS, RECIPES: RECIPES, VEG_EACH: VEG_EACH, BATCH_CARBS: BATCH_CARBS, NO_BATCH: NO_BATCH };
 })();

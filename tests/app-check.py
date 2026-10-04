@@ -1,9 +1,10 @@
 # Run from the folder that holds both repos:  python3 gym-bro/tests/app-check.py
-# Loads both apps in a headless browser and checks menus, shopping totals, recipe cards, prep and sharing.
+# Loads both apps in a headless browser and checks menus, shopping totals, recipe cards, the run sheet, sync and timers.
 import subprocess, time, json, random, sys, os
 from playwright.sync_api import sync_playwright
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-srv = subprocess.Popen(["python3", "-m", "http.server", "8765"], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL); time.sleep(1)
+srv = subprocess.Popen(["python3", "-m", "http.server", "8765"], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+db = subprocess.Popen(["python3", os.path.join(os.path.dirname(os.path.abspath(__file__)), "mock-db.py"), "8766"]); time.sleep(1)
 bad = []
 def fail(m): bad.append(m); print("FAIL", m)
 EXPECT = """(arg)=>{const D=window.BB_DATA,H=D.HOUSE,CAT={"Protein":"p","Dairy and eggs":"p","Carbs":"c","Sauces and cupboard":"c","Fruit and veg":"v"};
@@ -51,7 +52,7 @@ try:
             for cooks in ("2", "1"):
                 if not pg.query_selector(f'[data-cooks="{cooks}"]'): continue
                 pg.click(f'[data-cooks="{cooks}"]')
-                st = pg.eval_on_selector_all("[data-step]", "els=>els.map(e=>({id:e.dataset.step,s:+e.dataset.s,e:+e.dataset.e,d:+e.dataset.d,who:e.dataset.who,kit:e.dataset.kit,temp:e.dataset.temp,needs:e.dataset.needs?e.dataset.needs.split('~'):[]}))")
+                st = pg.eval_on_selector_all("[data-step]", "els=>els.map(e=>({id:e.dataset.step,s:+e.dataset.s,e:+e.dataset.e,d:+e.dataset.d,who:e.dataset.by,kit:e.dataset.kit,temp:e.dataset.temp,needs:e.dataset.needs?e.dataset.needs.split('~'):[]}))")
                 tag = f"{app} run sheet ({cooks} cook, round {rounds})"; by = {x["id"]: x for x in st}
                 if len(by) != len(st): fail(f"{tag}: duplicate steps")
                 if any(st[i]["s"] > st[i + 1]["s"] + 1e-6 for i in range(len(st) - 1)): fail(f"{tag}: steps are not in time order")
@@ -94,19 +95,64 @@ try:
         if "2026-10-05" in st: fail(f"{app}: planning next week wrote to this week")
         pg.click('[data-wk="2026-10-05"]')
         if pg.inner_text("#view") != this_before: fail(f"{app}: this week's page changed after planning next week")
-        # share code out
-        pg.click('[data-wk="2026-10-12"]'); pg.context.grant_permissions(["clipboard-read", "clipboard-write"]); pg.click("#sh-copy"); pg.wait_for_timeout(200); codes[app] = pg.evaluate("navigator.clipboard.readText()")
-        if "GYMMENU:" not in codes[app]: fail(f"{app}: no share code produced")
         if errs: fail(f"{app}: page errors {errs}")
         print(app, "rounds", rounds, "recipes exercised", len(seen))
-    # share code in: Harriett's phone takes Blue's dinners, treats and his own meals
-    pg = b.new_context(viewport={"width": 400, "height": 850}, service_workers="block").new_page(); pg.clock.install(time="2026-10-06T09:00:00")
-    pg.goto("http://localhost:8765/gym-gyal/index.html"); pg.click('[data-tab="food"]'); pg.click("#sh-paste"); pg.fill("#sh-text", codes["gym-bro"]); pg.click("#sh-load"); pg.wait_for_timeout(200)
-    st = json.loads(pg.evaluate("localStorage.getItem('gymgyal:menus')"))["2026-10-12"]
-    if st.get("dinner2") != "d-pizza" or st.get("p:lunch1") != "l-bulgogi" or "lunch1" in st: fail(f"share: Harriett's phone did not take Blue's menu correctly: {st}")
-    pg.click("#sh-paste"); pg.fill("#sh-text", codes["gym-gyal"]); pg.click("#sh-load")
-    if "your own" not in pg.inner_text("#sh-msg"): fail("share: own code was not refused")
+    # ---- sync between the two phones, against the stand-in database
+    def phone(app):
+        ctx = b.new_context(viewport={"width": 400, "height": 850}, service_workers="block"); ctx.add_init_script("window.GB_SYNC_URL='http://localhost:8766'")
+        pg = ctx.new_page(); er = []; pg.on("pageerror", lambda e: er.append(str(e) + " " + (e.stack or "")[:300])); pg.clock.install(time="2026-10-13T09:00:00"); pg.goto(f"http://localhost:8765/{app}/index.html"); pg.click('[data-tab="food"]'); return ctx, pg, er
+    def stored(pg, pre, k): return json.loads(pg.evaluate("([k])=>localStorage.getItem(k)", [pre + k]) or "null")
+    def until(what, fn, ms=6000):
+        t0 = time.time()
+        while time.time() - t0 < ms / 1000:
+            try:
+                if fn(): return True
+            except Exception: pass
+            time.sleep(0.15)
+        fail("sync: " + what); return False
+    WK = "2026-10-12"
+    ca, A, ea = phone("gym-bro"); cb, B, eb = phone("gym-gyal")
+    A.click('[data-swap="dinner"][data-dow="2"]'); A.locator('#sheet [data-choose="d-pizza"]').first.click()      # chosen before sync exists
+    A.click("#sy-new"); key = stored(A, "banebuild:", "sync")["key"]
+    if len(key) < 24: fail("sync: household key too short")
+    B.click("#sy-join"); B.fill("#sy-text", "GYMSYNC:" + key); B.click("#sy-go")
+    until("Harriett's phone did not receive the dinner Blue had already chosen", lambda: stored(B, "gymgyal:", "menus")[WK].get("dinner2") == "d-pizza")
+    B.click('[data-swap="lunch"][data-dow="1"]'); B.locator('#sheet [data-choose="l-caesar"][data-days="1,2,3"]').click()
+    until("Blue's phone did not receive Harriett's lunches", lambda: [stored(A, "banebuild:", "menus")[WK].get("p:lunch" + str(d)) for d in (1, 2, 3)] == ["l-caesar"] * 3)
+    if "lunch1" in stored(A, "banebuild:", "menus")[WK] and stored(A, "banebuild:", "menus")[WK]["lunch1"] == "l-caesar": fail("sync: Harriett's lunch overwrote Blue's own lunch")
+    A.locator('[data-shop^="i:"]').first.click(); tick = A.locator('[data-shop^="i:"]').first.get_attribute("data-shop")
+    until("shopping tick did not reach the other phone", lambda: stored(B, "gymgyal:", "shops")[WK]["t"].get(tick) is True)
+    B.locator("[data-pantry]").first.click(); pk = B.locator("[data-pantry]").first.get_attribute("data-pantry")
+    until("cupboard tick did not reach the other phone", lambda: stored(A, "banebuild:", "pantry").get(pk) == 1)
+    # last change wins on both phones
+    A.click('[data-swap="dinner"][data-dow="3"]'); A.locator('#sheet [data-choose="d-rigatoni"]').first.click(); time.sleep(0.3); B.clock.fast_forward(60000)  # the two test clocks start a moment apart
+    B.click('[data-swap="dinner"][data-dow="3"]'); B.locator('#sheet [data-choose="d-smash"]').first.click()
+    until("phones disagree after both changed the same dinner", lambda: stored(A, "banebuild:", "menus")[WK].get("dinner3") == "d-smash" and stored(B, "gymgyal:", "menus")[WK].get("dinner3") == "d-smash")
+    # offline changes are held and sent later
+    ca.set_offline(True); A.click('[data-swap="dinner"][data-dow="4"]'); A.locator('#sheet [data-choose="d-quesadilla"]').first.click(); time.sleep(0.6)
+    if stored(B, "gymgyal:", "menus")[WK].get("dinner4") == "d-quesadilla": fail("sync: an offline change arrived while offline")
+    ca.set_offline(False); A.evaluate("window.dispatchEvent(new Event('online'))")
+    until("offline change was not sent after reconnecting", lambda: stored(B, "gymgyal:", "menus")[WK].get("dinner4") == "d-quesadilla")
+    # timers: ticking a timed step starts it on both phones, it rings when due, and dismissing clears both
+    step = A.locator("[data-timer]").first; tid = step.get_attribute("data-shop"); mins = int(step.get_attribute("data-timer")); step.click()
+    if A.locator("[data-step]").count() < 3: fail("sync: the run sheet vanished after ticking a step")
+    until("timer did not start on the phone that ticked the step", lambda: A.locator("#ktimers .kt").count() == 1)
+    until("timer did not appear on the other phone", lambda: B.locator("#ktimers .kt").count() == 1)
+    B.clock.fast_forward((mins + 1) * 60000)
+    until("timer did not ring when due", lambda: B.locator("#ktimers .kt.done").count() == 1)
+    B.click("#ktimers [data-kt]")
+    until("dismissing the timer did not clear it on both phones", lambda: A.locator("#ktimers .kt").count() == 0 and B.locator("#ktimers .kt").count() == 0)
+    # reset reaches the other phone
+    B.click("#menu-reset"); B.click("#menu-reset")
+    until("menu reset did not reach the other phone", lambda: "dinner2" not in stored(A, "banebuild:", "menus")[WK])
+    # only menu, tick and timer data is ever sent
+    import urllib.request
+    state = json.loads(urllib.request.urlopen("http://localhost:8766/__state").read())
+    hh = state.get("h", {}).get(key, {})
+    if not hh or set(hh) - set("mrspct"): fail(f"sync: unexpected data in the database: {list(hh)}")
+    if any(w in json.dumps(state) for w in ["progress", "waist", "ex-", "meals", "supp"]): fail("sync: personal data was sent")
+    if ea or eb: fail(f"sync: page errors {ea} {eb}")
     b.close()
 finally:
-    srv.terminate()
+    srv.terminate(); db.terminate()
 print("%d problem(s)" % len(bad) if bad else "All app checks passed"); sys.exit(1 if bad else 0)

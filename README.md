@@ -31,7 +31,8 @@ Your data is lost if you uninstall the app or clear Chrome's site data, so keep 
 - Dinners and treats are one choice for both of you. Breakfast, shake and lunch are each person's own.
 - **Food tab → Harriett's meals** lets you plan her meals on your phone, so the shopping list and Sunday prep cover you both.
 - **Shopping list** defaults to **Household**; switch to **Just me** or **Just Harriett** if you need one person's list.
-- To keep the two phones in step: **Copy this week's menu**, send the message, and the other person taps **Paste** on their Food tab.
+- **Sync:** Food tab → **Set up sync** on one phone, send the link code to the other, and **Join with a code** there. Menus, shopping and run-sheet ticks, the cupboard list and kitchen timers then update on both phones. Weights, training logs and meal ticks are never sent.
+- **Run sheet timers:** ticking a step that cooks, marinates or cools starts its timer on both phones. The screen stays awake while the app is open so the alarm can sound.
 
 `index.html`, `data.js` and `guides.js` are shared with Gym-Gyal. `profile.js` holds the settings that make this app yours.
 
@@ -39,4 +40,4 @@ Your data is lost if you uninstall the app or clear Chrome's site data, so keep 
 
 Claude pushes updates straight to this repository. Open the app with signal and it updates itself; if not, close it fully and reopen. Your logs, menu choices and ticks are kept.
 
-Before each push Claude runs `node tests/data-check.js` and `python3 gym-bro/tests/app-check.py`.
+Before each push Claude runs `node tests/data-check.js` and `python3 gym-bro/tests/app-check.py` (the second uses `tests/mock-db.py` as a stand-in for the sync database).
