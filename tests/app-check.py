@@ -46,6 +46,33 @@ try:
                     elif abs(got[k] - v) > 0.2: fail(f"{app} {view}: {k} listed {got[k]} g, expected {v:.1f} g")
                 for k in got:
                     if k not in exp: fail(f"{app} {view}: {k} on the list but in no meal")
+            # Sunday run sheet: order, dependencies, one job per cook at a time, kit never double-booked
+            prepped = set(rid for w in (me, other) for k, rid in menu[w].items() if not k.endswith("0") and k[:-1] in ("lunch", "dinner") and D["RECIPES"][rid].get("comp") and D["RECIPES"][rid].get("type") != "fresh")
+            for cooks in ("2", "1"):
+                if not pg.query_selector(f'[data-cooks="{cooks}"]'): continue
+                pg.click(f'[data-cooks="{cooks}"]')
+                st = pg.eval_on_selector_all("[data-step]", "els=>els.map(e=>({id:e.dataset.step,s:+e.dataset.s,e:+e.dataset.e,d:+e.dataset.d,who:e.dataset.who,kit:e.dataset.kit,temp:e.dataset.temp,needs:e.dataset.needs?e.dataset.needs.split('~'):[]}))")
+                tag = f"{app} run sheet ({cooks} cook, round {rounds})"; by = {x["id"]: x for x in st}
+                if len(by) != len(st): fail(f"{tag}: duplicate steps")
+                if any(st[i]["s"] > st[i + 1]["s"] + 1e-6 for i in range(len(st) - 1)): fail(f"{tag}: steps are not in time order")
+                for x in st:
+                    for n in x["needs"]:
+                        if n not in by: fail(f"{tag}: {x['id']} needs {n}, which is not on the sheet")
+                        elif by[n]["d"] > x["s"] + 1e-6: fail(f"{tag}: {x['id']} starts at {x['s']} before {n} is done at {by[n]['d']}")
+                    if x["id"].startswith("P|") and not x["needs"]: fail(f"{tag}: {x['id']} boxes food that nothing made")
+                    if cooks == "1" and x["who"] != "chef": fail(f"{tag}: a step is given to a second cook")
+                for who in ("chef", "helper"):
+                    mine = sorted([x for x in st if x["who"] == who and x["e"] > x["s"]], key=lambda x: x["s"])
+                    for i in range(len(mine) - 1):
+                        if mine[i]["e"] > mine[i + 1]["s"] + 1e-6: fail(f"{tag}: {who} has {mine[i]['id']} and {mine[i+1]['id']} at the same time")
+                for kit, cap in (("oven", 2), ("hob", 4), ("ip", 1)):
+                    ks = [x for x in st if x["kit"] == kit]
+                    for x in ks:
+                        live = [y for y in ks if y["s"] < x["d"] and y["d"] > x["s"]]
+                        if len([y for y in live if y["s"] <= x["s"]]) > cap: fail(f"{tag}: {kit} over capacity at {x['id']}")
+                        if kit == "oven" and any(y["temp"] != x["temp"] for y in live): fail(f"{tag}: oven at two temperatures at once ({x['id']})")
+                missing = [r for r in prepped if any(c[0] == "P" for c in D["RECIPES"][r]["comp"]) and ("P|" + r) not in by]
+                if missing: fail(f"{tag}: no boxing step for {missing}")
             txt = pg.inner_text("#view")
             for w in ["undefined", "NaN", "null"]:
                 if w in txt: fail(f"{app}: '{w}' on the Food tab (round {rounds})")

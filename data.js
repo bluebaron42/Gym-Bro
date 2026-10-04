@@ -175,6 +175,10 @@ window.BB_DATA = (function () {
       "blue",
       "harriett"
     ],
+    "prep": {
+      "chef": "blue",
+      "helper": "harriett"
+    },
     "shared": [
       "dinner",
       "snack"
@@ -219,6 +223,7 @@ window.BB_DATA = (function () {
   // method = from scratch, no amounts (they are in the lists). finish = on the day, after Sunday prep.
   // Dinners: type fresh | head | sunday. Lunches: late freeze | split | no (Monday to Wednesday only).
   // comp = Sunday components: V veg, L long cook, M marinade, B breading, X shape, S sauce, O oven, H hob, T treat, P pack.
+  // The run sheet works out what each component needs first; after = {component index: [indexes it also needs]} for the exceptions.
   const R = [
     { id: "bf-eggs", slot: "breakfast", name: "Eggs and sourdough", time: "10 min",
       ing: [["eggs",200], ["egg-whites",150], ["sourdough",90], ["salsa",40]],
@@ -412,6 +417,7 @@ window.BB_DATA = (function () {
         ["H", "Thai green curry",20,"Fry the paste 1 min, seal the sliced thighs, add the coconut milk and water, simmer 10 min with the veg, then season", "30 g green curry paste; 150 ml light coconut milk; 50 ml water; 10 ml fish sauce; 0.25 x lime juice; 1 pinch sugar"],
         ["P", "rice, green curry"]] },
     { id: "l-tikka", slot: "lunch", name: "Chicken tikka masala (lighter)", time: "35 min", tag: "Curry", late: "freeze", kind: "curry",
+      after: {"3": [2]},
       ing: [["chicken-breast",200], ["greek-yog",60], ["curry-paste",25], ["onion",50], ["garlic",10], ["passata",120], ["coconut-light",60], ["jasmine-rice",80], ["lemon",25], ["ginger",5], ["coriander",5]],
       sea: [["To finish", "5 g fresh coriander"]],
       method: ["Marinate the chicken in yoghurt and half the paste; grill or air-fry at 220°C for 12 minutes.", "Soften onion and garlic, fry the rest of the paste, add passata and coconut milk; simmer 10 minutes.", "Blend smooth if you like, add the chicken. Serve with basmati."],
@@ -541,6 +547,7 @@ window.BB_DATA = (function () {
       sea: [["Chicken seasoning", "0.5 tsp dried oregano; 0.5 tsp garlic granules; 0.25 tsp salt"], ["Pizza sauce", "60 g passata; 0.5 tsp dried oregano; 0.5 clove garlic; 1 pinch salt; 1 pinch sugar; 1 pinch chilli flakes"]],
       method: ["Oven and a tray to the hottest setting.", "Toss the chicken in the chicken seasoning; pan-fry or air-fry 10 minutes and slice.", "Stir the pizza sauce together and spread it thin on the base.", "Top with mozzarella, chicken and pepperoni; bake on the hot tray 8–10 minutes."] },
     { id: "d-meatball-sub", slot: "dinner", name: "Meatball marinara sub", time: "10 min on the day", tag: "Italian", type: "sunday",
+      after: {"2": [1]},
       ing: [["beef-mince",180], ["panko",15], ["eggs",15], ["passata",120], ["garlic",7.5], ["mozzarella",40], ["parmesan",10], ["sub-roll",90], ["basil",3]],
       sea: [["To finish", "3 g fresh basil"]],
       method: ["Mix mince, panko, egg, garlic, parmesan and herbs; roll 6 meatballs.", "Brown, then simmer in seasoned passata for 12 minutes.", "Into the toasted roll, mozzarella on top, grill to melt."],
@@ -597,6 +604,7 @@ window.BB_DATA = (function () {
       sea: [["Sauce", "8 ml olive oil; 2 clove garlic; 0.5 tsp chilli flakes; 200 g chopped tomatoes; 25 g olives; 10 g capers; 0.5 tsp dried oregano"], ["To finish", "3 g fresh parsley"]],
       method: ["Spaghetti on.", "Warm the oil with the sliced garlic and chilli flakes; add the tomatoes, halved olives, capers and oregano; reduce 10 minutes.", "Fold in the drained tuna and toss with the pasta and a splash of pasta water.", "Parsley and parmesan on top. Taste before salting: the olives and capers are salty."] },
     { id: "d-meatballs", slot: "dinner", name: "Spaghetti and meatballs", time: "10 min on the day", tag: "Italian", type: "sunday",
+      after: {"2": [1]},
       ing: [["beef-mince",180], ["panko",15], ["eggs",15], ["passata",150], ["garlic",7.5], ["pasta",90], ["parmesan",15], ["basil",3]],
       sea: [["To finish", "3 g fresh basil"]],
       method: ["Mix mince, panko, egg, garlic, parmesan and herbs; roll 6 meatballs.", "Brown, then simmer in seasoned passata for 12 minutes.", "Toss with spaghetti; parmesan on top."],

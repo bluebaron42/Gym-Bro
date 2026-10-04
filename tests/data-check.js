@@ -13,6 +13,9 @@ Object.values(R).forEach((r) => {
   if ((r.type === "head" || r.type === "sunday") && !(r.comp && r.finish)) fail(r.id + ": needs Sunday components and a finish step");
   if (r.type === "head" && r.comp.some((c) => "OHL".indexOf(c[0]) >= 0)) fail(r.id + ": head-start dinner is being cooked on Sunday");
   if (r.slot === "lunch" && r.id !== "l-onigiri" && !(r.comp && r.comp.some((c) => c[0] === "P") && r.finish)) fail(r.id + ": lunch needs a pack line and a finish step");
+  // Run sheet: explicit dependencies point backwards at real components; anything assembled has something to assemble.
+  Object.keys(r.after || {}).forEach((ci) => { if (!r.comp[ci]) fail(r.id + ": after refers to a missing component " + ci); r.after[ci].forEach((j) => { if (!(j < ci) || !r.comp[j]) fail(r.id + ": after must point at an earlier component"); }); });
+  (r.comp || []).forEach((c, ci) => { if (c[0] === "X" && /^Build/.test(c[1]) && !r.comp.slice(0, ci).some((x) => "LHSO".indexOf(x[0]) >= 0)) fail(r.id + ": '" + c[1] + "' has nothing cooked before it"); });
   // Seasoning lists: every item is a known shopping ingredient or cupboard item, and the ingredient list covers what the lists use.
   const strs = []; (r.comp || []).forEach((t) => { const s = t[SIDX[t[0]]]; if (typeof s === "string" && s) strs.push(s); }); (r.sea || []).forEach((g) => strs.push(g[1]));
   const need = {}, zest = {};
