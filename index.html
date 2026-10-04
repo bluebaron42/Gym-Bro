@@ -380,7 +380,7 @@ function prepList(){
         else if(k==="H"){const o=HB[t[1]]=HB[t[1]]||{min:t[2],m:t[3],sp:{},d:[],n:0,p:{}};o.n++;if(t[4])addSp(o.sp,t[4],f);o.d.push(dish(id));
           const ps=HP[t[1]]||(/^(Boil eggs|Steam|Cinnamon apple|Spicy rice|Beans|Salt and pepper veg|Philly onions|Sweet and sour|Tikka masala sauce)/.test(t[1])?[]:[mainP(r)]);ps.forEach(mp=>{if(mp)o.p[mp]=(o.p[mp]||0)+gOf(r,mp,sc)})}
         else if(k==="T"){const o=TR[t[1]]=TR[t[1]]||{m:t[2],sp:{},n:0,days:[]};o.n++;addSp(o.sp,t[3],f);const bd=u.boxes[ix].d;if(o.days.indexOf(bd)<0)o.days.push(bd)}
-        else if(k==="P"){const b=u.boxes[ix];(PK[b.d]=PK[b.d]||[]).push({sl:u.slot,name:r.name,what:t[1],who:b.who})}
+        else if(k==="P"){const b=u.boxes[ix];(PK[b.d]=PK[b.d]||[]).push({sl:u.slot,name:r.name,id:id,what:t[1],who:b.who})}
       })})});
   const out=[];let total=10;
   const mins=m=>m<60?m+" min":Math.floor(m/60)+" h"+(m%60?" "+(m%60)+" min":"");
@@ -404,7 +404,7 @@ function prepList(){
   if(carb.penne)C.push("<b>Penne</b>: cook "+roundG(carb.penne)+" g 2 min short; drain (it finishes in the pasta bake).");
   if(carb["rice-noodles"])C.push("<b>Rice noodles</b>: soak "+roundG(carb["rice-noodles"])+" g in boiling water 5 min, rinse cold, toss in a few drops of oil.");
   if(carb.potatoes)C.push("<b>Potatoes</b>: cut "+shopAmount("potatoes",carb.potatoes)+" into chips or cubes; boil 5 min, drain, steam-dry, cool, bag by meal (air-fry on the day).");
-  if(C.length)C.push("Spread cooked rice on a tray to cool fast; portion within an hour.");
+  
   // 2. veg
   const V=[];const tVeg=Object.keys(VEG).length;
   if(tally.garlic>=1)V.push("<b>Garlic</b>: peel and grate "+Math.ceil(tally.garlic)+" cloves into a small covered bowl. Every recipe below draws from it.");
@@ -438,9 +438,26 @@ function prepList(){
   if(hobs.length){K.push("## Hob jobs: up to 3 rings at once while the oven works");hobs.forEach(k=>{const o=HB[k];K.push("<b>"+k+"</b>"+(Object.keys(o.p).length?" ("+amt(o.p)+")":"")+", "+o.min+" min: "+o.m+(Object.keys(o.sp).length?". With: "+spText(o.sp):"")+".");total+=Math.ceil(o.min*0.4)})}
   // 8. pack
   const PKL=[];let boxes=0;
+  // Per-box weights: cooked weight for batch carbs and meat, with the raw or dry weight alongside.
+  const YIELD={"sushi-rice":2.3,"jasmine-rice":2.6,pasta:2.2,penne:2.2,"rice-noodles":2.5};
+  const RAWP={"chicken-breast":.75,"chicken-thigh":.72,"beef-mince":.75,"lamb-mince":.72,"beef-shin":.65,steak:.8,topside:.75,"pork-loin":.75,bacon:.7,salmon:.85};
+  const SHORT={"jasmine-rice":"jasmine or basmati rice",pasta:"pasta",penne:"penne","rice-noodles":"rice noodles","chicken-thigh":"chicken thigh","beef-mince":"beef mince","lamb-mince":"lamb mince",steak:"sirloin steak",topside:"beef topside","pork-loin":"pork loin",bacon:"bacon medallions",tuna:"drained tuna",prawns:"king prawns",eggs:"egg","egg-whites":"egg whites","greek-yog":"Greek yoghurt",broccoli:"broccoli",greens:"pak choi or greens",edamame:"edamame",peas:"peas",berries:"berries",strawberries:"strawberries",corn:"sweetcorn","kidney-beans":"kidney beans",brioche:"brioche bun",wrap:"wrap","sub-roll":"sub roll","pizza-base":"pizza base",mozzarella:"mozzarella","cheese-slice":"cheese slice"};
+  const sname=i=>SHORT[i]||ING[i][0].replace(/\s*\(.*\)/,"").split(",")[0].toLowerCase();
+  const perBox=id=>{const r=RECIPES[id],nb=NO_BATCH.indexOf(id)>=0,a=[];
+    r.ing.forEach(([i,g0])=>{const n=ING[i];if(!n||i==="whey"||i==="garlic"||i==="lime"||i==="panko"||i==="cornflour")return;const cat=n[1];
+      if(cat==="Sauces and cupboard"&&i!=="kidney-beans"&&i!=="peanuts")return;const g=g0*scaleOf(i,P.scales);if(g<=0)return;
+      if(YIELD[i])a.push(nb?roundG(g)+" g dry "+sname(i)+" (cook on the day)":"about "+roundG(g*YIELD[i])+" g cooked "+sname(i)+" ("+roundG(g)+" g dry)");
+      else if(i==="potatoes")a.push(roundG(g)+" g potatoes (raw weight)");
+      else if(RAWP[i])a.push("about "+roundG(g*RAWP[i])+" g cooked "+sname(i)+" ("+roundG(g)+" g raw)");
+      else if(n[6]){const c=Math.max(.5,Math.round(g/n[6]*2)/2);const nm=sname(i).replace(/s$/,"");a.push((c+"").replace(/\.5$/,"½").replace(/^0½/,"½")+" "+nm+(c>1?"s":""))}
+      else a.push(roundG(g)+" g "+sname(i))});
+    return a.length?"<i>Per box: "+a.join(", ")+".</i>":""};
+  const riceName=(id,w)=>{const r=RECIPES[id];const has=k=>r.ing.some(x=>x[0]===k);const nm=has("sushi-rice")?"sushi rice":has("jasmine-rice")?"jasmine or basmati rice":null;
+    return nm?w.replace(/(^|, |; |and )(seasoned |lime |spicy )?rice\b(?! noodles)/g,(m,a,b)=>a+(b||"")+nm):w};
+  PKL.push("<b>Cool first</b>: spread rice, noodles and pasta on trays and get them boxed and into the fridge within 1 hour; everything else within 90 minutes. Lids on only once cold. Weigh cooked food into the boxes using the per-box weights below.");
   days.forEach(d=>{const it=PK[d];if(!it||!it.length)return;const store=d<=3?"fridge":"freezer";
-    const grp={};it.forEach(b=>{const k=b.sl+"|"+b.name;(grp[k]=grp[k]||{sl:b.sl,name:b.name,what:b.what,me:0,pt:0})[b.who]++});
-    PKL.push("<b>"+DFULL[d]+" ("+store+")</b>: "+Object.values(grp).map(g=>{boxes+=g.me+g.pt;return SLOTNAME[g.sl].toLowerCase()+", "+g.name+(g.pt?" × 2 (you and "+pt.who+")":"")+": "+g.what}).join(". ")+".")});
+    const grp={};it.forEach(b=>{const k=b.sl+"|"+b.name;(grp[k]=grp[k]||{sl:b.sl,name:b.name,id:b.id,what:b.what,me:0,pt:0})[b.who]++});
+    PKL.push("<b>"+DFULL[d]+" ("+store+")</b>: "+Object.values(grp).map(g=>{boxes+=g.me+g.pt;return SLOTNAME[g.sl].toLowerCase()+", "+g.name+": "+riceName(g.id,g.what)+". "+perBox(g.id)}).join("<br>"))});
   PKL.push("Label every box with the day. Each night, move the next day's freezer boxes to the fridge. Reheat until piping hot all the way through.");
   total+=10+boxes;
   const longMax=longs.length?longs[0].min+15:0;const wall=Math.round(Math.max(total,longMax)/5)*5;
