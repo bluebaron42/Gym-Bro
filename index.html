@@ -143,13 +143,16 @@ nav.tabs button[aria-selected="true"]{color:var(--accent)}
 #timer{position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:6}
 #timer .shell{padding-block:0 8px}
 #ktimers{position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:6}
-#ktimers .shell{padding-block:0 8px;display:flex;flex-direction:column;gap:6px}
-#ktimers .kt{background:var(--fg);color:var(--bg);border-radius:12px;padding:8px 12px;display:flex;align-items:center;gap:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-size:13px}
-#ktimers .kt b{font-family:var(--display);font-size:22px;min-width:58px}
-#ktimers .kt span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#ktimers .kt button{border:0;background:transparent;color:inherit;font:700 13px var(--body);padding:6px;cursor:pointer;opacity:.9}
+#ktimers .shell{padding-block:0 8px}
+#ktimers .kt{background:var(--fg);color:var(--bg);border-radius:12px;padding:4px 6px 4px 12px;display:flex;align-items:center;gap:6px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-size:13px}
+#ktimers button{border:0;background:transparent;color:inherit;font:700 13px var(--body);padding:8px;cursor:pointer}
+#ktimers .kt-open{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:4px 0;text-align:left;font-weight:500}
+#ktimers .kt-open b{font-family:var(--display);font-size:22px;min-width:56px}
+#ktimers .kt-open span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ktimers .kt-open em{font-style:normal;font-weight:700;opacity:.75;white-space:nowrap}
 #ktimers .kt.done{background:var(--warn);color:#fff}
-body.has-kt main{padding-bottom:160px}
+.kt-row .opt-top b{font-family:var(--display);font-size:24px}
+body.has-kt main{padding-bottom:132px}
 .rs-timer{display:block;font-size:12.5px;color:var(--muted)}
 #timer .in{background:var(--fg);color:var(--bg);border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:12px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
 #timer .t{font-family:var(--display);font-size:30px;font-weight:700;min-width:70px}
@@ -698,7 +701,7 @@ function renderFood(){
     '<p class="rest-note" style="margin:0"><b>Sunday load:</b> '+["fresh","head","sunday"].map(t=>ORDER.filter(d=>(RECIPES[choice("dinner",d)]||{}).type===t).length+' '+DTYPE[t][0].toLowerCase()).join(" · ")+' dinners; '+HOUSE.order.map(w=>lunchN(w)+' lunch'+(lunchN(w)>1?'es':'')+' for '+(w===ME?'you':pname(w))).join(", ")+'; '+treatN+' batch treat'+(treatN===1?'':'s')+'.</p>'+menu+'<button type="button" class="btn ghost small" id="menu-reset" style="align-self:flex-start">Reset this menu to defaults</button></section>'+
     '<h2 class="sec">Sync with '+esc(pname(OTHER))+'</h2>'+syncCard()+
     '<h2 class="sec">Recipes</h2>'+lib+
-    '<h2 class="sec">Shopping list</h2><section class="card">'+seg("sv",shopView,[["house","Household"],[ME,"Just me"],[OTHER,"Just "+pname(OTHER)]])+'<p class="rest-note"><b>'+weekRange(viewWk)+'.</b> '+(shopView==="house"?'Everything both of you eat this week, at each person’s portions.':shopView===ME?'Only your portions.':'Only '+esc(poss(OTHER))+' portions.')+' Weights include an allowance for peel and trim; pack counts are a guide.</p><div class="data-btns"><button type="button" class="btn small" id="shop-copy">Copy shopping list</button></div><p class="rest-note" id="shop-msg" aria-live="polite"></p>'+lists+'</section>'+
+    '<h2 class="sec">Shopping list</h2><section class="card">'+seg("sv",shopView,[["house","Household"],[ME,"Just me"],[OTHER,"Just "+pname(OTHER)]])+'<p class="rest-note"><b>'+weekRange(viewWk)+'.</b> '+(shopView==="house"?'Everything both of you eat this week, at each person’s portions.':shopView===ME?'Only your portions.':'Only '+esc(poss(OTHER))+' portions.')+' Weights include an allowance for peel and trim; pack counts are a guide.</p><div class="data-btns"><button type="button" class="btn small" id="shop-send">Send to Claude</button><button type="button" class="btn ghost small" id="shop-copy">Copy shopping list</button></div><p class="rest-note" id="shop-msg" aria-live="polite"></p>'+lists+'</section>'+
     '<h2 class="sec">Sunday run sheet'+(viewWk===THIS_MONDAY?'':' for next week')+'</h2><section class="card">'+(RS.steps.length?
       '<div class="prep-est"><b>About '+hm(RS.total)+'</b><span>start to finish with '+(RS.cooks>1?'two of you':'one cook')+', for Monday '+fmtDate(viewWk)+' to Saturday</span></div>'+seg("cooks",String(nCooks),[["2","Two of us"],["1","One cook"]])+
       '<p class="rest-note">Work down the list. Times count from when you start; each step shows who does it and the hands-on minutes. Ticking a step that cooks, marinates or cools starts its timer on both phones. It covers both your lunches, the treats, and head start or Sunday batch dinners, and rebuilds whenever you swap a meal.</p>'+prep+
@@ -715,6 +718,7 @@ function openSheet(state){sheet=state;renderSheet();$("#sheet").hidden=false;doc
 function closeSheet(){sheet=null;$("#sheet").hidden=true;document.body.style.overflow=""}
 function blockOf(dow){return dow>=1&&dow<=3?[[1,2,3],"Mon–Wed"]:dow>=4?[[4,5,6],"Thu–Sat"]:null}
 function renderSheet(){if(!sheet)return;const T=$("#sheet-title"),B=$("#sheet-body");const who=sheet.who||ME;
+  if(sheet.mode==="timers"){T.textContent="Timers";B.innerHTML=timerSheet();return}
   if(sheet.mode==="swap"){const cur=choice(sheet.slot,sheet.dow,who),blk=blockOf(sheet.dow);
     T.textContent=DFULL[sheet.dow]+" "+SLOTNAME[sheet.slot].toLowerCase()+(isShared(sheet.slot)?"":" · "+(who===ME?"you":pname(who)));
     let last=null;
@@ -936,8 +940,10 @@ function shopText(){const shop=shopState().t||{},pantry=get("pantry",{});let ski
   const cup=SL.cup.filter(c=>!pantry[c.key]);if(cup.length){L.push("Seasonings not in the cupboard");cup.forEach(c=>L.push("- "+c.name+" (recipes use "+c.amt+")"));L.push("")}
   if(skipped)L.push("("+skipped+" ticked item"+(skipped>1?"s":"")+" left off as already got.)");
   return L.join("\n").trim()}
-$("#view").addEventListener("click",async ev=>{if(ev.target.id!=="shop-copy")return;const t=shopText();const m=$("#shop-msg");
-  try{await navigator.clipboard.writeText(t);m.textContent="Copied. Ticked items are left off. Paste it to Claude to order, or into your notes."}
+$("#view").addEventListener("click",async ev=>{const send=ev.target.id==="shop-send";if(ev.target.id!=="shop-copy"&&!send)return;const m=$("#shop-msg");
+  const t=(send?"Please build my Asda basket from this "+P.app+" shopping list. Match each line to a product, round up to whole packs, and tell me anything you could not find.\n\n":"")+shopText();
+  if(send&&navigator.share){try{await navigator.share({text:t});m.textContent="Pick Claude in the share menu, then send.";return}catch(e){if(e&&e.name==="AbortError")return}}
+  try{await navigator.clipboard.writeText(t);m.textContent=send?"This phone can’t open the share menu, so the list is copied instead. Paste it into your Claude chat.":"Copied. Ticked items are left off."}
   catch(e){let ta=$("#shop-text");if(!ta){ta=document.createElement("textarea");ta.id="shop-text";ta.readOnly=true;ta.setAttribute("aria-label","Shopping list as text");ta.className="share-ta";m.after(ta)}ta.value=t;ta.focus();ta.select();m.textContent="Your phone blocked copying. The list is selected below: long-press and choose Copy."}});
 
 function suppList(){const m=new Date().getMonth();const L=[["creatine","Creatine monohydrate, 5 g","Any time. Stir it into your morning shake."]];
@@ -1053,18 +1059,25 @@ function setTimer(id,label,mins){const all=Object.assign({},get("timers",{}));co
   if(mins){try{ringCtx=ringCtx||new (window.AudioContext||window.webkitAudioContext)();if(ringCtx.state==="suspended")ringCtx.resume()}catch(e){}
     try{if(window.Notification&&Notification.permission==="default")Notification.requestPermission()}catch(e){}}}
 function beep(){try{if(!ringCtx)return;[0,0.22,0.44].forEach(d=>{const o=ringCtx.createOscillator(),g=ringCtx.createGain();o.frequency.value=880;o.connect(g);g.connect(ringCtx.destination);const t=ringCtx.currentTime+d;g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.5,t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+0.18);o.start(t);o.stop(t+0.2)})}catch(e){}}
+const ktLeft=(t,now)=>{const left=Math.round((t.e-now)/1000);return left<=0?"Done":Math.floor(left/60)+":"+pad(left%60)};
+// One slim bar above the tabs: the next timer to finish and how many are running. Tap it for the full list.
 function renderTimers(){const el=$("#ktimers");if(!el)return;const all=get("timers",{}),ids=Object.keys(all).sort((a,b)=>all[a].e-all[b].e),now=Date.now();
   // drop anything that finished more than two hours ago and was never dismissed
   ids.filter(i=>now-all[i].e>72e5).forEach(i=>setTimer(i));
-  const live=ids.filter(i=>now-all[i].e<=72e5);el.hidden=!live.length;let ringing=false;
-  el.innerHTML='<div class="shell">'+live.map(i=>{const left=Math.round((all[i].e-now)/1000),done=left<=0;if(done)ringing=true;
-    if(done&&!notified[i]){notified[i]=1;try{if(navigator.vibrate)navigator.vibrate([400,200,400,200,400])}catch(e){}
-      try{if(window.Notification&&Notification.permission==="granted"&&navigator.serviceWorker)navigator.serviceWorker.ready.then(r=>r.showNotification("Timer done",{body:all[i].l,tag:"kt-"+i,renotify:true,requireInteraction:true,icon:"icon-192.png"})).catch(()=>{})}catch(e){}}
-    return '<div class="kt'+(done?' done':'')+'"><b class="num">'+(done?"Done":Math.floor(left/60)+":"+pad(left%60))+'</b><span>'+esc(all[i].l)+'</span><button type="button" data-kt="'+esc(i)+'">'+(done?"Dismiss":"Cancel")+'</button></div>'}).join("")+'</div>';
+  const live=ids.filter(i=>now-all[i].e<=72e5),done=live.filter(i=>all[i].e<=now);el.hidden=!live.length;
+  done.forEach(i=>{if(notified[i])return;notified[i]=1;try{if(navigator.vibrate)navigator.vibrate([400,200,400,200,400])}catch(e){}
+    try{if(window.Notification&&Notification.permission==="granted"&&navigator.serviceWorker)navigator.serviceWorker.ready.then(r=>r.showNotification("Timer done",{body:all[i].l,tag:"kt-"+i,renotify:true,requireInteraction:true,icon:"icon-192.png"})).catch(()=>{})}catch(e){}});
+  if(live.length){const i=done[0]||live[0],more=live.length-1;
+    el.innerHTML='<div class="shell"><div class="kt'+(done.length?' done':'')+'"><button type="button" class="kt-open" data-ktopen aria-label="Show all timers"><b class="num">'+ktLeft(all[i],now)+'</b><span>'+esc(all[i].l)+'</span>'+(more?'<em>+'+more+' more</em>':'')+'</button>'+(done.length?'<button type="button" data-kt="'+esc(i)+'">Dismiss</button>':'')+'</div></div>'}else el.innerHTML="";
   document.body.classList.toggle("has-kt",live.length>0);
-  if(ringing&&!ringInt){beep();ringInt=setInterval(beep,2500)}else if(!ringing&&ringInt){clearInterval(ringInt);ringInt=null}}
+  if(sheet&&sheet.mode==="timers"){if(live.length)renderSheet();else closeSheet()}
+  if(done.length&&!ringInt){beep();ringInt=setInterval(beep,2500)}else if(!done.length&&ringInt){clearInterval(ringInt);ringInt=null}}
+function timerSheet(){const all=get("timers",{}),now=Date.now(),ids=Object.keys(all).sort((a,b)=>all[a].e-all[b].e);
+  return '<p class="rest-note">Timers run on both phones. Cancelling or dismissing one here clears it on the other.</p>'+ids.map(i=>{const d=all[i].e<=now;
+    return '<div class="opt kt-row'+(d?' on':'')+'"><div class="opt-top"><b class="num">'+ktLeft(all[i],now)+'</b><button type="button" class="btn ghost small" data-kt="'+esc(i)+'">'+(d?"Dismiss":"Cancel")+'</button></div><div>'+esc(all[i].l)+'</div><div class="opt-meta num">'+(all[i].n?all[i].n+' min timer · ':'')+(d?'finished':'ends')+' '+new Date(all[i].e).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})+'</div></div>'}).join("")}
 setInterval(()=>{if(Object.keys(get("timers",{})).length)renderTimers()},1000);
-document.addEventListener("click",ev=>{const b=ev.target.closest("[data-kt]");if(!b)return;const id=b.dataset.kt;setTimer(id)});
+document.addEventListener("click",ev=>{const b=ev.target.closest("[data-kt]");if(b){setTimer(b.dataset.kt);return}
+  if(ev.target.closest("[data-ktopen]"))openSheet({mode:"timers"})});
 
 // ---------- Keep the screen awake while the app is open ----------
 let wakeLock=null;
