@@ -20,7 +20,7 @@ Shared, and must be byte-identical in both repos (edit in Gym-Bro, then copy acr
 
 - `index.html` all UI and logic, vanilla JS in one script, no build step
 - `data.js` ingredients, recipes, household, defaults, shopping tables, sync address
-- `guides.js` exercise form guides
+- `guides.js` exercise form guides: gym versions by exercise id, home versions by home exercise name (`GB_HOME_MAP`). A guide with `u` is done one side at a time, and the card then spells out what a set means. `data-check.js` fails if any exercise in either profile lacks a gym or home guide.
 
 Per repo: `profile.js` (who the phone belongs to, training plan, targets, theme), `sw.js`, `manifest.webmanifest`, icons, `README.md`.
 

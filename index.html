@@ -65,6 +65,8 @@ h2.sec{font-family:var(--display);font-weight:700;font-size:22px;text-transform:
 .chip.warn{background:var(--warn-soft);color:var(--warn)}
 .mrow .both{display:block;font-style:normal;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:none;color:var(--accent)}
 .pack{color:var(--muted);font-size:12px;white-space:nowrap}
+.target small{display:block;font:600 12px var(--body);letter-spacing:0;text-transform:none;text-align:right}
+.uni{margin:0;font-size:14px}
 .rs-h{display:flex;gap:8px;align-items:baseline;margin-bottom:2px}
 .rs-h b{font-size:15px}
 .rs-h i{font-style:normal;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:1px 8px}
@@ -315,7 +317,12 @@ const DFULL=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturd
 const CREATORS=[["Tasty Shreds","Tasty Shreds"],["Remington James","Remington James fakeaway"],["Will Tennyson","Will Tennyson fast food"],["Jalalsamfit","Jalalsamfit stealth health"],["The Protein Chef","The Protein Chef"]];
 const MAIN_LIFTS=P.mainLifts;
 const E1RM_LIFTS=P.e1rm;
-const GUIDES=window.GB_GUIDES||{};
+const GUIDES=window.GB_GUIDES||{}, HOME_GUIDES=window.GB_HOME_GUIDES||{}, HOME_MAP=window.GB_HOME_MAP||{};
+// The form guide for an exercise as it is done in the current mode.
+function guideFor(x){if(mode()==="gym")return GUIDES[x.id]||null;const k=HOME_MAP[x.name];return HOME_GUIDES[k]||GUIDES[k]||null}
+// One-side-at-a-time exercises: [word for the target line, what one set means].
+function sideInfo(g,x){if(!g||!g.u||x.unit==="m")return null;const k=g.u.split("-")[0],alt=/-alt$/.test(g.u),w=k==="side"?"side":k;
+  return ["each "+w,alt?"Alternate "+w+"s each rep. One set is "+repsLabel(x)+" reps on each "+w+", then rest.":x.sets+" sets on each "+w+". One set is "+repsLabel(x)+" reps on one "+w+", then straight away the same on the other, then rest. Log one "+w+"’s weight and reps."]}
 
 // ---------- Food: household, recipes, choices, shopping ----------
 const FD=window.BB_DATA;
@@ -618,7 +625,7 @@ function exerciseCard(e){
       '<span class="x">×</span>'+
       '<label><input id="r-'+x.id+'-'+i+'" type="number" inputmode="numeric" min="0" aria-label="'+esc(x.name)+' set '+(i+1)+' '+(x.unit==="m"?"metres":"reps")+'" value="'+esc(s.r)+'" placeholder="'+(ph?esc(ph.r):x.hi)+'" data-f="r"><small>'+(x.unit==="m"?"m":"reps")+'</small></label>'+
       '<button type="button" class="tick" data-tick aria-pressed="'+s.done+'" aria-label="Mark set '+(i+1)+' done">✓</button></div>'}).join("");
-  const g=(mode()==="gym")?GUIDES[x.id]:null;
+  const g=guideFor(x), side=sideInfo(g,x);
   const li=a=>a.map(t=>'<li>'+esc(t)+'</li>').join("");
   const back=g?'<div class="face back" hidden>'+
     '<div class="ex-head"><div><div class="eyebrow">Form guide</div><h3>'+esc(x.name)+'</h3></div><button type="button" class="flip-btn" data-flip aria-label="Back to logging">Log sets</button></div>'+
@@ -631,7 +638,8 @@ function exerciseCard(e){
   return '<section class="card excard'+(x.heavy?' heavy':'')+'" data-ex="'+x.id+'" data-rest="'+x.rest+'" data-name="'+esc(x.name)+'"><div class="face front">'+
     (x.heavy?'<div class="heavy-tag"><span class="chip plate">Heavy lift</span><span>Stop 1–2 reps short of failure.</span></div>':'')+
     '<div class="ex-head"><div><h3>'+esc(x.name)+'</h3><div class="ex-meta">Rest '+restLabel(x.rest)+(g?' · <button type="button" class="flip-link" data-flip>Form guide</button>':'')+'</div></div>'+
-    '<div class="target num">'+x.sets+' × '+repsLabel(x)+'</div></div>'+
+    '<div class="target num">'+x.sets+' × '+repsLabel(x)+(side?'<small>'+side[0]+'</small>':'')+'</div></div>'+
+    (side?'<p class="uni">'+side[1]+'</p>':'')+
     '<div class="last">'+lastHtml+'</div><div class="sets">'+rows+'</div></div>'+back+'</section>';
 }
 

@@ -40,6 +40,16 @@ Object.keys(D.PRESETS || {}).forEach((wk) => {
   Object.keys(D.PRESETS[wk]).forEach((slot) => { const sh = H.shared.indexOf(slot) >= 0, sets = sh ? { all: D.PRESETS[wk][slot] } : D.PRESETS[wk][slot];
     Object.keys(sets).forEach((w) => Object.keys(sets[w]).forEach((d) => { const r = R[sets[w][d]]; if (!r || r.slot !== slot) fail("preset " + wk + " " + slot + " day " + d + ": bad dish " + sets[w][d]); })); });
 });
+// Training: every exercise in both apps has a form guide for the gym and for home, and one-sided ones say so.
+require("../guides.js");
+["../profile.js", "../../gym-gyal/profile.js"].forEach((f) => { delete require.cache[require.resolve(f)]; require(f); const P = window.GB_PROFILE;
+  Object.values(P.days).forEach((d) => (d.ex || []).forEach((e) => {
+    const gg = window.GB_GUIDES[e[0]], hk = window.GB_HOME_MAP[e[5]], hg = window.GB_HOME_GUIDES[hk] || window.GB_GUIDES[hk];
+    if (!gg) fail(P.app + ": no gym guide for " + e[1]);
+    if (!hg) fail(P.app + ": no home guide for '" + e[5] + "'");
+    [[e[1], gg], [e[5], hg]].forEach(([name, g]) => { if (g && e[9] !== "m" && /one-arm|one-leg|single-leg|split squat|each side|each leg|kickback|step-up|pallof/i.test(name) && !g.u) fail(P.app + ": '" + name + "' is done one side at a time but its guide does not say so"); });
+  })); });
+Object.keys(window.GB_HOME_MAP).forEach((k) => { const v = window.GB_HOME_MAP[k]; if (!(window.GB_HOME_GUIDES[v] || window.GB_GUIDES[v])) fail("home guide map points at a missing guide: " + v); });
 const n = (f) => Object.values(R).filter(f).length;
 console.log("dinners " + n((r) => r.slot === "dinner") + " (fresh " + n((r) => r.type === "fresh") + ", head " + n((r) => r.type === "head") + ", sunday " + n((r) => r.type === "sunday") + "), lunches " + n((r) => r.slot === "lunch") + ", treats " + n((r) => r.slot === "snack"));
 console.log(bad ? bad + " problem(s)" : "All checks passed"); process.exit(bad ? 1 : 0);
