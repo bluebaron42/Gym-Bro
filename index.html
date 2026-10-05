@@ -361,7 +361,7 @@ function choice(slot,dow,who){who=who||ME;const k=menuKey(slot,dow,who),own=allM
 function weekSnapshot(){const m={};SLOTS.forEach(sl=>ORDER.forEach(d=>(isShared(sl)?[ME]:HOUSE.order).forEach(w=>{m[menuKey(sl,d,w)]=choice(sl,d,w)})));return m}
 function setChoice(slot,days,id,who){const all=Object.assign({},allMenus()),old=all[viewWk]||{};const m=all[viewWk]?Object.assign({},all[viewWk]):weekSnapshot();
   days.forEach(d=>{if(allowed(id,slot,d,who))m[menuKey(slot,d,who)]=id});all[viewWk]=m;
-  Object.keys(all).sort().slice(0,-8).forEach(k=>delete all[k]);save("menus",all);
+  save("menus",all);
   const out={},now=Date.now();Object.keys(m).forEach(k=>{if(old[k]!==m[k])out["m/"+viewWk+"/"+canon(k)]=m[k]+"@"+now});syncPush(out)}
 function pool(slot,dow,who){const T={fresh:0,head:1,sunday:2};
   return Object.keys(RECIPES).filter(id=>allowed(id,slot,dow,who)).sort((a,b)=>{const x=RECIPES[a],y=RECIPES[b];return ((T[x.type]||0)-(T[y.type]||0))||(x.name<y.name?-1:1)})}
@@ -561,7 +561,7 @@ function lsSet(k,v){try{localStorage.setItem(LS+k,JSON.stringify(v));storageOK=t
 function get(k,def){if(!(k in cache)){cache[k]=lsGet(k)}return cache[k]==null?def:cache[k]}
 let persistAsked=false;
 function askPersist(){if(persistAsked)return;persistAsked=true;try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}}
-function save(k,v){cache[k]=v;lsSet(k,v);askPersist();setSync(storageOK?"Saved on this phone":"Couldn’t save. Check Chrome isn’t in incognito mode.")}
+function save(k,v){cache[k]=v;lsSet(k,v);askPersist();if(/^(ex-|progress$|mealhist$|supphist$)/.test(k))reviewSoon();setSync(storageOK?"Saved on this phone":"Couldn’t save. Check Chrome isn’t in incognito mode.")}
 let syncMsg="Saved on this phone";
 function setSync(m){syncMsg=m;const el=$("#sync");if(el)el.textContent=m}
 function saveSoon(k,v){save(k,v)}
@@ -592,7 +592,7 @@ function exKey(id){return "ex-"+id+"-"+mode()}
 function hist(id){return get(exKey(id),{h:[]}).h||[]}
 function todayEntry(id,sets){const h=hist(id);let e=h.find(x=>x.d===TODAY);if(!e){e={d:TODAY,sets:Array.from({length:sets},()=>({w:"",r:"",done:false}))}}return e}
 function lastEntry(id){const h=hist(id).filter(x=>x.d<TODAY&&x.sets.some(s=>s.done));return h.length?h[h.length-1]:null}
-function putEntry(id,e,now){const h=hist(id).filter(x=>x.d!==e.d);h.push(e);h.sort((a,b)=>a.d<b.d?-1:1);const v={h:h.slice(-40)};(now?save:saveSoon)(exKey(id),v)}
+function putEntry(id,e,now){const h=hist(id).filter(x=>x.d!==e.d);h.push(e);h.sort((a,b)=>a.d<b.d?-1:1);const v={h:h};(now?save:saveSoon)(exKey(id),v)}
 
 // ---------- Rendering ----------
 let tab=(location.hash||"").replace("#","");if(!["today","week","food","progress"].includes(tab))tab="today";
@@ -869,11 +869,12 @@ function renderProgress(){
   if(sorted.length){h+='<h2 class="sec">Recent entries</h2><section class="card"><ul class="list">'+sorted.slice().reverse().slice(0,14).map(x=>'<li><span>'+fmtDate(x.d)+'</span><span class="num">'+(x.w?wOut(x.w)+' '+WU:'—')+' · '+(x.waist?x.waist+' cm':'—')+'</span></li>').join("")+'</ul></section>'}
   const bk=get("backup",null);
   h+='<h2 class="sec">Your data</h2><section class="card">'+
-    '<p class="empty">Everything is saved on this phone only. Copy it into your Claude chat for a review, and back it up now and then in case Chrome’s data is cleared.</p>'+
+    '<p class="empty">Your whole record is kept on this phone with no time limit. Back up saves it to a file; Copy gives Claude the last 12 weeks to review.</p>'+
     '<div class="data-btns"><button type="button" class="btn" id="d-copy">Copy data for Claude</button><button type="button" class="btn ghost" id="d-backup">Back up</button><button type="button" class="btn ghost" id="d-restore">Restore</button></div>'+
     '<input type="file" id="d-file" accept="application/json,.json" hidden>'+
     '<textarea id="d-text" readonly hidden aria-label="Your data as text" style="width:100%;min-height:120px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--fg);font:13px ui-monospace,monospace;padding:8px"></textarea>'+
-    '<p class="rest-note" id="d-msg">Last backup: '+(bk?fmtDate(bk):"never")+'.</p></section>';
+    '<p class="rest-note" id="d-msg">Last backup: '+(bk?fmtDate(bk):"never")+'.</p>'+
+    ((!bk||(parse(TODAY)-parse(bk))/864e5>14)?'<p class="banner"><b>Back up now.</b> '+(bk?'Your last backup was '+Math.round((parse(TODAY)-parse(bk))/864e5)+' days ago.':'You have no backup yet.')+' The full record lives on this phone, so a backup file is what protects it.</p>':'')+'</section>'+reviewCard();
   return h;
 }
 
@@ -923,7 +924,7 @@ $("#view").addEventListener("click",ev=>{
     if(s.done){const card=row.closest(".card");startTimer(Number(card.dataset.rest),card.dataset.name)}
     return}
   const mb=ev.target.closest("[data-meal]");
-  if(mb){let md=get("meals",{d:TODAY,t:{}});if(md.d!==TODAY)md={d:TODAY,t:{}};md={d:TODAY,t:Object.assign({},md.t)};md.t[mb.dataset.meal]=!md.t[mb.dataset.meal];save("meals",md);const y=window.scrollY;render();window.scrollTo(0,y);return}
+  if(mb){let md=get("meals",{d:TODAY,t:{}});if(md.d!==TODAY)md={d:TODAY,t:{}};md={d:TODAY,t:Object.assign({},md.t)};md.t[mb.dataset.meal]=!md.t[mb.dataset.meal];save("meals",md);logMeals(md);const y=window.scrollY;render();window.scrollTo(0,y);return}
   const dy=ev.target.closest("[data-day]"); if(dy){weekSel=Number(dy.dataset.day);render();return}
   const go=ev.target.closest("[data-go]"); if(go){tab=go.dataset.go;render();window.scrollTo(0,0);return}
   const sh=ev.target.closest("[data-shop]"); if(sh){toggleShop(sh.dataset.shop,sh);return}
@@ -1099,32 +1100,82 @@ document.addEventListener("visibilitychange",()=>{keepAwake();if(document.visibi
 document.addEventListener("click",keepAwake,{passive:true});
 keepAwake();
 
+// ---------- The record: everything measured is kept, and can be shared privately for review ----------
+// One line per day of what was eaten, rewritten whenever a meal is ticked or unticked.
+function logMeals(md){const keys={breakfast:"b",shake:"k",lunch:"l",dinner:"d",snack:"s"},ate={};let k=0,p=0;
+  dayMenu(parse(md.d).getDay()).forEach(m=>{if(md.t[keys[m.slot]]){const x=macros(m.id);k+=x.k;p+=x.p;ate[m.slot]=m.id}});
+  const h=Object.assign({},get("mealhist",{}));if(Object.keys(ate).length)h[md.d]={ate:ate,k:k,p:p,tk:kcalTarget(),tp:P.protein};else delete h[md.d];save("mealhist",h)}
+// Optional copy for Claude to read: this phone's record under its own private key, in weekly pieces. Off unless switched on.
+function reviewKey(){const r=get("review",{})||{};return r.on&&r.key?r.key:null}
+const fbKey=k=>String(k).replace(/[.$#\[\]\/]/g," ");
+function recordWeeks(){const W={},at=(d,part)=>{const w=W[mondayOf(parse(d))]=W[mondayOf(parse(d))]||{};const o=w[part]=w[part]||{};return o[d]=o[d]||{}};
+  (get("progress",{e:[]}).e||[]).forEach(x=>{const o=at(x.d,"body");if(x.w!=null&&x.w!=="")o.kg=Number(x.w);if(x.waist!=null&&x.waist!=="")o.waist_cm=Number(x.waist)});
+  const seen={};Object.keys(DAYS).forEach(d=>(DAYS[d].ex||[]).forEach(e=>["gym","home"].forEach(m=>{const k="ex-"+e[0]+"-"+m;if(seen[k])return;seen[k]=1;
+    (get(k,{h:[]}).h||[]).forEach(x=>{const done=x.sets.filter(z=>z.done);if(done.length)at(x.d,"sets")[fbKey(exName(e,m)+" ("+m+")")]=done.map(z=>(z.w!==""?z.w+"x":"")+z.r).join(", ")})})));
+  const mh=get("mealhist",{});Object.keys(mh).forEach(d=>{const x=mh[d],o=at(d,"meals");o.ate={};Object.keys(x.ate).forEach(sl=>{o.ate[sl]=(RECIPES[x.ate[sl]]||{}).name||x.ate[sl]});o.kcal=x.k;o.protein_g=x.p;o.target_kcal=x.tk;o.target_protein_g=x.tp});
+  const sh=get("supphist",{});Object.keys(sh).forEach(d=>{if(sh[d]&&sh[d].length)at(d,"supplements").taken=sh[d]});
+  return W}
+const strHash=t=>{let h=5381;for(let i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))|0;return h+":"+t.length};
+let reviewTimer=null, reviewNote="";
+function setReview(t){reviewNote=t;const el=$("#rv-msg");if(el)el.textContent=t}
+function reviewSoon(){if(!reviewKey())return;clearTimeout(reviewTimer);reviewTimer=setTimeout(reviewPush,3000)}
+function reviewPush(){const key=reviewKey();if(!key)return;if(navigator.onLine===false){setReview("Offline: it will upload when you have signal.");return}
+  const W=recordWeeks(),sent=Object.assign({},get("reviewh",{})),body={};
+  Object.keys(W).forEach(wk=>{const h=strHash(JSON.stringify(W[wk]));if(sent[wk]!==h){body["w/"+wk]=W[wk];sent[wk]=h}});
+  Object.keys(sent).forEach(wk=>{if(!W[wk]){body["w/"+wk]=null;delete sent[wk]}});
+  if(!Object.keys(body).length){setReview("Up to date.");return}
+  body.about={app:P.app,updated:new Date().toISOString(),weeks:Object.keys(W).sort(),plan_start:startDate(),target_kcal:kcalTarget(),target_protein_g:P.protein,
+    note:"Body weight is stored in kg and waist in cm. Sets list completed sets as weight x reps, by exercise and where it was done. Read one week at a time from w/<monday date>."};
+  fetch(SYNC_URL+"/x/"+key+".json",{method:"PATCH",body:JSON.stringify(body)}).then(r=>{if(r.ok){lsSet("reviewh",cache.reviewh=sent);setReview("Up to date.")}
+    else setReview(r.status===401||r.status===403?"The database refused the upload. Publish the updated rules, then switch this off and on again.":"Upload failed. It will try again.")}).catch(()=>setReview("Offline: it will upload when you have signal."))}
+function reviewCard(){const on=!!reviewKey();
+  return '<h2 class="sec">Share my record with Claude</h2><section class="card">'+
+    '<div class="seg wide" role="group"><button type="button" data-review="0" aria-pressed="'+!on+'">Off</button><button type="button" data-review="1" aria-pressed="'+on+'">On</button></div>'+
+    '<p class="empty">'+(on?'A copy of your weigh-ins, waist, sets, meals eaten and supplements is kept online under a private key, so Claude can read it when you give it the key. Switching this off deletes that copy.':'Off: your record stays on this phone only. Switch on to keep a private online copy Claude can read for reviews, without copying and pasting.')+'</p>'+
+    (on?'<div class="data-btns"><button type="button" class="btn small" id="rv-copy">Copy review key</button></div><textarea id="rv-text" hidden readonly class="share-ta" aria-label="Review key"></textarea>':'')+
+    '<p class="rest-note" id="rv-msg" aria-live="polite">'+esc(on?reviewNote:"")+'</p></section>'}
+$("#view").addEventListener("click",async ev=>{const b=ev.target.closest("[data-review]");
+  if(b){const cur=get("review",{})||{};
+    if(b.dataset.review==="1"&&!reviewKey()){save("review",{key:cur.key||newKey(),on:true});lsSet("reviewh",cache.reviewh={});reviewNote="Uploading…";render();reviewPush()}
+    else if(b.dataset.review==="0"&&reviewKey()){const key=cur.key;clearTimeout(reviewTimer);save("review",{});lsSet("reviewh",cache.reviewh={});reviewNote="";render();
+      fetch(SYNC_URL+"/x/"+key+".json",{method:"DELETE"}).then(r=>{const m=$("#d-msg");if(m)m.textContent=r.ok?"The online copy has been deleted.":"Couldn’t delete the online copy. Switch it on and off again when you have signal."}).catch(()=>{const m=$("#d-msg");if(m)m.textContent="Offline: the online copy is still there. Switch it on and off again when you have signal."})}
+    return}
+  if(ev.target.id==="rv-copy"){const t="GYMREVIEW:"+reviewKey();const ta=$("#rv-text");ta.hidden=false;ta.value=t;
+    try{await navigator.clipboard.writeText(t);setReview("Review key copied. Paste it into your Claude chat. Anyone with this key can read your record, so only give it to Claude.")}
+    catch(e){ta.focus();ta.select();setReview("Long-press the key above and copy it, then paste it into your Claude chat.")}}});
+window.addEventListener("online",reviewPush);
+
 // ---------- Your data: copy, backup, restore ----------
 function exName(e,m){return m==="home"?e[5]:e[1]}
 function exTarget(e,m){const lo=m==="home"?e[6]:e[3],hi=m==="home"?e[7]:e[4];return e[2]+"x"+(lo===hi?lo:lo+"-"+hi)+(e[9]==="m"?" m":"")}
 function buildSummary(){
-  const L=[];
+  const L=[],since=iso(new Date(parse(TODAY).getTime()-84*864e5));
   L.push(P.app.toUpperCase()+" DATA (exported "+TODAY+")");
   L.push("Plan start "+startDate()+" | week "+weekNo()+" | "+phase().label+" | target "+kcalTarget()+" kcal, "+P.protein+" g protein | currently training at "+mode());
+  L.push("Daily detail covers the last 12 weeks (from "+since+"). Older detail is in the backup file.");
   const pr=(get("progress",{e:[]}).e||[]).slice().sort((a,b)=>a.d<b.d?-1:1);
-  L.push("");L.push("WEEKLY AVERAGE WEIGHT (week starting, "+WU+", weigh-ins)");const wa=weekAvgs();if(wa.length)wa.forEach(x=>L.push(x.wk+", "+wOut(x.avg)+", "+x.n));else L.push("No weigh-ins yet");
-  L.push("");L.push("BODY, DAILY (date, weight "+WU+", waist cm)");
-  if(pr.length)pr.forEach(x=>L.push(x.d+", "+(x.w!=null?wOut(x.w):"-")+", "+(x.waist!=null?x.waist:"-")));else L.push("No entries yet");
-  L.push("");L.push("LIFTS (completed sets as kg x reps, last 8 sessions per exercise)");
-  let any=false;
+  L.push("");L.push("WEEKLY AVERAGE WEIGHT, ALL WEEKS (week starting, "+WU+", weigh-ins)");const wa=weekAvgs();if(wa.length)wa.forEach(x=>L.push(x.wk+", "+wOut(x.avg)+", "+x.n));else L.push("No weigh-ins yet");
+  L.push("");L.push("BODY, DAILY (date, weight "+WU+", waist cm)");const prr=pr.filter(x=>x.d>=since);
+  if(prr.length)prr.forEach(x=>L.push(x.d+", "+(x.w!=null?wOut(x.w):"-")+", "+(x.waist!=null?x.waist:"-")));else L.push("No entries yet");
+  L.push("");L.push("LIFTS (completed sets as kg x reps)");
+  let any=false;const seen={};
   ORDER.forEach(d=>{const D=DAYS[d];if(D.rest)return;
     ["gym","home"].forEach(m=>{const rows=[];
-      D.ex.forEach(e=>{const h=(get("ex-"+e[0]+"-"+m,{h:[]}).h||[]).filter(x=>x.sets.some(s=>s.done));
+      D.ex.forEach(e=>{const k="ex-"+e[0]+"-"+m;if(seen[k])return;seen[k]=1;const h=(get(k,{h:[]}).h||[]).filter(x=>x.d>=since&&x.sets.some(s=>s.done));
         if(!h.length)return;
         rows.push(exName(e,m)+" (target "+exTarget(e,m)+")");
-        h.slice(-8).forEach(x=>rows.push("  "+x.d+": "+x.sets.filter(s=>s.done).map(s=>(s.w!==""?s.w+"x":"")+s.r).join(", ")))});
+        h.forEach(x=>rows.push("  "+x.d+": "+x.sets.filter(s=>s.done).map(s=>(s.w!==""?s.w+"x":"")+s.r).join(", ")))});
       if(rows.length){any=true;L.push("["+DNAME[d]+" "+D.title+", "+m+"]");rows.forEach(r=>L.push(r))}})});
   if(!any)L.push("No sets logged yet");
-  const md=get("meals",{d:"",t:{}});
-  L.push("");L.push("CURRENT MENU (lunch / dinner)");ORDER.forEach(d=>L.push(DNAME[d]+": "+RECIPES[choice("lunch",d)].name+" / "+RECIPES[choice("dinner",d)].name+" ("+dayTotals(d).k+" kcal, "+dayTotals(d).p+" g protein with breakfast and snack)"));
-  const sh=get("supphist",{});const last7=Object.keys(sh).filter(d=>d>iso(new Date(Date.now()-7*864e5))&&sh[d].indexOf("creatine")>=0).length;
-  L.push("");L.push("Creatine taken on "+last7+" of the last 7 days");
-  L.push("");L.push("Meals ticked today: "+(md.d===TODAY?Object.values(md.t).filter(Boolean).length:0)+" of 5");
+  const mh=get("mealhist",{}),md=Object.keys(mh).sort();
+  L.push("");L.push("MEALS EATEN BY WEEK, ALL WEEKS (week starting, days logged, average kcal, average protein g)");
+  const mw={};md.forEach(d=>{const w=mw[mondayOf(parse(d))]=mw[mondayOf(parse(d))]||{n:0,k:0,p:0};w.n++;w.k+=mh[d].k;w.p+=mh[d].p});
+  if(md.length)Object.keys(mw).sort().forEach(w=>L.push(w+", "+mw[w].n+", "+Math.round(mw[w].k/mw[w].n)+", "+Math.round(mw[w].p/mw[w].n)));else L.push("No meals ticked yet");
+  L.push("");L.push("MEALS EATEN, DAILY (date, kcal of target, protein g of target, what was ticked)");
+  md.filter(d=>d>=since).forEach(d=>{const x=mh[d];L.push(d+", "+x.k+" of "+x.tk+", "+x.p+" of "+x.tp+", "+Object.keys(x.ate).map(sl=>(RECIPES[x.ate[sl]]||{}).name||x.ate[sl]).join("; "))});
+  L.push("");L.push("CURRENT MENU (lunch / dinner)");ORDER.forEach(d=>L.push(DNAME[d]+": "+RECIPES[choice("lunch",d)].name+" / "+RECIPES[choice("dinner",d)].name+" ("+dayTotals(d).k+" kcal, "+dayTotals(d).p+" g protein with breakfast, shake and treat)"));
+  const sh=get("supphist",{});
+  L.push("");L.push("SUPPLEMENTS (date, taken)");Object.keys(sh).sort().filter(d=>d>=since&&sh[d].length).forEach(d=>L.push(d+", "+sh[d].join(" ")));
   return L.join("\n");
 }
 function msg(t){const el=$("#d-msg");if(el)el.textContent=t}

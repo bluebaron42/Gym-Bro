@@ -21,6 +21,7 @@ The repository is public, so anyone with the link can see the plan. Your logged 
 ## 3. Using it with Claude
 
 - **Review:** Progress tab → **Copy data for Claude**, then paste it into our chat and ask for a review or plan changes.
+- **Share my record with Claude:** Progress tab, off by default. When on, a private online copy of your weigh-ins, sets, meals eaten and supplements lets Claude review them once you give it your review key. Switching it off deletes that copy.
 - **Backup:** Progress tab → **Back up** saves a file to your Downloads. Do this every couple of weeks.
 - **Restore:** Progress tab → **Restore** and pick the backup file. It replaces what's on the phone.
 

@@ -28,8 +28,8 @@ Gym-Bro only: `tests/`, `tools/`, `firebase-rules.json`, this file.
 
 ## Rules that must not be broken
 
-1. **No personal data in either repo.** Both are public. Body weight, waist, training logs, meal ticks and supplements live only in each phone's localStorage. Never commit them, and never sync them.
-2. **Never commit the household sync key.** Blue supplies it in chat when needed. It is not stored anywhere in the repos.
+1. **No personal data in either repo.** Both are public. Body weight, waist, training logs, meals eaten and supplements live in each phone's localStorage. Never commit them, and never put them in the household sync area. The only way they leave a phone is the owner's own opt-in "Share my record with Claude" switch (below) or a backup file they choose to send.
+2. **Never commit the household sync key or a review key.** Blue supplies them in chat when needed. They are not stored anywhere in the repos.
 3. **Shared files stay identical.** After any change: `cp index.html data.js guides.js ../gym-gyal/` and check with `cmp`.
 4. **Bump `VERSION` in both `sw.js` files on every push**, or phones keep the old version.
 5. **Run both checks before every push** (see below). Do not push on a failure.
@@ -88,6 +88,14 @@ not been measured in a real prep session.
 its time and the newest wins. Rules are in `firebase-rules.json` and are pasted into the Firebase console by Blue
 (project `gym-app-6c933`). The sandbox can read the database with the key through a web fetch but cannot write to it.
 
+**The record**: everything measured is kept with no time limit (sets, weigh-ins, waist, supplements, and a `mealhist`
+line per day of what was ticked as eaten). "Copy data for Claude" gives the last 12 weeks in detail plus weekly averages;
+the backup file holds everything. With "Share my record with Claude" on (Progress tab, off by default, per phone), the
+phone keeps a copy under `x/<review key>/` in the same database: `about` lists the weeks, and each week is at
+`w/<monday date>` with `body`, `sets`, `meals` and `supplements` by date. To review, ask for the review key
+(`GYMREVIEW:...`), fetch `x/<key>/about.json`, then one `w/<monday>.json` at a time: large reads through the fetch tool
+are unreliable. Switching the option off deletes the online copy.
+
 **Timers**: ticking an oven or hob run-sheet step starts a shared timer (nothing for marinating, cooling, cold jobs or the Instant Pot, which has its own). The alarm is reliable only while the app is in
 front, so the app keeps the screen awake. Lock-screen notifications are best effort; a guaranteed one would need a push server.
 
@@ -98,7 +106,7 @@ Blue shops at Asda home delivery. Building the basket in a browser has not been 
 ## State on 4 October 2026
 
 Done: dish list rework, household menus, single ingredient source, household shopping, run sheet, sync, timers,
-screen-awake, body weight in pounds for Harriett (stored in kg).
+screen-awake, body weight in pounds for Harriett (stored in kg), home form guides, full history with the opt-in online record.
 
 Open items:
 

@@ -49,6 +49,9 @@ class H(BaseHTTPRequestHandler):
             for lp, q in LISTEN:
                 if ps[:len(lp)] == lp: q.put(("patch" if patch else "put", {"path": "/" + "/".join(ps[len(lp):]), "data": body}))
         self.reply(body)
+    def do_DELETE(self):
+        with LOCK: set_at(parts(self.path), None)
+        self.reply(None)
     def do_PATCH(self): self.write(True)
     def do_PUT(self): self.write(False)
 ThreadingHTTPServer(("127.0.0.1", int(sys.argv[1])), H).serve_forever()

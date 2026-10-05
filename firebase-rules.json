@@ -6,18 +6,58 @@
       "$key": {
         ".read": "$key.length >= 24",
         ".write": "$key.length >= 24",
-        "m": { "$wk": { "$f": { ".validate": "newData.isString() && newData.val().length < 80" } } },
-        "r": { "$wk": { ".validate": "newData.isNumber()" } },
-        "s": { "$wk": { "$k": { ".validate": "newData.isNumber()" } } },
-        "p": { "$k": { ".validate": "newData.isNumber()" } },
-        "c": { ".validate": "newData.isString() && newData.val().length < 30" },
-        "t": { "$id": {
-          "l": { ".validate": "newData.isString() && newData.val().length < 200" },
-          "e": { ".validate": "newData.isNumber()" },
-          "n": { ".validate": "newData.isNumber()" },
-          "$other": { ".validate": false }
-        } },
-        "$other": { ".validate": false }
+        "m": {
+          "$wk": {
+            "$f": {
+              ".validate": "newData.isString() && newData.val().length < 80"
+            }
+          }
+        },
+        "r": {
+          "$wk": {
+            ".validate": "newData.isNumber()"
+          }
+        },
+        "s": {
+          "$wk": {
+            "$k": {
+              ".validate": "newData.isNumber()"
+            }
+          }
+        },
+        "p": {
+          "$k": {
+            ".validate": "newData.isNumber()"
+          }
+        },
+        "c": {
+          ".validate": "newData.isString() && newData.val().length < 30"
+        },
+        "t": {
+          "$id": {
+            "l": {
+              ".validate": "newData.isString() && newData.val().length < 200"
+            },
+            "e": {
+              ".validate": "newData.isNumber()"
+            },
+            "n": {
+              ".validate": "newData.isNumber()"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "x": {
+      "$key": {
+        ".read": "$key.length >= 24",
+        ".write": "$key.length >= 24"
       }
     }
   }

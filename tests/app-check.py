@@ -1,6 +1,6 @@
 # Run from the folder that holds both repos:  python3 gym-bro/tests/app-check.py
 # Loads both apps in a headless browser and checks menus, shopping totals, recipe cards, the run sheet, sync and timers.
-import subprocess, time, json, random, sys, os
+import subprocess, time, json, random, sys, os, urllib.request
 from playwright.sync_api import sync_playwright
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 srv = subprocess.Popen(["python3", "-m", "http.server", "8765"], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -171,11 +171,35 @@ try:
     B.click("#menu-reset"); B.click("#menu-reset")
     until("menu reset did not reach the other phone", lambda: "dinner2" not in stored(A, "banebuild:", "menus")[WK])
     # only menu, tick and timer data is ever sent
-    import urllib.request
     state = json.loads(urllib.request.urlopen("http://localhost:8766/__state").read())
     hh = state.get("h", {}).get(key, {})
     if not hh or set(hh) - set("mrspct"): fail(f"sync: unexpected data in the database: {list(hh)}")
     if any(w in json.dumps(state) for w in ["progress", "waist", "ex-", "meals", "supp"]): fail("sync: personal data was sent")
+    # ---- the record: full history on the phone, and the opt-in private copy for review
+    def dbstate(): return json.loads(urllib.request.urlopen("http://localhost:8766/__state").read())
+    A.click('[data-tab="today"]'); A.locator("[data-meal]").first.click()
+    row = A.locator(".excard .set").first; row.locator('[data-f="w"]').fill("42.5"); row.locator('[data-f="r"]').fill("9"); row.locator("[data-tick]").click()
+    mh = stored(A, "banebuild:", "mealhist")
+    if not mh or "2026-10-13" not in mh or not mh["2026-10-13"]["k"] > 0: fail(f"record: the meal tick was not written to the meal history: {mh}")
+    A.locator("[data-meal]").first.click()
+    if "2026-10-13" in (stored(A, "banebuild:", "mealhist") or {}): fail("record: unticking the only meal left a meal-history entry behind")
+    A.locator("[data-meal]").first.click()
+    A.evaluate("localStorage.setItem('banebuild:progress',JSON.stringify({e:[{d:'2026-10-13',w:96.4,waist:91},{d:'2026-09-01',w:97.2}]}))"); A.reload()
+    if "x" in dbstate(): fail("record: something was uploaded before sharing was switched on")
+    A.click('[data-tab="progress"]'); A.click('[data-review="1"]'); rk = stored(A, "banebuild:", "review")["key"]
+    until("the record was not uploaded after switching sharing on", lambda: "2026-10-12" in dbstate().get("x", {}).get(rk, {}).get("w", {}))
+    rec = dbstate()["x"][rk]; wk = rec["w"]["2026-10-12"]
+    if wk.get("body", {}).get("2026-10-13", {}).get("kg") != 96.4: fail(f"record: weigh-in missing from the uploaded week: {wk.get('body')}")
+    if "42.5x9" not in json.dumps(wk.get("sets", {})): fail(f"record: logged set missing from the uploaded week: {wk.get('sets')}")
+    if not wk.get("meals", {}).get("2026-10-13", {}).get("kcal"): fail("record: meals eaten missing from the uploaded week")
+    if "2026-08-31" not in rec["w"] or "2026-08-31" not in rec["about"]["weeks"]: fail("record: an older week was not uploaded")
+    if rk == key or rk in json.dumps(dbstate().get("h", {})) or "kg" in json.dumps(dbstate().get("h", {})): fail("record: personal data or its key leaked into the household area")
+    A.click('[data-tab="today"]'); row = A.locator(".excard .set").nth(1); row.locator('[data-f="w"]').fill("45"); row.locator('[data-f="r"]').fill("8"); row.locator("[data-tick]").click()
+    until("a new set did not reach the uploaded copy", lambda: "45x8" in json.dumps(dbstate()["x"][rk]["w"]["2026-10-12"].get("sets", {})), 9000)
+    A.click('[data-tab="progress"]')
+    if "Back up now" not in A.inner_text("#view"): fail("record: no backup reminder although there has never been a backup")
+    A.click('[data-review="0"]')
+    until("switching sharing off did not delete the uploaded copy", lambda: rk not in dbstate().get("x", {}))
     if ea or eb: fail(f"sync: page errors {ea} {eb}")
     b.close()
 finally:
