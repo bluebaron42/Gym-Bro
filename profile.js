@@ -29,7 +29,7 @@ window.GB_PROFILE = {
   days: {
   1:{title:"Chest + back", focus:"Heavy bench and pull-ups, then chest and back size work", ex:[
     ["bench","Barbell bench press",4,4,6,"DB floor press, 3-sec lowering",12,15,180,null,"H"],
-    ["assist-pullup","Assisted pull-up (or lat pulldown)",4,6,10,"Band pulldowns",8,12,120],
+    ["wide-pulldown","Wide-grip lat pulldown",4,8,12,"Band pulldowns",8,12,120],
     ["incline-press","Incline dumbbell press",3,8,12,"Incline DB press, 3-sec lowering",12,15,120],
     ["row","Chest-supported row",3,8,12,"One-arm DB row",12,15,120],
     ["fly","Cable fly",2,12,15,"DB fly on the floor",12,15,75],
