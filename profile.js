@@ -29,7 +29,7 @@ window.GB_PROFILE = {
   days: {
   1:{title:"Chest + back", focus:"Heavy bench and pull-ups, then chest and back size work", ex:[
     ["bench","Barbell bench press",4,4,6,"DB floor press, 3-sec lowering",12,15,180,null,"H"],
-    ["pullup","Weighted pull-up",4,4,6,"Pull-ups or band pulldowns",6,12,180,null,"H"],
+    ["assist-pullup","Assisted pull-up (or lat pulldown)",4,6,10,"Band pulldowns",8,12,120],
     ["incline-press","Incline dumbbell press",3,8,12,"Incline DB press, 3-sec lowering",12,15,120],
     ["row","Chest-supported row",3,8,12,"One-arm DB row",12,15,120],
     ["fly","Cable fly",2,12,15,"DB fly on the floor",12,15,75],
@@ -70,6 +70,6 @@ window.GB_PROFILE = {
     ["skull","Skull crusher",3,10,12,"DB skull crusher",12,15,75]]},
   0:{rest:true, title:"Rest", focus:"8–10k steps, Sunday food prep"}
 },
-  mainLifts: [["bench","Bench press"],["ohp","Overhead press"],["deadlift","Deadlift"],["squat","Back squat"],["pullup","Pull-up (added kg)"],["dips","Dips (added kg)"],["bb-row","Barbell row"],["rackpull","Rack pull"]],
+  mainLifts: [["bench","Bench press"],["ohp","Overhead press"],["deadlift","Deadlift"],["squat","Back squat"],["dips","Dips (added kg)"],["bb-row","Barbell row"],["rackpull","Rack pull"]],
   e1rm: [["bench","Bench"],["ohp","Overhead press"],["deadlift","Deadlift"],["squat","Squat"]]
 };

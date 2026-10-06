@@ -117,6 +117,8 @@ Open items:
 
 - `PRESETS` in `data.js` pins the week of 5 Oct 2026 to what was already prepped. Delete it after that week;
   `data-check.js` starts failing three weeks later as a reminder.
+- Blue cannot yet do a bodyweight pull-up, so his Monday slot is "Assisted pull-up (or lat pulldown)" with slow negatives. When he reports 5 clean bodyweight pull-ups, restore the weighted pull-up slot and its guide (in git history before 6 Oct 2026) and its line in `mainLifts`.
+- Blue trains at NRG Gym Lewisham: Life Fitness kit, with Hammer Strength plate-loaded machines, Insignia pin-loaded machines and free weights. An assisted pull-up machine there is not confirmed.
 - Run-sheet task times need tuning after a real prep session. Ask Blue which steps ran long.
 - Screen-awake is unconfirmed on Harriett's iPhone.
 - Build the Asda basket from the shopping list when Blue asks.
