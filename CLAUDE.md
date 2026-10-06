@@ -49,8 +49,13 @@ for the sync database. It covers: shopping totals for every view against an inde
 card, week isolation, the run sheet (dependency order, one job per cook, kit limits), sync between two phones
 (including offline and conflicting edits), timers, and the pinned-week rules.
 
-Commit as `Claude <noreply@anthropic.com>` and push to `main`. GitHub Pages takes a few minutes; the sandbox
-usually cannot reach `github.io`, so say plainly that the live site was not checked.
+Commit as `Claude <noreply@anthropic.com>` and push to `main`. Then confirm it actually published, because GitHub
+sometimes cancels the publishing run and the phones silently stay on the old version:
+
+- `gh api repos/bluebaron42/<repo>/commits/main/check-runs` should show `deploy` completed with `success`.
+- A web fetch of `https://bluebaron42.github.io/<repo>/sw.js?v=<anything new>` should show the `VERSION` you pushed
+  (shell tools cannot reach `github.io`; the web fetch tool can).
+- If the run was cancelled or skipped, push an empty commit to that repo to publish again.
 
 ## How the food side works
 
