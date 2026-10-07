@@ -442,7 +442,7 @@ function runSheet(nCooks){
   const spText=t=>Object.values(t.sp).map(seaFmt).join(", ");
   const HP={"Pasta bake sauce":["chicken-breast","turkey-rashers"]};
   Object.keys(use).forEach(id=>{const r=RECIPES[id],u=use[id],comps=r.comp||[],ids=[],eaten={};
-    const cids=[];if(!onDay(id))r.ing.forEach(([i,g])=>{if(BATCH.indexOf(i)<0)return;const c=task("C|"+i,{kind:"C",ing:i,g:0});u.scs.forEach(sc=>{c.g+=g*scaleOf(i,sc)});if(c.d.indexOf(r.name)<0)c.d.push(r.name);cids.push(c.id)});
+    const cids=[];if(!onDay(id)||r.sun)r.ing.forEach(([i,g])=>{if(BATCH.indexOf(i)<0||(onDay(id)&&r.sun.indexOf(i)<0))return;const c=task("C|"+i,{kind:"C",ing:i,g:0});u.scs.forEach(sc=>{c.g+=g*scaleOf(i,sc)});if(c.d.indexOf(r.name)<0)c.d.push(r.name);cids.push(c.id)});
     comps.forEach((t,ci)=>{const k=t[0];let o;
       if(k==="V"){o=task("V|"+t[1],{kind:"V",ing:t[1],g:0,cuts:{}});u.scs.forEach(sc=>{const g=gOf(r,t[1],sc);o.g+=g;const c=o.cuts[t[2]]=o.cuts[t[2]]||{g:0,d:[]};c.g+=g;c.d.push(r.name)})}
       else if(k==="L"){o=task("L|"+t[1],{kind:"L",lab:t[1],eq:t[2],min:t[3],m:t[5],role:"chef"});u.scs.forEach(sc=>{addSp(o,t[4],sc);const mp=mainP(r);if(mp)o.p[mp]=(o.p[mp]||0)+gOf(r,mp,sc)})}

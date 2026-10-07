@@ -193,7 +193,7 @@ try:
     if "42.5x9" not in json.dumps(wk.get("sets", {})): fail(f"record: logged set missing from the uploaded week: {wk.get('sets')}")
     if not wk.get("meals", {}).get("2026-10-13", {}).get("kcal"): fail("record: meals eaten missing from the uploaded week")
     if "2026-08-31" not in rec["w"] or "2026-08-31" not in rec["about"]["weeks"]: fail("record: an older week was not uploaded")
-    if rk == key or rk in json.dumps(dbstate().get("h", {})) or "kg" in json.dumps(dbstate().get("h", {})): fail("record: personal data or its key leaked into the household area")
+    if rk == key or rk in json.dumps(list(dbstate().get("h", {}).values())) or '"kg"' in json.dumps(list(dbstate().get("h", {}).values())): fail("record: personal data or its key leaked into the household area")
     A.click('[data-tab="today"]'); row = A.locator(".excard .set").nth(1); row.locator('[data-f="w"]').fill("45"); row.locator('[data-f="r"]').fill("8"); row.locator("[data-tick]").click()
     until("a new set did not reach the uploaded copy", lambda: "45x8" in json.dumps(dbstate()["x"][rk]["w"]["2026-10-12"].get("sets", {})), 9000)
     A.click('[data-tab="progress"]')

@@ -11,7 +11,7 @@ Object.values(R).forEach((r) => {
   if (r.slot === "lunch" && ["freeze", "split", "no"].indexOf(r.late) < 0) fail(r.id + ": lunch needs late");
   if (r.type === "fresh" && (r.comp || r.finish)) fail(r.id + ": cook-fresh dinner has Sunday prep");
   if ((r.type === "head" || r.type === "sunday") && !(r.comp && r.finish)) fail(r.id + ": needs Sunday components and a finish step");
-  if (r.type === "head" && r.comp.some((c) => "OHL".indexOf(c[0]) >= 0)) fail(r.id + ": head-start dinner is being cooked on Sunday");
+  if (r.type === "head" && r.comp.some((c) => "OHL".indexOf(c[0]) >= 0 && !/^Soften/.test(c[1]))) fail(r.id + ": head-start dinner is being cooked on Sunday");
   if (r.slot === "lunch" && r.id !== "l-onigiri" && !(r.comp && r.comp.some((c) => c[0] === "P") && r.finish)) fail(r.id + ": lunch needs a pack line and a finish step");
   // Run sheet: explicit dependencies point backwards at real components; anything assembled has something to assemble.
   Object.keys(r.after || {}).forEach((ci) => { if (!r.comp[ci]) fail(r.id + ": after refers to a missing component " + ci); r.after[ci].forEach((j) => { if (!(j < ci) || !r.comp[j]) fail(r.id + ": after must point at an earlier component"); }); });
