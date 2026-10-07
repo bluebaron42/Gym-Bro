@@ -126,7 +126,7 @@ Open items:
 - Blue cannot yet do a bodyweight pull-up, so his Monday slot is "Wide-grip lat pulldown" at his request. If he later wants pull-ups back, the weighted pull-up slot and guide are in git history before 6 Oct 2026, along with its line in `mainLifts`.
 - Training reviews happen when Blue asks for one (not on a schedule). Weights and exercises are both adjusted in the review, in conversation; he declined an automatic "drop the weight" prompt in the app, so do not build one. Read his record, and swap an exercise only when it is clearly not working: below the rep range two sessions running despite less weight, or he cannot do the movement. Swap to an easier version of the same movement using kit NRG has, change at most two exercises a week, and tell him what changed and why.
 - Blue trains at NRG Gym Lewisham: Life Fitness kit, with Hammer Strength plate-loaded machines, Insignia pin-loaded machines and free weights. An assisted pull-up machine there is not confirmed.
-- The Tasty Shreds recipes (added 7 Oct 2026: 8 breakfasts, 7 treats, 13 lunches, 12 dinners) are converted from a US book and
+- The Tasty Shreds recipes (added 7 Oct 2026: 8 breakfasts, 7 treats, 12 lunches, 12 dinners) are converted from a US book and
   have not been test-cooked. Portions were sized up to match the rest of the app, US products were swapped for UK ones (panko for
   cornflakes, smoked paprika and orange juice for achiote, chipotle paste, home-made ranch and nacho sauce), and Claude chose which
   are lunches and which are dinners. The brookie (skyr in place of banana) and the cheesecake bake time at 180°C are the least

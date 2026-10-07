@@ -39,7 +39,6 @@ window.BB_DATA = (function () {
     "chicken-mince": ["Chicken mince", "Protein",120,20,0,4.5],
     "turkey-ham": ["Turkey ham", "Protein",105,19,2,2.5],
     "chicken-sausage": ["Chicken sausages", "Protein",150,17,4,7],
-    "roast-beef": ["Roast beef slices", "Protein",125,23,1,3],
     "turkey-pepperoni": ["Turkey pepperoni", "Protein",180,22,2,9],
     "salmon": ["Salmon fillets", "Protein",200,20,0,13],
     "tuna": ["Tuna in spring water, drained", "Protein",110,25,0,1],
@@ -272,7 +271,7 @@ window.BB_DATA = (function () {
   // Dinners: type fresh | head | sunday. Lunches: late freeze | split | no (Monday to Wednesday only).
   // Breakfasts built in whole pieces: pieces: true = small ones, ing is one piece and each person has their own number of them
   // (HOUSE pieces). whole: [ingredients] = big ones, one each: those ingredients stay whole and the filling follows the person's scales.
-  // A B component may end with how the chicken is cut. Lunch burritos and subs use whole: [...] too.
+  // A B component may end with how the chicken is cut. Lunch burritos use whole: [...] too.
   // O, X and H components may end with a list of ingredients to show the weight of, instead of the dish's main protein.
   // comp = Sunday components: V veg, L long cook, M marinade, B breading, X shape, S sauce, O oven, H hob, T treat, P pack.
   // The run sheet works out what each component needs first; after = {component index: [indexes it also needs]} for the exceptions.
@@ -922,15 +921,6 @@ window.BB_DATA = (function () {
         ["O",200,22,"Pollo asado chicken, rest and chop",["chicken-breast"]],
         ["H", "Peppers and corn",5,"Char the diced peppers and the corn in a hot dry pan", "1 pinch salt",[]],
         ["P", "rice, chopped pollo asado, peppers and corn; a lime wedge"]] },
-    { id: "l-cheesesteak-sub", slot: "lunch", name: "Roast beef cheesesteak sub", time: "Sunday batch", tag: "Fakeaway", late: "freeze", whole: ["sub-roll"],
-      ing: [["roast-beef",140], ["sub-roll",90], ["onion",50], ["peppers",80], ["mozzarella",30], ["light-mayo",15], ["garlic",2.5]],
-      method: ["Soften the sliced onion and peppers until sweet.", "Toss the torn roast beef through for 3 minutes.", "Spread the roll with garlic mayo, fill, top with the mozzarella and bake at 200°C until melted."],
-      finish: "From the fridge, bake in its foil at 200°C for 12 minutes; from frozen, 25 minutes. Open the foil for the last 3. 15 min",
-      comp: [["V", "onion", "sliced"],
-        ["V", "peppers", "sliced"],
-        ["H", "Cheesesteak filling",12,"Soften the onion and peppers until sweet, then toss the torn roast beef through for 3 minutes", "0.25 tsp salt; 1 pinch black pepper",["roast-beef"]],
-        ["S", "Garlic mayo", "15 g light mayo; 0.5 clove garlic; 1 pinch salt",0],
-        ["P", "Spread the rolls with garlic mayo, fill, top with the mozzarella and wrap each one in foil"]] },
     { id: "d-steak-mac", slot: "dinner", name: "Garlic steak Alfredo mac", time: "25 min", tag: "Italian", type: "fresh",
       ing: [["steak",200], ["penne",90], ["milk",60], ["cream-cheese",30], ["mozzarella",20], ["onion",30], ["garlic",10], ["parmesan",8], ["spring-onion",5]],
       sea: [["Steak seasoning", "0.5 tsp salt; 0.25 tsp black pepper; 0.25 tsp onion powder; 0.25 tsp garlic granules"], ["Alfredo sauce", "60 ml milk; 30 g light cream cheese; 20 g light mozzarella; 2 clove garlic"]],
