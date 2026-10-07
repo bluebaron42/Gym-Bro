@@ -81,7 +81,8 @@ be in `CUPBOARD`. Methods carry no amounts.
 - Dinners have `type`: `fresh` (cooked on the night, nothing on Sunday), `head` (marinade, coating or sauce on
   Sunday, cooked on the night), `sunday` (cooked and boxed on Sunday).
   A head-start dinner may set `sun: [rice or potatoes]` to have that cooked or par-boiled on Sunday, and may have an `H` step
-  whose label starts "Soften". On 7 Oct 2026 eight cook-fresh dinners became Sunday batches and two (fried rice, Philly) head starts.
+  whose label starts "Soften". On 7 Oct 2026 eight cook-fresh dinners became Sunday batches and two (fried rice, Philly) head starts. Every dinner with chips has them cut and par-boiled on Sunday, at Blue's request:
+  give any new chips dinner `sun: ["potatoes"]` (or make it a Sunday batch).
 - Lunches have `late`: `freeze`, `split` (freeze the cooked part), or `no` (Monday to Wednesday only).
 
 **Shopping list**: Household by default, or one person. Adds `TRIM` (peel and trim allowance) and shows a `PACKS`
