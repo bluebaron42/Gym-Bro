@@ -340,7 +340,7 @@ const lots=sc=>sc.flat||(sc.p+sc.c)/2;
 // small ones are a set number of pieces each, big ones keep the bread whole and scale only the filling.
 function scFor(id,who){const r=RECIPES[id],pe=person(who||ME);if(r&&r.pieces)return {flat:pe.pieces||1};return r&&r.whole?Object.assign({},pe.scales,{whole:r.whole}):pe.scales}
 function scaleOf(i,sc){const n=ING[i];sc=sc||person(ME).scales;if(sc.flat)return sc.flat;if(sc.whole&&sc.whole.indexOf(i)>=0)return 1;if(!n||n[8]==="fixed")return 1;if(n[8]==="aroma")return lots(sc);return sc[CAT[n[1]]]!=null?sc[CAT[n[1]]]:1}
-const LIQUID={"milk":1,"skimmed-milk":1,"egg-whites":1,"coffee":1};
+const LIQUID={"orange-juice":1,"milk":1,"skimmed-milk":1,"egg-whites":1,"coffee":1};
 const AISLES=["Protein","Carbs","Dairy and eggs","Fruit and veg","Sauces and cupboard"];
 const SLOTNAME={breakfast:"Breakfast",shake:"Morning shake",lunch:"Lunch",dinner:"Dinner",snack:"Treat"};
 const macroCache={};
@@ -447,7 +447,7 @@ function runSheet(nCooks){
       if(k==="V"){o=task("V|"+t[1],{kind:"V",ing:t[1],g:0,cuts:{}});u.scs.forEach(sc=>{const g=gOf(r,t[1],sc);o.g+=g;const c=o.cuts[t[2]]=o.cuts[t[2]]||{g:0,d:[]};c.g+=g;c.d.push(r.name)})}
       else if(k==="L"){o=task("L|"+t[1],{kind:"L",lab:t[1],eq:t[2],min:t[3],m:t[5],role:"chef"});u.scs.forEach(sc=>{addSp(o,t[4],sc);const mp=mainP(r);if(mp)o.p[mp]=(o.p[mp]||0)+gOf(r,mp,sc)})}
       else if(k==="M"){o=task("M|"+t[1]+"|"+t[2]+"|"+t[3],{kind:"M",ty:t[1],lab:t[2],pr:t[3],g:0,min:t[5],role:"chef"});u.scs.forEach(sc=>{o.g+=gOf(r,t[3],sc);addSp(o,t[4],sc)})}
-      else if(k==="B"){o=task("B|"+id,{kind:"B",coat:t[2],pr:t[1],g:0,egg:0,crumb:0,role:"chef"});u.scs.forEach(sc=>{o.n++;o.g+=gOf(r,t[1],sc);if(t[2]==="panko"){o.egg+=gOf(r,"eggs",sc);o.crumb+=gOf(r,"panko",sc)}else o.crumb+=gOf(r,"cornflour",sc);addSp(o,t[3],sc)})}
+      else if(k==="B"){o=task("B|"+id,{kind:"B",coat:t[2],pr:t[1],cut:t[4],g:0,egg:0,crumb:0,role:"chef"});u.scs.forEach(sc=>{o.n++;o.g+=gOf(r,t[1],sc);if(t[2]==="panko"){o.egg+=gOf(r,"eggs",sc);o.crumb+=gOf(r,"panko",sc)}else o.crumb+=gOf(r,"cornflour",sc);addSp(o,t[3],sc)})}
       else if(k==="X"){o=task("X|"+t[1],{kind:"X",lab:t[1],m:t[2],role:"chef"});u.scs.forEach(sc=>{o.n++;if(t[3])addSp(o,t[3],sc);(t[4]||[/^Build/.test(t[1])?null:mainP(r)]).forEach(mp=>{if(mp)o.p[mp]=(o.p[mp]||0)+gOf(r,mp,sc)})})}
       else if(k==="S"){o=task("S|"+t[1],{kind:"S",lab:t[1],sim:t[3]||0,bl:!!t[4],role:t[3]?"chef":"helper"});u.scs.forEach(sc=>{o.n++;addSp(o,t[2],sc)})}
       else if(k==="O"){o=task("O|"+t[1]+"|"+t[3],{kind:"O",temp:t[1],min:t[2],lab:t[3],role:"chef"});u.scs.forEach(sc=>{o.n++;(t[4]||[/oats|brownie|crumble|crouton|lasagne|pasta bake|meatball/i.test(t[3])?null:mainP(r)]).forEach(mp=>{if(mp)o.p[mp]=(o.p[mp]||0)+gOf(r,mp,sc)})})}
@@ -507,7 +507,7 @@ function runSheet(nCooks){
     if(k==="V"){const each=VEGE[o.ing];o.a=Math.round(2+o.g/100*1.5);o.html="<b>"+ING[o.ing][0]+(each?" (about "+Math.max(1,Math.round(o.g/each[0]*2)/2)+")":"")+"</b>: "+Object.keys(o.cuts).map(c=>c+", "+amount(o.ing,o.cuts[c].g)+" for "+list(o.cuts[c].d)).join("; ")+"."}
     else if(k==="M"){o.a=Math.round(3+o.g/300);o.w=Math.min(o.min||0,45);o.html="<b>"+o.lab+"</b> ("+MT[o.ty]+") for "+amount(o.pr,o.g)+" "+lower(o.pr)+": "+spText(o)+"."+(o.min?" Leave at least "+mins(o.min)+".":"")+for_}
     else if(k==="B"){o.a=Math.round(4+o.n*1.5);const egg=Math.max(1,Math.ceil(o.egg/50-0.2));
-      o.html="<b>"+(o.coat==="panko"?"Bread":"Coat")+" the chicken for "+o.d[0]+"</b>: "+amount(o.pr,o.g)+" "+lower(o.pr)+(o.coat==="panko"?", butterflied and bashed to 1.5 cm; dip in "+egg+" beaten egg"+(egg>1?"s":"")+", then "+Math.round(o.crumb)+" g panko seasoned with ":", diced; toss in "+Math.round(o.crumb)+" g cornflour seasoned with ")+spText(o)+"."+(o.coat==="panko"?" Lay on a lined tray and freeze raw, then bag.":" Onto an oven tray.")}
+      o.html="<b>"+(o.coat==="panko"?"Bread":"Coat")+" the chicken for "+o.d[0]+"</b>: "+amount(o.pr,o.g)+" "+lower(o.pr)+(o.coat==="panko"?", "+(o.cut||"butterflied and bashed to 1.5 cm")+"; dip in "+egg+" beaten egg"+(egg>1?"s":"")+", then "+Math.round(o.crumb)+" g panko seasoned with ":", diced; toss in "+Math.round(o.crumb)+" g cornflour seasoned with ")+spText(o)+"."+(o.coat==="panko"?" Lay on a lined tray and freeze raw, then bag.":" Onto an oven tray.")}
     else if(k==="X"){o.a=5+o.n;o.html="<b>"+o.lab+"</b>"+(Object.keys(o.p).length?" ("+amt(o.p)+")":"")+": "+o.m+(Object.keys(o.sp).length?". Mix in: "+spText(o):"")+"."+for_}
     else if(k==="S"){o.a=o.sim?4+(o.bl?2:0):3;o.w=o.sim;if(o.sim){o.kit="hob";if(o.sim>=5)o.tm=o.sim}o.html="<b>"+o.lab+"</b>"+(o.sim?" (hob, simmer "+o.sim+" min"+(o.bl?", then blend":"")+")":" (cold: whisk in a jar or pot)")+": "+spText(o)+"."+for_}
     else if(k==="O"){// Two oven settings only, so trays can share: anything hotter than 200°C runs at 200°C for a few minutes longer.
