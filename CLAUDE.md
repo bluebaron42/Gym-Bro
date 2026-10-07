@@ -72,6 +72,12 @@ for that week, what the week before had, then `DEFAULTS`. The first edit to a we
 the same food as an ingredient and must be covered by `ing`; `data-check.js` fails if they are not. Other names must
 be in `CUPBOARD`. Methods carry no amounts.
 
+- Breakfasts are built in whole pieces and are on the run sheet for all seven days. `pieces: true` = small ones: `ing` is one piece
+  and each person has `HOUSE.people[x].pieces` of them (Blue 2, Harriett 1), with no other scaling. `whole: [ingredients]` = big ones,
+  one each: the bread stays whole and the filling follows the person's usual scales. `scFor(id, who)` in `index.html` applies both.
+  Shared parts (egg white sheet, patties, rashers, nacho cheese sauce, cheesecake batter) pool into one Sunday task by having the same label.
+- `O`, `X` and `H` components may end with a list of ingredients whose weight the step shows. An `H` label containing "one at a time"
+  takes its minutes per portion.
 - Dinners have `type`: `fresh` (cooked on the night, nothing on Sunday), `head` (marinade, coating or sauce on
   Sunday, cooked on the night), `sunday` (cooked and boxed on Sunday).
 - Lunches have `late`: `freeze`, `split` (freeze the cooked part), or `no` (Monday to Wednesday only).
@@ -115,11 +121,14 @@ screen-awake, body weight in pounds for Harriett (stored in kg), home form guide
 
 Open items:
 
-- `PRESETS` in `data.js` pins the week of 5 Oct 2026 to what was already prepped. Delete it after that week;
+- `PRESETS` in `data.js` pins the week of 5 Oct 2026 to what was already prepped (breakfast shows Weetabix, because the old egg and oat breakfasts were removed mid-week). Delete it after that week;
   `data-check.js` starts failing three weeks later as a reminder.
 - Blue cannot yet do a bodyweight pull-up, so his Monday slot is "Wide-grip lat pulldown" at his request. If he later wants pull-ups back, the weighted pull-up slot and guide are in git history before 6 Oct 2026, along with its line in `mainLifts`.
 - Training reviews happen when Blue asks for one (not on a schedule). Weights and exercises are both adjusted in the review, in conversation; he declined an automatic "drop the weight" prompt in the app, so do not build one. Read his record, and swap an exercise only when it is clearly not working: below the rep range two sessions running despite less weight, or he cannot do the movement. Swap to an easier version of the same movement using kit NRG has, change at most two exercises a week, and tell him what changed and why.
 - Blue trains at NRG Gym Lewisham: Life Fitness kit, with Hammer Strength plate-loaded machines, Insignia pin-loaded machines and free weights. An assisted pull-up machine there is not confirmed.
+- The Tasty Shreds breakfasts and treats (added 7 Oct 2026) are converted from a US book and have not been test-cooked. The brookie
+  (skyr in place of banana) and the cheesecake bake time at 180°C are the least certain. Macros for the new ingredients are typical
+  UK label values, not checked against Asda. The other 25 shortlisted lunches and dinners from that book have not been added.
 - Run-sheet task times need tuning after a real prep session. Ask Blue which steps ran long.
 - Screen-awake is unconfirmed on Harriett's iPhone.
 - Build the Asda basket from the shopping list when Blue asks.

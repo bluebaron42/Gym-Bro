@@ -335,13 +335,16 @@ const SLOTS=["breakfast","shake","lunch","dinner","snack"];
 const isShared=slot=>HOUSE.shared.indexOf(slot)>=0;
 const eaters=(slot,who)=>isShared(slot)?HOUSE.order:[who||ME];
 const CAT={"Protein":"p","Dairy and eggs":"p","Carbs":"c","Sauces and cupboard":"c","Fruit and veg":"v"};
-const lots=sc=>(sc.p+sc.c)/2;
-function scaleOf(i,sc){const n=ING[i];sc=sc||person(ME).scales;if(!n||n[8]==="fixed")return 1;if(n[8]==="aroma")return lots(sc);return sc[CAT[n[1]]]!=null?sc[CAT[n[1]]]:1}
+const lots=sc=>sc.flat||(sc.p+sc.c)/2;
+// The scales one person eats one dish at. Breakfasts built in whole pieces do not follow the usual scales:
+// small ones are a set number of pieces each, big ones keep the bread whole and scale only the filling.
+function scFor(id,who){const r=RECIPES[id],pe=person(who||ME);if(r&&r.pieces)return {flat:pe.pieces||1};return r&&r.whole?Object.assign({},pe.scales,{whole:r.whole}):pe.scales}
+function scaleOf(i,sc){const n=ING[i];sc=sc||person(ME).scales;if(sc.flat)return sc.flat;if(sc.whole&&sc.whole.indexOf(i)>=0)return 1;if(!n||n[8]==="fixed")return 1;if(n[8]==="aroma")return lots(sc);return sc[CAT[n[1]]]!=null?sc[CAT[n[1]]]:1}
 const LIQUID={"milk":1,"skimmed-milk":1,"egg-whites":1,"coffee":1};
 const AISLES=["Protein","Carbs","Dairy and eggs","Fruit and veg","Sauces and cupboard"];
 const SLOTNAME={breakfast:"Breakfast",shake:"Morning shake",lunch:"Lunch",dinner:"Dinner",snack:"Treat"};
 const macroCache={};
-function macros(id,who){who=who||ME;const key=id+"|"+who;if(macroCache[key])return macroCache[key];const r=RECIPES[id],sc=person(who).scales;let k=0,p=0,c=0,f=0;
+function macros(id,who){who=who||ME;const key=id+"|"+who;if(macroCache[key])return macroCache[key];const r=RECIPES[id],sc=scFor(id,who);let k=0,p=0,c=0,f=0;
   (r?r.ing:[]).forEach(([i,g0])=>{const n=ING[i];if(!n)return;const g=g0*scaleOf(i,sc);k+=n[2]*g/100;p+=n[3]*g/100;c+=n[4]*g/100;f+=n[5]*g/100});
   return macroCache[key]={k:Math.round(k),p:Math.round(p),c:Math.round(c),f:Math.round(f)}}
 // Menu choices live in one object per week: shared and my own slots as slot+day, the other person's as "p:"+slot+day.
@@ -404,7 +407,7 @@ function seaText(str,scs,mult){const acc={};scs.forEach(sc=>seaParse(str).forEac
 let shopView="house";
 function shopPeople(){return shopView==="house"?HOUSE.order:[shopView]}
 function shopList(){const agg={},uses={},cup={};
-  shopPeople().forEach(w=>{const sc=person(w).scales;ORDER.forEach(d=>SLOTS.forEach(sl=>{const r=RECIPES[choice(sl,d,w)];if(!r)return;
+  shopPeople().forEach(w=>{ORDER.forEach(d=>SLOTS.forEach(sl=>{const r=RECIPES[choice(sl,d,w)];if(!r)return;const sc=scFor(r.id,w);
     r.ing.forEach(([i,g])=>{agg[i]=(agg[i]||0)+g*scaleOf(i,sc);(uses[i]=uses[i]||{})[r.name]=1});
     seaGroups(r).forEach(g=>seaParse(g[1]).forEach(s=>{if(ALIAS[s.n]||!CUP[s.n])return;
       const u=s.u==="pinch"||s.u==="tbsp"?"tsp":s.u,q=s.q*(s.u==="pinch"?0.125:s.u==="tbsp"?3:1)*lots(sc);const k=u+"|"+s.n;(cup[k]=cup[k]||{u:u,n:s.n,q:0}).q+=q}))}))});
@@ -420,15 +423,15 @@ function shopList(){const agg={},uses={},cup={};
 const KIT={oven:2,hob:4,ip:1}; // trays at one temperature, rings, Instant Pot
 function runSheet(nCooks){
   const VEGE=FD.VEG_EACH;
-  const use={};const addUse=(id,slot,d,who)=>{const u=use[id]=use[id]||{slot:slot,scs:[],boxes:[]};u.scs.push(person(who).scales);u.boxes.push({d:d,who:who})};
-  // Monday to Saturday lunches and dinners for both people, plus the week's treats. Cook-fresh dinners are not prepped.
-  [1,2,3,4,5,6,0].forEach(d=>(d?["lunch","dinner","snack"]:["snack"]).forEach(sl=>HOUSE.order.forEach(w=>{const id=choice(sl,d,w);if(RECIPES[id].type==="fresh")return;addUse(id,sl,d,w)})));
+  const use={};const addUse=(id,slot,d,who)=>{const u=use[id]=use[id]||{slot:slot,scs:[],boxes:[]};u.scs.push(scFor(id,who));u.boxes.push({d:d,who:who})};
+  // Monday to Saturday lunches and dinners for both people, plus the week's breakfasts and treats. Cook-fresh dinners are not prepped.
+  [1,2,3,4,5,6,0].forEach(d=>(d?["breakfast","lunch","dinner","snack"]:["breakfast","snack"]).forEach(sl=>HOUSE.order.forEach(w=>{const id=choice(sl,d,w);if(RECIPES[id].type==="fresh")return;addUse(id,sl,d,w)})));
   const gOf=(r,ing,sc)=>{const e=r.ing.find(x=>x[0]===ing);return e?e[1]*scaleOf(ing,sc):0};
   const mainP=r=>{const e=r.ing.find(([i])=>ING[i]&&ING[i][1]==="Protein"&&i!=="whey");return e?e[0]:null};
   const list=a=>{a=[...new Set(a)];return a.length<3?a.join(" and "):a.slice(0,-1).join(", ")+" and "+a[a.length-1]};
   const lower=id=>ING[id]?ING[id][0].toLowerCase():id;
   const mins=m=>m<60?m+" min":Math.floor(m/60)+" h"+(m%60?" "+(m%60)+" min":"");
-  const amt=p=>Object.keys(p).filter(i=>p[i]>0).map(i=>amount(i,p[i])+" "+lower(i)).join(" + ");
+  const amt=p=>Object.keys(p).filter(i=>p[i]>0).map(i=>amount(i,p[i])+(ING[i][6]?"":" "+lower(i))).join(" + ");
   // ---- 1. pool components into tasks
   const T={};
   const task=(id,init)=>T[id]||(T[id]=Object.assign({id:id,needs:{},d:[],sp:{},p:{},n:0,a:0,w:0,role:"any",kit:null},init));
@@ -445,11 +448,11 @@ function runSheet(nCooks){
       else if(k==="L"){o=task("L|"+t[1],{kind:"L",lab:t[1],eq:t[2],min:t[3],m:t[5],role:"chef"});u.scs.forEach(sc=>{addSp(o,t[4],sc);const mp=mainP(r);if(mp)o.p[mp]=(o.p[mp]||0)+gOf(r,mp,sc)})}
       else if(k==="M"){o=task("M|"+t[1]+"|"+t[2]+"|"+t[3],{kind:"M",ty:t[1],lab:t[2],pr:t[3],g:0,min:t[5],role:"chef"});u.scs.forEach(sc=>{o.g+=gOf(r,t[3],sc);addSp(o,t[4],sc)})}
       else if(k==="B"){o=task("B|"+id,{kind:"B",coat:t[2],pr:t[1],g:0,egg:0,crumb:0,role:"chef"});u.scs.forEach(sc=>{o.n++;o.g+=gOf(r,t[1],sc);if(t[2]==="panko"){o.egg+=gOf(r,"eggs",sc);o.crumb+=gOf(r,"panko",sc)}else o.crumb+=gOf(r,"cornflour",sc);addSp(o,t[3],sc)})}
-      else if(k==="X"){o=task("X|"+t[1],{kind:"X",lab:t[1],m:t[2],role:"chef"});u.scs.forEach(sc=>{o.n++;if(t[3])addSp(o,t[3],sc);const mp=/^Build/.test(t[1])?null:mainP(r);if(mp)o.p[mp]=(o.p[mp]||0)+gOf(r,mp,sc)})}
+      else if(k==="X"){o=task("X|"+t[1],{kind:"X",lab:t[1],m:t[2],role:"chef"});u.scs.forEach(sc=>{o.n++;if(t[3])addSp(o,t[3],sc);(t[4]||[/^Build/.test(t[1])?null:mainP(r)]).forEach(mp=>{if(mp)o.p[mp]=(o.p[mp]||0)+gOf(r,mp,sc)})})}
       else if(k==="S"){o=task("S|"+t[1],{kind:"S",lab:t[1],sim:t[3]||0,bl:!!t[4],role:t[3]?"chef":"helper"});u.scs.forEach(sc=>{o.n++;addSp(o,t[2],sc)})}
-      else if(k==="O"){o=task("O|"+t[1]+"|"+t[3],{kind:"O",temp:t[1],min:t[2],lab:t[3],role:"chef"});u.scs.forEach(sc=>{o.n++;const mp=/oats|brownie|crumble|crouton|lasagne|pasta bake|meatball/i.test(t[3])?null:mainP(r);if(mp)o.p[mp]=(o.p[mp]||0)+gOf(r,mp,sc)})}
-      else if(k==="H"){o=task("H|"+t[1],{kind:"H",lab:t[1],min:t[2],m:t[3],role:"chef"});u.scs.forEach(sc=>{o.n++;if(t[4])addSp(o,t[4],sc);
-        const ps=HP[t[1]]||(/^(Boil eggs|Steam|Cinnamon apple|Tikka masala sauce)/.test(t[1])?[]:[mainP(r)]);ps.forEach(mp=>{if(mp)o.p[mp]=(o.p[mp]||0)+gOf(r,mp,sc)})})}
+      else if(k==="O"){o=task("O|"+t[1]+"|"+t[3],{kind:"O",temp:t[1],min:t[2],lab:t[3],role:"chef"});u.scs.forEach(sc=>{o.n++;(t[4]||[/oats|brownie|crumble|crouton|lasagne|pasta bake|meatball/i.test(t[3])?null:mainP(r)]).forEach(mp=>{if(mp)o.p[mp]=(o.p[mp]||0)+gOf(r,mp,sc)})})}
+      else if(k==="H"){o=task("H|"+t[1],{kind:"H",lab:t[1],min:t[2],m:t[3],role:"chef"});u.scs.forEach(sc=>{o.n++;if(/one at a time/.test(t[1]))o.min=t[2]*o.n;if(t[4])addSp(o,t[4],sc);
+        const ps=t[5]||HP[t[1]]||(/^(Boil eggs|Steam|Cinnamon apple|Tikka masala sauce)/.test(t[1])?[]:[mainP(r)]);ps.forEach(mp=>{if(mp)o.p[mp]=(o.p[mp]||0)+gOf(r,mp,sc)})})}
       else if(k==="T"){o=task("T|"+t[1],{kind:"T",lab:t[1],m:t[2],days:[],role:"helper"});u.scs.forEach((sc,ix)=>{o.n++;addSp(o,t[3],sc);const bd=u.boxes[ix].d;if(o.days.indexOf(bd)<0)o.days.push(bd)})}
       else{o=task("P|"+id,{kind:"P",rid:id,what:t[1],boxes:u.boxes,role:"helper"})}
       if(o.d.indexOf(r.name)<0)o.d.push(r.name);ids.push(o.id);
@@ -459,7 +462,8 @@ function runSheet(nCooks){
       if(k==="L")nd=nd.concat(prev("V"));
       else if(k==="H")nd=nd.concat(prev("VM"));
       else if(k==="O"){for(let j=ci-1;j>=0;j--)if("MBXT".indexOf(comps[j][0])>=0&&!eaten[j]){eaten[j]=1;nd.push(ids[j]);break}}
-      else if(k==="X")nd=nd.concat(prev("LHSOMB"),/^Build/.test(t[1])?cids:[]);
+      if(k==="O"&&/^Potato/.test(t[3]))nd=nd.concat(cids);
+      if(k==="X")nd=nd.concat(prev("LHSOMB"),/^Build/.test(t[1])?cids:[]);
       else if(k==="P")nd=nd.concat(ids.slice(0,ci),cids);
       nd.forEach(x=>{if(x!==o.id)o.needs[x]=1})})});
   // ---- 2. time, kit and wording for each task
@@ -484,7 +488,7 @@ function runSheet(nCooks){
   const MT={yog:"yoghurt marinade: mix, coat, cover, fridge",wet:"wet marinade: mix in a bowl or bag with the meat",dry:"dry rub: mix and rub on"};
   // per-box weights: cooked weight for batch carbs and meat, with the raw or dry weight alongside
   const YIELD={"sushi-rice":2.3,"jasmine-rice":2.6,pasta:2.2,penne:2.2,"rice-noodles":2.5};
-  const RAWP={"chicken-breast":.75,"chicken-thigh":.72,"beef-mince":.75,"lamb-mince":.72,"beef-shin":.65,steak:.8,"turkey-rashers":.75,salmon:.85};
+  const RAWP={"turkey-mince":.75,"chicken-mince":.75,"chicken-breast":.75,"chicken-thigh":.72,"beef-mince":.75,"lamb-mince":.72,"beef-shin":.65,steak:.8,"turkey-rashers":.75,salmon:.85};
   const SHORT={"jasmine-rice":"jasmine or basmati rice",pasta:"pasta",penne:"penne","rice-noodles":"rice noodles","chicken-thigh":"chicken thigh","beef-mince":"beef mince","lamb-mince":"lamb mince",steak:"sirloin steak","turkey-rashers":"turkey rashers",tuna:"drained tuna",prawns:"king prawns",eggs:"egg","egg-whites":"egg whites","greek-yog":"Greek yoghurt",broccoli:"broccoli",greens:"pak choi or greens",edamame:"edamame",peas:"peas",berries:"berries",corn:"sweetcorn","kidney-beans":"kidney beans",brioche:"brioche bun",wrap:"wrap","sub-roll":"sub roll","pizza-base":"pizza base",mozzarella:"mozzarella","cheese-slice":"cheese slice"};
   const sname=i=>SHORT[i]||ING[i][0].replace(/\s*\(.*\)/,"").split(",")[0].toLowerCase();
   const perBox=(id,sc)=>{const r=RECIPES[id],nb=onDay(id),a=[];
@@ -510,10 +514,10 @@ function runSheet(nCooks){
       const hot=o.temp>200,m=o.min+(hot?4:0);if(hot)o.temp=200;o.a=2;o.w=m;o.tm=m;o.kit="oven";o.html="<b>Oven "+o.temp+"°C fan: "+o.lab+"</b>"+(Object.keys(o.p).length?" ("+amt(o.p)+")":"")+", "+m+" min."+for_}
     else if(k==="H"){o.kit="hob";if(o.min<=8){o.a=o.min}else{o.a=Math.max(4,Math.round(o.min*0.5));o.w=o.min-o.a;if(o.w>=5)o.tm=o.w}o.html="<b>"+o.lab+"</b> (hob, "+o.min+" min)"+(Object.keys(o.p).length?": "+amt(o.p):"")+". "+o.m+(Object.keys(o.sp).length?". With: "+spText(o):"")+"."+for_}
     else if(k==="T"){o.a=Math.round(5+o.n*0.5);o.html="<b>"+o.lab+"</b>, "+o.n+" portion"+(o.n>1?"s":"")+" ("+dayRun(o.days.map(d=>d||7))+"): "+spText(o)+". "+o.m+"."}
-    else if(k==="P"){const r=RECIPES[o.rid],raw=r.type==="head",by={};o.boxes.forEach(b=>{(by[b.who]=by[b.who]||[]).push(b.d)});o.a=Math.round(2+o.boxes.length*0.7);
+    else if(k==="P"){const r=RECIPES[o.rid],raw=r.type==="head",bf=r.slot==="breakfast",by={};o.boxes.forEach(b=>{(by[b.who]=by[b.who]||[]).push(b.d||7)});o.a=Math.round(2+o.boxes.length*0.7);
       const where=ds=>{const lim=raw?2:3,fr_=ds.filter(d=>d<=lim),fz=ds.filter(d=>d>lim),a=[];if(fr_.length)a.push(dayRun(fr_)+" in the fridge");
         if(fz.length)a.push(dayRun(fz)+(r.slot==="lunch"&&r.late==="split"?": freeze the cooked part, cut or mix the fresh part on the day":" in the freezer"));return a.join("; ")};
-      o.html="<b>Box up: "+r.name+"</b>: "+riceName(o.rid,o.what)+". "+HOUSE.order.filter(w=>by[w]).map(w=>"<br><b>"+pname(w)+"</b>, "+by[w].length+" "+(raw?"bag":"box")+(by[w].length>1?(raw?"s":"es"):"")+" ("+where(by[w])+")"+(raw?"":": <i>"+perBox(o.rid,person(w).scales)+"</i>")+".").join("")}});
+      o.html="<b>Box up: "+r.name+"</b>: "+riceName(o.rid,o.what)+". "+HOUSE.order.filter(w=>by[w]).map(w=>"<br><b>"+pname(w)+"</b>, "+(bf?by[w].length*(r.pieces?person(w).pieces||1:1)+" in all":by[w].length+" "+(raw?"bag":"box")+(by[w].length>1?(raw?"s":"es"):""))+" ("+where(by[w])+")"+(raw?"":": <i>"+(bf?"each day ":"")+perBox(o.rid,scFor(o.rid,w))+"</i>")+".").join("")}});
   // ---- 3. schedule
   const ids=Object.keys(T),kids={},tail={};ids.forEach(i=>Object.keys(T[i].needs).forEach(n=>{(kids[n]=kids[n]||[]).push(i)}));
   const tl=i=>tail[i]!=null?tail[i]:(tail[i]=T[i].a+T[i].w+Math.max(0,...(kids[i]||[]).map(tl)));
@@ -748,7 +752,7 @@ function renderSheet(){if(!sheet)return;const T=$("#sheet-title"),B=$("#sheet-bo
   const r=RECIPES[sheet.id], x=macros(sheet.id,who), s=sheet.serv||1;
   // Shared dishes are cooked for both; a shake is shown for two when you both picked it that day.
   const sameShake=r.slot==="shake"&&sheet.dow!=null&&choice("shake",sheet.dow,ME)===r.id&&choice("shake",sheet.dow,OTHER)===r.id;
-  const ppl=(isShared(r.slot)||sameShake)?HOUSE.order:[who], both=ppl.length>1, scs=ppl.map(w=>person(w).scales);
+  const ppl=(isShared(r.slot)||sameShake)?HOUSE.order:[who], both=ppl.length>1, scs=ppl.map(w=>scFor(r.id,w));
   const lab=w=>w===ME?"You":pname(w);
   T.textContent=r.name;
   const canUse=sheet.dow!=null&&sheet.slot&&allowed(r.id,sheet.slot,sheet.dow,who)&&choice(sheet.slot,sheet.dow,who)!==r.id;
@@ -760,7 +764,7 @@ function renderSheet(){if(!sheet)return;const T=$("#sheet-title"),B=$("#sheet-bo
     '<p class="rest-note">'+(both?'Macros are '+(who===ME?'your':esc(poss(who)))+' portion. Amounts below are for both of you, with each person’s share underneath.':'Macros and amounts are '+(who===ME?'your':esc(poss(who)))+' portion.')+' Raw weights unless stated; rice and pasta are dry.</p>'+
     '<div class="serv"><span>'+(both?'Batches':'Servings')+'</span><button type="button" class="btn ghost small" data-serv="-1" aria-label="Fewer">−</button><b class="num">'+s+'</b><button type="button" class="btn ghost small" data-serv="1" aria-label="More">+</button></div>'+
     (sameShake?'<p class="rest-note">You both have this today. Blend the total, then pour the larger glass for '+(person(ME).scales.p>=person(OTHER).scales.p?'you':esc(pname(OTHER)))+'.</p>':'')+
-    '<h3 class="rh">Ingredients</h3><ul class="list ing">'+r.ing.map(([i,g])=>'<li><span>'+esc(ING[i]?ING[i][0]:i)+(both?'<small class="uses">'+ppl.map(w=>lab(w)+' '+esc(amount(i,g*s*scaleOf(i,person(w).scales)))).join(' · ')+'</small>':'')+'</span><span class="num">'+esc(amount(i,g*s*scs.reduce((a,sc)=>a+scaleOf(i,sc),0)))+'</span></li>').join("")+'</ul>'+
+    '<h3 class="rh">Ingredients</h3><ul class="list ing">'+r.ing.map(([i,g])=>'<li><span>'+esc(ING[i]?ING[i][0]:i)+(both?'<small class="uses">'+ppl.map(w=>lab(w)+' '+esc(amount(i,g*s*scaleOf(i,scFor(r.id,w))))).join(' · ')+'</small>':'')+'</span><span class="num">'+esc(amount(i,g*s*scs.reduce((a,sc)=>a+scaleOf(i,sc),0)))+'</span></li>').join("")+'</ul>'+
     (groups.length?'<h3 class="rh">Seasoning and sauces</h3><p class="rest-note" style="margin:0">How the sauces, marinades and seasonings are made up'+(both?', for both of you':'')+'. Anything listed above is the same food, not extra.</p><ul class="list sea">'+groups.map(g=>'<li><span><b>'+esc(g[0])+'</b><small class="uses">'+esc(seaText(g[1],scs,s))+'</small></span></li>').join("")+'</ul>':'')+
     (r.finish?'<p class="banner"><b>After Sunday prep:</b> '+esc(r.finish)+'.</p><h3 class="rh">From scratch</h3><p class="rest-note" style="margin:0">Use this if it wasn’t prepped.</p>':'<h3 class="rh">Method</h3>')+
     '<ol class="method">'+r.method.map(m=>'<li>'+esc(m)+'</li>').join("")+'</ol>'+

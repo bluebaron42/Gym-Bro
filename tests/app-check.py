@@ -9,7 +9,7 @@ bad = []
 def fail(m): bad.append(m); print("FAIL", m)
 EXPECT = """(arg)=>{const D=window.BB_DATA,H=D.HOUSE,CAT={"Protein":"p","Dairy and eggs":"p","Carbs":"c","Sauces and cupboard":"c","Fruit and veg":"v"};
   const sc=(i,s)=>{const n=D.ING[i];return n[8]==="fixed"?1:n[8]==="aroma"?(s.p+s.c)/2:s[CAT[n[1]]]};const out={};
-  arg.people.forEach(w=>{const s=H.people[w].scales;Object.keys(arg.menu[w]).forEach(k=>{D.RECIPES[arg.menu[w][k]].ing.forEach(([i,g])=>{out[i]=(out[i]||0)+g*sc(i,s)})})});return out}"""
+  arg.people.forEach(w=>{const s=H.people[w].scales;Object.keys(arg.menu[w]).forEach(k=>{const r=D.RECIPES[arg.menu[w][k]];r.ing.forEach(([i,g])=>{out[i]=(out[i]||0)+g*(r.pieces?H.people[w].pieces:(r.whole||[]).indexOf(i)>=0?1:sc(i,s))})})});return out}"""
 def allowed(D, rid, slot, dow, who):
     r = D["RECIPES"].get(rid); H = D["HOUSE"]
     if not r or r["slot"] != slot: return False

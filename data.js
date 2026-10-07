@@ -21,6 +21,11 @@ window.BB_DATA = (function () {
     "rice-cakes": ["Rice cakes", "Carbs",390,8,81,3,8,"rice cakes"],
     "panko": ["Panko breadcrumbs", "Carbs",370,12,75,3],
     "granola": ["Granola (lower sugar)", "Carbs",430,10,60,15],
+    "english-muffin": ["English muffins", "Carbs",225,9,43,1.8,68,"muffins"],
+    "thin-bagel": ["Thin bagels", "Carbs",255,10,48,2,45,"bagels"],
+    "mini-wrap": ["Mini wraps", "Carbs",300,8.5,50,7,31,"wraps"],
+    "sr-flour": ["Self-raising flour", "Carbs",340,9.5,72,1.2],
+    "oreo": ["Oreo biscuits", "Carbs",480,5,69,20,11,"biscuits"],
     "weetabix-minis": ["Weetabix Minis Chocolate Chip", "Carbs", 389, 9.9, 71, 5.3],
     "chicken-breast": ["Chicken breast", "Protein",106,24,0,1.1],
     "chicken-thigh": ["Chicken thigh fillets, skinless", "Protein",125,20,0,4.9],
@@ -29,6 +34,9 @@ window.BB_DATA = (function () {
     "beef-shin": ["Beef shin", "Protein",130,21,0,5],
     "steak": ["Sirloin steak, trimmed", "Protein",150,23,0,6],
     "turkey-rashers": ["Turkey rashers", "Protein",105,22,0.5,1.5],
+    "turkey-mince": ["Turkey thigh mince (7% fat)", "Protein",140,20,0,7],
+    "chicken-mince": ["Chicken mince", "Protein",120,20,0,4.5],
+    "turkey-ham": ["Turkey ham", "Protein",105,19,2,2.5],
     "turkey-pepperoni": ["Turkey pepperoni", "Protein",180,22,2,9],
     "salmon": ["Salmon fillets", "Protein",200,20,0,13],
     "tuna": ["Tuna in spring water, drained", "Protein",110,25,0,1],
@@ -45,6 +53,11 @@ window.BB_DATA = (function () {
     "skyr": ["Skyr (plain)", "Dairy and eggs",65,11,4,0.2],
     "cream-cheese": ["Light cream cheese", "Dairy and eggs",150,7,5,11],
     "cheese-slice": ["Light cheese slices", "Dairy and eggs",250,20,5,15,20,"slices"],
+    "cheddar": ["Light mature cheddar", "Dairy and eggs",310,28,1,22],
+    "cottage-cheese": ["Cottage cheese (low fat)", "Dairy and eggs",70,11,4,1.5],
+    "squirty-cream": ["Light squirty cream", "Dairy and eggs",200,2.5,9,17],
+    "cherries": ["Frozen cherries", "Fruit and veg",50,1,11,0.2],
+    "strawberries": ["Frozen strawberries", "Fruit and veg",32,0.7,6,0.3],
     "onion": ["Onions", "Fruit and veg",40,1.1,9,0.1],
     "garlic": ["Garlic", "Fruit and veg",110,6,24,0.5,null,null,"aroma"],
     "peppers": ["Peppers", "Fruit and veg",30,1,6,0.3],
@@ -91,6 +104,11 @@ window.BB_DATA = (function () {
     "peanuts": ["Roasted peanuts", "Sauces and cupboard",590,26,13,49],
     "kidney-beans": ["Kidney beans (tin, drained)", "Sauces and cupboard",100,7,15,0.5],
     "peri-peri": ["Peri-peri sauce", "Sauces and cupboard",80,1,15,2],
+    "pb-powder": ["Peanut butter powder", "Sauces and cupboard",375,48,25,9],
+    "jalapenos": ["Pickled jalapeños (jar)", "Sauces and cupboard",20,1,3,0.5],
+    "franks": ["Frank's RedHot sauce", "Sauces and cupboard",15,1,2,0.5],
+    "icing-sugar": ["Icing sugar", "Sauces and cupboard",400,0,100,0],
+    "lager": ["Lager", "Sauces and cupboard",40,0.3,3,0],
     "cocoa": ["Cocoa powder", "Sauces and cupboard",380,20,12,21],
     "dark-choc": ["Dark chocolate (85%)", "Sauces and cupboard",600,10,20,50],
     "jam": ["Reduced-sugar jam", "Sauces and cupboard",140,0.5,34,0.1],
@@ -145,7 +163,17 @@ window.BB_DATA = (function () {
     "cornflour": ["cornflour",{}],
     "grated parmesan": ["parmesan",{"tbsp":5}],
     "skimmed milk": ["skimmed-milk",{}],
-    "milk": ["milk",{"tbsp":15}],
+    "milk": ["milk",{"tbsp":15,"tsp":5}],
+    "light cheese slice": ["cheese-slice",{"x":20}],
+    "light cheddar": ["cheddar",{}],
+    "cottage cheese": ["cottage-cheese",{}],
+    "Frank's hot sauce": ["franks",{}],
+    "lager": ["lager",{"tbsp":15}],
+    "self-raising flour": ["sr-flour",{}],
+    "frozen cherries": ["cherries",{}],
+    "icing sugar": ["icing-sugar",{}],
+    "Oreo": ["oreo",{"x":11}],
+    "peanut butter powder": ["pb-powder",{}],
     "oats": ["oats",{}],
     "peanut butter": ["peanut-butter",{}],
     "cocoa": ["cocoa",{}],
@@ -163,14 +191,15 @@ window.BB_DATA = (function () {
     "capers": ["capers",{}]
   };
   // Seasonings that live in the cupboard: checked off, not bought by weight.
-  const CUPBOARD = {"American mustard":"American mustard", "Dijon mustard":"Dijon mustard", "Worcestershire":"Worcestershire", "baking powder":"Baking powder", "bay leaf":"Bay leaf", "beef stock":"Beef stock (cubes)", "black pepper":"Black pepper", "butter":"Butter", "cayenne":"Cayenne", "chilli flakes":"Chilli flakes", "chilli powder":"Chilli powder", "cinnamon":"Cinnamon", "cinnamon stick":"Cinnamon stick", "cumin":"Cumin", "dried mint":"Dried mint", "dried oregano":"Dried oregano", "dried thyme":"Dried thyme", "five-spice":"Five-spice", "garam masala":"Garam masala", "garlic granules":"Garlic granules", "ground cardamom":"Ground cardamom", "ground coriander":"Ground coriander", "nutmeg":"Nutmeg", "onion powder":"Onion powder", "salt":"Salt", "smoked paprika":"Smoked paprika", "stock cube":"Stock cube", "sugar":"Sugar", "tomato purée":"Tomato purée", "turmeric":"Turmeric", "vanilla extract":"Vanilla extract", "white pepper":"White pepper"};
+  const CUPBOARD = {"American mustard":"American mustard", "Dijon mustard":"Dijon mustard", "Worcestershire":"Worcestershire", "baking powder":"Baking powder", "bay leaf":"Bay leaf", "beef stock":"Beef stock (cubes)", "black pepper":"Black pepper", "butter":"Butter", "cayenne":"Cayenne", "chilli flakes":"Chilli flakes", "chilli powder":"Chilli powder", "cinnamon":"Cinnamon", "cinnamon stick":"Cinnamon stick", "cumin":"Cumin", "dried mint":"Dried mint", "dried oregano":"Dried oregano", "dried thyme":"Dried thyme", "five-spice":"Five-spice", "garam masala":"Garam masala", "garlic granules":"Garlic granules", "ground cardamom":"Ground cardamom", "ground coriander":"Ground coriander", "nutmeg":"Nutmeg", "onion powder":"Onion powder", "salt":"Salt", "smoked paprika":"Smoked paprika", "stock cube":"Stock cube", "sugar":"Sugar", "tomato purée":"Tomato purée", "turmeric":"Turmeric", "vanilla extract":"Vanilla extract", "white pepper":"White pepper", "dried sage":"Dried sage", "Italian herbs":"Italian herbs", "taco seasoning":"Taco seasoning", "sprinkles":"Sprinkles", "xanthan gum":"Xanthan gum"};
   // Buy this much more than the prepared weight (peel, trim, stones).
   const TRIM = {"onion":1.1,"garlic":1.2,"ginger":1.25,"peppers":1.15,"lettuce":1.15,"broccoli":1.1,"greens":1.1,"mango":1.45,"avocado":1.35,"potatoes":1.05,"apple":1.1,"spring-onion":1.1,"basil":1.2,"coriander":1.2,"parsley":1.2,"mint":1.2,"cucumber":1.03,"chicken-thigh":1.05,"beef-shin":1.1};
   // Typical UK pack: [grams, label]. A guide only; the weight needed is always shown.
-  const PACKS = {"chopped-tom":[400,"tin"],"passata":[500,"carton"],"coconut-light":[400,"tin"],"kidney-beans":[240,"tin, drained"],"tuna":[102,"tin, drained"],"eggs":[300,"box of 6"],"beef-mince":[500,"pack"],"mozzarella":[125,"ball"],"skyr":[450,"pot"],"greek-yog":[500,"tub"],"wrap":[496,"pack of 8"],"brioche":[240,"pack of 4"],"sub-roll":[360,"pack of 4"],"pizza-base":[300,"pack of 2"],"rocket":[60,"bag"],"spinach":[200,"bag"],"beansprouts":[300,"bag"],"cream-cheese":[165,"tub"],"cheese-slice":[200,"pack of 10"],"pasta":[500,"pack"],"penne":[500,"pack"],"sushi-rice":[500,"pack"],"jasmine-rice":[1000,"bag"],"basil":[30,"pot or bunch"],"coriander":[30,"bunch"],"parsley":[30,"bunch"],"mint":[30,"bunch"],"salmon":[240,"pack of 2 fillets"]};
+  const PACKS = {"chopped-tom":[400,"tin"],"passata":[500,"carton"],"coconut-light":[400,"tin"],"kidney-beans":[240,"tin, drained"],"tuna":[102,"tin, drained"],"eggs":[300,"box of 6"],"beef-mince":[500,"pack"],"mozzarella":[125,"ball"],"skyr":[450,"pot"],"greek-yog":[500,"tub"],"wrap":[496,"pack of 8"],"brioche":[240,"pack of 4"],"sub-roll":[360,"pack of 4"],"pizza-base":[300,"pack of 2"],"rocket":[60,"bag"],"spinach":[200,"bag"],"beansprouts":[300,"bag"],"cream-cheese":[165,"tub"],"cheese-slice":[200,"pack of 10"],"english-muffin":[272,"pack of 4"],"thin-bagel":[270,"pack of 6"],"mini-wrap":[248,"pack of 8"],"turkey-mince":[500,"pack"],"chicken-mince":[500,"pack"],"pasta":[500,"pack"],"penne":[500,"pack"],"sushi-rice":[500,"pack"],"jasmine-rice":[1000,"bag"],"basil":[30,"pot or bunch"],"coriander":[30,"bunch"],"parsley":[30,"bunch"],"mint":[30,"bunch"],"salmon":[240,"pack of 2 fillets"]};
 
   // The household. Dinners and treats are shared; breakfast, shake and lunch are per person.
   // scales: p = protein and dairy, c = carbs, fats and sauces, v = fruit and veg.
+  // pieces: how many this person has of a breakfast that is built in whole pieces (a recipe with pieces: true).
   const HOUSE = {
     "order": [
       "blue",
@@ -187,6 +216,7 @@ window.BB_DATA = (function () {
     "people": {
       "blue": {
         "name": "Blue",
+        "pieces": 2,
         "scales": {
           "p": 1,
           "c": 0.88,
@@ -198,6 +228,7 @@ window.BB_DATA = (function () {
       },
       "harriett": {
         "name": "Harriett",
+        "pieces": 1,
         "scales": {
           "p": 0.7,
           "c": 0.45,
@@ -208,7 +239,7 @@ window.BB_DATA = (function () {
     }
   };
   // The menu a new week starts from (0 = Sunday).
-  const DEFAULTS = {"dinner":{"0":"d-meatballs", "1":"d-ragu", "2":"d-smash", "3":"d-fried-rice", "4":"d-peri-peri", "5":"d-bigmac", "6":"d-carbonara"},"snack":{"0":"s-bark", "1":"s-brownie", "2":"s-brownie", "3":"s-brownie", "4":"s-brownie", "5":"s-bark", "6":"s-bark"},"lunch":{"blue":{"0":"l-tuna-poke", "1":"l-teriyaki", "2":"l-teriyaki", "3":"l-teriyaki", "4":"l-ragu-box", "5":"l-ragu-box", "6":"l-ragu-box"},"harriett":{"0":"l-spicy-tuna-salad", "1":"l-shawarma", "2":"l-shawarma", "3":"l-shawarma", "4":"l-green-curry", "5":"l-green-curry", "6":"l-green-curry"}},"breakfast":{"blue":{"0":"bf-eggs", "1":"bf-eggs", "2":"bf-oats", "3":"bf-eggs", "4":"bf-oats", "5":"bf-eggs", "6":"bf-oats"},"harriett":{"0":"bf-eggs", "1":"bf-eggs", "2":"bf-oats", "3":"bf-eggs", "4":"bf-oats", "5":"bf-eggs", "6":"bf-oats"}},"shake":{"blue":{"0":"sh-strawberry", "1":"sh-choc-pb", "2":"sh-mocha", "3":"sh-strawberry", "4":"sh-berry-oat", "5":"sh-lassi", "6":"sh-choc-pb"},"harriett":{"0":"sh-strawberry", "1":"sh-choc-pb", "2":"sh-mocha", "3":"sh-strawberry", "4":"sh-berry-oat", "5":"sh-lassi", "6":"sh-choc-pb"}}};
+  const DEFAULTS = {"dinner":{"0":"d-meatballs", "1":"d-ragu", "2":"d-smash", "3":"d-fried-rice", "4":"d-peri-peri", "5":"d-bigmac", "6":"d-carbonara"},"snack":{"0":"s-bark", "1":"s-brownie", "2":"s-brownie", "3":"s-brownie", "4":"s-brownie", "5":"s-bark", "6":"s-bark"},"lunch":{"blue":{"0":"l-tuna-poke", "1":"l-teriyaki", "2":"l-teriyaki", "3":"l-teriyaki", "4":"l-ragu-box", "5":"l-ragu-box", "6":"l-ragu-box"},"harriett":{"0":"l-spicy-tuna-salad", "1":"l-shawarma", "2":"l-shawarma", "3":"l-shawarma", "4":"l-green-curry", "5":"l-green-curry", "6":"l-green-curry"}},"breakfast":{"blue":{"0":"bf-weetabix", "1":"bf-mcbuffin", "2":"bf-mcbuffin", "3":"bf-mcbuffin", "4":"bf-bagel", "5":"bf-bagel", "6":"bf-bagel"},"harriett":{"0":"bf-weetabix", "1":"bf-mcbuffin", "2":"bf-mcbuffin", "3":"bf-mcbuffin", "4":"bf-bagel", "5":"bf-bagel", "6":"bf-bagel"}},"shake":{"blue":{"0":"sh-strawberry", "1":"sh-choc-pb", "2":"sh-mocha", "3":"sh-strawberry", "4":"sh-berry-oat", "5":"sh-lassi", "6":"sh-choc-pb"},"harriett":{"0":"sh-strawberry", "1":"sh-choc-pb", "2":"sh-mocha", "3":"sh-strawberry", "4":"sh-berry-oat", "5":"sh-lassi", "6":"sh-choc-pb"}}};
 
   // One-off weeks that start from something other than DEFAULTS. Delete an entry once its week has passed
   // (tests/data-check.js fails when one is more than two weeks old).
@@ -216,6 +247,7 @@ window.BB_DATA = (function () {
   const PRESETS = { "2026-10-05": {
     dinner: {"1": "d-gyros", "2": "d-philly", "3": "d-fried-rice", "4": "d-doner", "5": "d-bigmac", "6": "d-lasagne", "0": "d-meatballs"},
     snack: {"1": "s-choc-mousse", "2": "s-brownie", "3": "s-cheesecake", "4": "s-bark", "5": "s-crumble", "6": "s-pbj", "0": "snack"},
+    breakfast: {blue: {"1": "bf-weetabix", "2": "bf-weetabix", "3": "bf-weetabix", "4": "bf-weetabix", "5": "bf-weetabix", "6": "bf-weetabix", "0": "bf-weetabix"}, harriett: {"1": "bf-weetabix", "2": "bf-weetabix", "3": "bf-weetabix", "4": "bf-weetabix", "5": "bf-weetabix", "6": "bf-weetabix", "0": "bf-weetabix"}},
     lunch: {blue: {"1": "l-teriyaki", "2": "l-bulgogi", "3": "l-prawn-egg", "4": "l-spicy-salmon", "5": "l-shawarma", "6": "l-prawn-egg", "0": "l-tuna-poke"}},
     shake: {blue: {"1": "sh-choc-pb", "2": "sh-mocha", "3": "sh-strawberry", "4": "sh-berry-oat", "5": "sh-lassi", "6": "sh-choc-pb", "0": "sh-strawberry"}}
   } };
@@ -223,19 +255,87 @@ window.BB_DATA = (function () {
   // Recipes: ing = grams per full portion. sea = [label, list] seasoning groups not covered by a Sunday component.
   // method = from scratch, no amounts (they are in the lists). finish = on the day, after Sunday prep.
   // Dinners: type fresh | head | sunday. Lunches: late freeze | split | no (Monday to Wednesday only).
+  // Breakfasts built in whole pieces: pieces: true = small ones, ing is one piece and each person has their own number of them
+  // (HOUSE pieces). whole: [ingredients] = big ones, one each: those ingredients stay whole and the filling follows the person's scales.
+  // O, X and H components may end with a list of ingredients to show the weight of, instead of the dish's main protein.
   // comp = Sunday components: V veg, L long cook, M marinade, B breading, X shape, S sauce, O oven, H hob, T treat, P pack.
   // The run sheet works out what each component needs first; after = {component index: [indexes it also needs]} for the exceptions.
   const R = [
-    { id: "bf-eggs", slot: "breakfast", name: "Eggs and sourdough", time: "10 min",
-      ing: [["eggs",200], ["egg-whites",150], ["sourdough",90], ["salsa",40]],
-      sea: [["Seasoning", "0.25 tsp salt; 1 pinch black pepper"]],
-      method: ["Scramble the eggs and whites low and slow, season well.", "Toast the sourdough.", "Serve with salsa or hot sauce."] },
     { id: "bf-weetabix", slot: "breakfast", name: "Chocolate chip Weetabix minis", time: "1 min",
       ing: [["weetabix-minis",75], ["milk",250]],
       method: ["Weigh the minis into a bowl.", "Pour over the cold milk and eat straight away, before they go soft."] },
-    { id: "bf-oats", slot: "breakfast", name: "Protein oats with berries", time: "5 min",
-      ing: [["oats",70], ["milk",250], ["whey",30], ["berries",100], ["peanut-butter",10], ["honey",10]],
-      method: ["Cook the oats in the milk for 3–4 minutes.", "Take off the heat and stir the whey in so it doesn't go grainy.", "Top with berries, peanut butter and honey."] },
+    { id: "bf-mcbuffin", slot: "breakfast", name: "Spicy McBuffins", time: "Batch: 35 min", pieces: true,
+      ing: [["english-muffin",68], ["turkey-mince",70], ["egg-whites",60], ["cheddar",10], ["cheese-slice",30], ["milk",5], ["jalapenos",10]],
+      method: ["Season the mince, press thin patties and bake at 200°C for 12 minutes, turning once.", "Bake the egg whites with the cheddar in a lined tin at 180°C for 14 minutes and cut into squares.", "Nacho sauce: tear half the cheese slices into the warm milk with the paprika and garlic granules and whisk over a low heat until smooth.", "Build on a split muffin: cheese slice, egg, patty, nacho sauce, jalapeños. Toast in the air fryer for 3 minutes."],
+      finish: "Unwrap, microwave 60 to 90 seconds, then air fryer at 200°C for 3 minutes. 5 min",
+      comp: [["X", "Spicy turkey patties", "Mix the seasoning through the mince and press thin patties onto a lined tray, one per sandwich or burrito", "0.125 tsp salt; 0.25 tsp garlic granules; 0.25 tsp smoked paprika; 1 pinch chilli flakes; 1 pinch black pepper",["turkey-mince"]],
+        ["O",200,12,"Sausage patties, turned once",["turkey-mince","chicken-mince"]],
+        ["O",180,14,"Egg white sheet: lined tin, any cheddar scattered over; cool and cut one square per sandwich",["egg-whites","cheddar"]],
+        ["S", "Nacho cheese sauce", "0.5 x light cheese slice; 1 tsp milk; 1 pinch smoked paprika; 1 pinch garlic granules",3],
+        ["P", "Build each one on a split muffin: cheese slice, egg square, patty, nacho sauce, jalapeños, lid. Wrap one by one"]] },
+    { id: "bf-poorboy", slot: "breakfast", name: "Sage chicken McMuffins", time: "Batch: 35 min", pieces: true,
+      ing: [["english-muffin",68], ["chicken-mince",70], ["egg-whites",50], ["cheddar",12], ["cheese-slice",20]],
+      method: ["Mix the sage, herbs and seasoning through the mince, press thin patties and bake at 200°C for 12 minutes, turning once.", "Bake the egg whites with the cheddar in a lined tin at 180°C for 14 minutes and cut into squares.", "Build on a split muffin: patty, cheese slice, egg. Toast in the air fryer for 3 minutes."],
+      finish: "Unwrap, microwave 60 to 90 seconds, then air fryer at 200°C for 3 minutes. 5 min",
+      comp: [["X", "Sage chicken patties", "Mix the seasoning through the mince and press thin patties onto a lined tray, one per sandwich", "0.125 tsp salt; 0.5 tsp dried sage; 0.25 tsp Italian herbs; 1 pinch black pepper",["chicken-mince"]],
+        ["O",200,12,"Sausage patties, turned once",["turkey-mince","chicken-mince"]],
+        ["O",180,14,"Egg white sheet: lined tin, any cheddar scattered over; cool and cut one square per sandwich",["egg-whites","cheddar"]],
+        ["P", "Build each one on a split muffin: patty, cheese slice, egg square, lid. Wrap one by one"]] },
+    { id: "bf-bagel", slot: "breakfast", name: "Turkey bacon and egg bagels", time: "Batch: 25 min", pieces: true,
+      ing: [["thin-bagel",45], ["turkey-rashers",50], ["egg-whites",60], ["cheese-slice",20]],
+      sea: [["Seasoning", "1 pinch salt; 1 pinch black pepper"]],
+      method: ["Season the egg whites, bake in a lined tin at 180°C for 14 minutes and cut into squares.", "Bake the rashers flat on a lined tray at 200°C for 10 minutes.", "Build on a split bagel: egg, cheese slice, rashers. Toast in the air fryer for 3 minutes."],
+      finish: "Unwrap, microwave 60 to 90 seconds, then air fryer at 200°C for 3 minutes. 5 min",
+      comp: [["O",180,14,"Egg white sheet: lined tin, any cheddar scattered over; cool and cut one square per sandwich",["egg-whites","cheddar"]],
+        ["O",200,10,"Turkey rashers, flat on a lined tray",["turkey-rashers"]],
+        ["P", "Build each one on a split bagel: egg square, cheese slice, two rashers, lid. Wrap one by one"]] },
+    { id: "bf-tacos", slot: "breakfast", name: "Steak and cheese breakfast tacos", time: "Batch: 35 min", pieces: true,
+      ing: [["mini-wrap",31], ["steak",40], ["turkey-rashers",25], ["eggs",85], ["cheddar",13], ["cheese-slice",10], ["milk",5]],
+      method: ["Season the steak, sear hard for 2 to 3 minutes a side, rest and dice small.", "Bake the rashers at 200°C for 10 minutes and chop.", "Scramble the eggs low and soft.", "Nacho sauce: tear the cheese slices into the warm milk with the paprika and garlic granules and whisk over a low heat until smooth.", "Fold the steak, rashers, cheddar and sauce through the eggs, fill and fold the wraps, and crisp in a dry pan on both sides."],
+      finish: "Unwrap and crisp in a dry pan for 2 minutes a side, or microwave 60 seconds then air fryer at 200°C for 3 minutes. Hot sauce on the side. 5 min",
+      comp: [["H", "Sear the steak",6,"Season, sear hard for 2 to 3 minutes a side, rest, then dice small", "0.25 tsp taco seasoning; 1 pinch salt; 1 pinch garlic granules",["steak"]],
+        ["O",200,10,"Turkey rashers, flat on a lined tray",["turkey-rashers"]],
+        ["H", "Soft scramble",6,"Whisk, cook low and take it off while still glossy; it finishes when reheated", "1 pinch salt",["eggs","egg-whites"]],
+        ["S", "Nacho cheese sauce", "0.5 x light cheese slice; 1 tsp milk; 1 pinch smoked paprika; 1 pinch garlic granules",3],
+        ["P", "Fold the diced steak, chopped rashers, cheddar and nacho sauce through the scramble; fill and fold the wraps. Wrap one by one"]] },
+    { id: "bf-pocket", slot: "breakfast", name: "Turkey ham breakfast pockets", time: "Batch: 40 min", whole: ["wrap"],
+      ing: [["wrap",62], ["eggs",110], ["turkey-ham",55], ["cheddar",35], ["cheese-slice",20], ["milk",10], ["peppers",40], ["onion",20], ["spring-onion",5]],
+      method: ["Dice the peppers and onion small and soften in a little oil; brown the diced ham in the same pan.", "Whisk the eggs and cook a thin flat omelette.", "Nacho sauce: tear the cheese slice into the warm milk with the paprika and garlic granules and whisk over a low heat until smooth.", "Lay the omelette on the wrap, add the cheddar, sauce, ham, veg and spring onion, roll tight and crisp in a dry pan."],
+      finish: "Unwrap and crisp in a dry pan for 2 minutes a side, or microwave 90 seconds then air fryer at 200°C for 3 minutes. 5 min",
+      comp: [["V", "peppers", "diced small"],
+        ["V", "onion", "diced small"],
+        ["H", "Soften the peppers and onion",8,"A little oil over a medium heat until soft and sweet; brown the diced turkey ham in the same pan at the end", "1 pinch salt",["turkey-ham"]],
+        ["H", "Flat omelettes, one at a time",3,"Whisk and cook one thin flat omelette for each pocket", "1 pinch salt; 1 pinch black pepper",["eggs"]],
+        ["S", "Nacho cheese sauce", "1 x light cheese slice; 2 tsp milk; 2 pinch smoked paprika; 2 pinch garlic granules",3],
+        ["P", "Lay an omelette on each wrap, add the cheddar, nacho sauce, ham, veg and sliced spring onion, and roll tight. Wrap one by one"]] },
+    { id: "bf-buffalo", slot: "breakfast", name: "Buffalo chicken bagels", time: "Batch: 35 min", whole: ["thin-bagel"],
+      ing: [["chicken-breast",105], ["thin-bagel",45], ["turkey-rashers",50], ["cream-cheese",15], ["cheddar",15], ["franks",30], ["cheese-slice",20], ["spring-onion",5]],
+      method: ["Season the chicken and bake at 200°C for 18 minutes; bake the rashers alongside for 10 minutes.", "Chop the chicken and warm it with the cream cheese, cheddar and hot sauce until it just simmers.", "Pile into a toasted bagel with the rashers, cheese slice and sliced spring onion."],
+      finish: "Toast the bagel, warm the filling for 60 seconds in the microwave, and build with the rashers, cheese slice and sliced spring onion. 4 min",
+      after: {"4": [1]},
+      comp: [["M", "dry", "Buffalo chicken seasoning", "chicken-breast", "0.125 tsp salt; 0.25 tsp garlic granules; 0.25 tsp smoked paprika",0],
+        ["O",200,18,"Chicken breasts for the buffalo filling",["chicken-breast"]],
+        ["O",200,10,"Turkey rashers, flat on a lined tray",["turkey-rashers"]],
+        ["V", "spring-onion", "sliced"],
+        ["H", "Buffalo chicken filling",5,"Chop the chicken and warm it with the cream cheese, cheddar and hot sauce until it just simmers", "30 g Frank's hot sauce; 15 g light cream cheese; 15 g light cheddar",["chicken-breast"]],
+        ["P", "Filling into tubs with the rashers alongside. Bagels, cheese slices and spring onion stay separate until the day"]] },
+    { id: "bf-quesadilla", slot: "breakfast", name: "Breakfast quesadilla", time: "Batch: 5 min each", whole: ["wrap"],
+      ing: [["wrap",62], ["turkey-ham",70], ["egg-whites",150], ["eggs",50], ["cheddar",30], ["cheese-slice",20], ["spring-onion",10]],
+      sea: [["Seasoning", "1 pinch salt; 1 pinch black pepper"]],
+      method: ["Crisp the chopped ham in a non-stick pan over a medium heat.", "Pour over the whisked egg and whites; when the top is nearly set, add the cheeses and spring onion and press the wrap on top.", "Lid on for a minute, flip to toast the wrap, then fold in half.", "Two pans at once halves the time for a batch."],
+      finish: "Unwrap and crisp in a dry pan for 2 minutes a side, or microwave 60 seconds then air fryer at 200°C for 3 minutes. Hot sauce on the side. 5 min",
+      comp: [["H", "Breakfast quesadillas, one at a time",5,"Crisp the chopped ham, pour over the whisked egg, add the cheeses and spring onion when nearly set and press a wrap on; flip to toast, fold in half and cool. Two pans at once halves this", "",["turkey-ham","egg-whites","eggs"]],
+        ["P", "Cool flat on a rack, then wrap one by one"]] },
+    { id: "bf-burrito", slot: "breakfast", name: "Classic breakfast burrito", time: "Batch: 45 min", whole: ["wrap"],
+      ing: [["wrap",62], ["turkey-mince",60], ["turkey-rashers",50], ["egg-whites",150], ["cheddar",40], ["potatoes",75]],
+      method: ["Season the mince, press a thin patty and bake at 200°C for 12 minutes with the rashers alongside for 10.", "Cube the potato, boil 5 minutes, steam-dry, then roast at 200°C for 20 minutes until crisp.", "Scramble the egg whites low and soft.", "Chop the patty and rashers, fold through the eggs with the cheddar and potato, and roll tight in the wrap."],
+      finish: "Unwrap, microwave 90 seconds, then air fryer at 200°C for 3 minutes. Hot sauce on the side. 5 min",
+      comp: [["X", "Spicy turkey patties", "Mix the seasoning through the mince and press thin patties onto a lined tray, one per sandwich or burrito", "0.125 tsp salt; 0.25 tsp garlic granules; 0.25 tsp smoked paprika; 1 pinch chilli flakes; 1 pinch black pepper",["turkey-mince"]],
+        ["O",200,12,"Sausage patties, turned once",["turkey-mince","chicken-mince"]],
+        ["O",200,10,"Turkey rashers, flat on a lined tray",["turkey-rashers"]],
+        ["O",200,20,"Potato cubes, oiled and salted, until crisp",[]],
+        ["H", "Soft egg white scramble",6,"Whisk, cook low and take it off while still glossy; it finishes when reheated", "1 pinch salt",["eggs","egg-whites"]],
+        ["P", "Chop the patty and rashers, fold through the scramble with the cheddar and potato, and roll tight in the wraps. Wrap one by one"]] },
     { id: "snack", slot: "snack", name: "Yoghurt bowl and an apple", time: "2 min",
       ing: [["greek-yog",300], ["honey",15], ["berries",80], ["granola",40], ["apple",150]],
       method: ["Greek yoghurt with honey, berries and granola.", "An apple on the side, or sliced in."],
@@ -272,6 +372,48 @@ window.BB_DATA = (function () {
       ing: [["rice-cakes",32], ["peanut-butter",20], ["jam",20], ["greek-yog",200], ["berries",50]],
       method: ["Spread 4 rice cakes with peanut butter and jam.", "Greek yoghurt with berries on the side."],
       comp: [] },
+    { id: "s-cherry-cheesecake", slot: "snack", name: "Cherry crumble cheesecake", time: "Batch: 30 min + chilling", tag: "Sweet",
+      ing: [["cream-cheese",50], ["skyr",150], ["eggs",25], ["whey",15], ["honey",20], ["milk",10], ["cherries",60], ["digestives",15]],
+      method: ["Blend the cream cheese, skyr, egg, whey, honey, milk and vanilla until smooth.", "Bake in a lined tin at 180°C for about 20 minutes, until just wobbling in the middle. Cool, then chill for 2 hours.", "Simmer the cherries with a little honey until syrupy.", "Spoon the cherries over a slice and crumble the digestive on top."],
+      finish: "Cut a slice, spoon over the cherries and crumble the digestive on top. 1 min",
+      comp: [["T", "Cheesecake batter", "Blend until smooth and pour into a lined tin; one tin does every cheesecake this week", "50 g light cream cheese; 150 g skyr; 0.5 x egg; 15 g vanilla whey; 15 g honey; 2 tsp milk; 0.25 tsp vanilla extract"],
+        ["O",180,20,"Baked cheesecake, until just wobbling in the middle; cool, then chill"],
+        ["H", "Cherry compote",5,"Simmer the cherries with the honey until syrupy; cool and box", "60 g frozen cherries; 5 g honey"]] },
+    { id: "s-bday-cheesecake", slot: "snack", name: "Birthday cake cheesecake", time: "Batch: 30 min + chilling", tag: "Sweet",
+      ing: [["cream-cheese",50], ["skyr",150], ["eggs",25], ["whey",15], ["honey",15], ["milk",15], ["icing-sugar",10]],
+      sea: [["Icing", "10 g icing sugar; 1 tsp milk; 1 tsp sprinkles"]],
+      method: ["Blend the cream cheese, skyr, egg, whey, honey, milk and vanilla until smooth.", "Bake in a lined tin at 180°C for about 20 minutes, until just wobbling in the middle. Cool, then chill for 2 hours.", "Stir the icing sugar and milk to a thick icing, spread over a slice and finish with sprinkles."],
+      finish: "Cut a slice, spread with the icing and finish with sprinkles. 2 min",
+      comp: [["T", "Cheesecake batter", "Blend until smooth and pour into a lined tin; one tin does every cheesecake this week", "50 g light cream cheese; 150 g skyr; 0.5 x egg; 15 g vanilla whey; 15 g honey; 2 tsp milk; 0.25 tsp vanilla extract"],
+        ["O",180,20,"Baked cheesecake, until just wobbling in the middle; cool, then chill"]] },
+    { id: "s-oreo-cheesecake", slot: "snack", name: "Oreo cheesecake", time: "Batch: 30 min + chilling", tag: "Sweet",
+      ing: [["cream-cheese",60], ["skyr",180], ["eggs",25], ["whey",15], ["honey",15], ["milk",10], ["oreo",11]],
+      sea: [["Topping", "30 g skyr; 10 g light cream cheese; 1 x Oreo; 1 tsp sprinkles"]],
+      method: ["Blend the cream cheese, skyr, egg, whey, honey, milk and vanilla until smooth.", "Bake in a lined tin at 180°C for about 20 minutes, until just wobbling in the middle. Cool, then chill for 2 hours.", "Whisk the topping skyr and cream cheese, fold in the crushed Oreo, spread over a slice and finish with sprinkles."],
+      finish: "Cut a slice, whisk the topping with the crushed Oreo, spread over and finish with sprinkles. 2 min",
+      comp: [["T", "Cheesecake batter", "Blend until smooth and pour into a lined tin; one tin does every cheesecake this week", "50 g light cream cheese; 150 g skyr; 0.5 x egg; 15 g vanilla whey; 15 g honey; 2 tsp milk; 0.25 tsp vanilla extract"],
+        ["O",180,20,"Baked cheesecake, until just wobbling in the middle; cool, then chill"]] },
+    { id: "s-pretzel", slot: "snack", name: "Pretzel bites with beer cheese", time: "Batch: 30 min", tag: "Savoury",
+      ing: [["sr-flour",60], ["skyr",75], ["cottage-cheese",55], ["cheddar",20], ["cream-cheese",15], ["lager",15]],
+      method: ["Bring the flour, skyr and salt together into a dough, roll into ropes and cut into 2 cm bites.", "Bake on a lined tray at 200°C for 12 minutes until deep golden.", "Blend the cottage cheese, cheddar, cream cheese, lager and mustard, then stir over a medium heat for 5 minutes until melted and smooth."],
+      finish: "Bites back in the air fryer at 200°C for 3 minutes; warm the dip gently. 4 min",
+      comp: [["T", "Pretzel dough", "Bring together into a dough, roll into ropes and cut 2 cm bites onto a lined tray", "60 g self-raising flour; 75 g skyr; 1 pinch salt"],
+        ["O",200,12,"Pretzel bites, until deep golden"],
+        ["S", "Beer cheese dip", "55 g cottage cheese; 20 g light cheddar; 15 g light cream cheese; 1 tbsp lager; 0.5 tsp Dijon mustard",5,true]] },
+    { id: "s-brookie", slot: "snack", name: "Brookie", time: "Batch: 30 min", tag: "Sweet",
+      ing: [["eggs",50], ["whey",15], ["pb-powder",17], ["cocoa",5], ["oats",10], ["honey",20], ["skyr",40], ["dark-choc",8], ["milk",10]],
+      method: ["Blitz the oats to flour and mix with everything except the cocoa and chocolate.", "Split the batter in two and stir the cocoa into one half.", "Marble both into a lined tin, press the chopped chocolate on top and bake at 180°C for about 20 minutes, until just set."],
+      finish: "One square, cold or warmed for 20 seconds. 1 min",
+      comp: [["T", "Brookie batters", "Blitz the oats to flour, mix everything except the cocoa and chocolate, split in two and stir the cocoa into one half; marble both into a lined tin and press the chopped chocolate on top", "1 x egg; 15 g vanilla whey; 17 g peanut butter powder; 10 g oats; 20 g honey; 40 g skyr; 5 g cocoa; 8 g dark chocolate; 2 tsp milk; 1 pinch salt"],
+        ["O",180,20,"Brookie, until just set; cool and cut into squares"]] },
+    { id: "s-scoreo", slot: "snack", name: "Cookies and cream thick shake", time: "4 min", tag: "Sweet",
+      ing: [["whey",30], ["skyr",100], ["cocoa",10], ["honey",15], ["milk",100], ["oreo",22], ["squirty-cream",15]],
+      sea: [["Thickener", "0.5 tsp xanthan gum"]],
+      method: ["Blend two big handfuls of ice to snow.", "Add the skyr, whey, half the cocoa, the honey, the xanthan gum and the milk and blend until it holds a spoon.", "Stir the rest of the cocoa with a splash of milk to a sauce.", "Top with the cream, the crushed Oreos and the cocoa sauce."] },
+    { id: "s-strawb-shake", slot: "snack", name: "Strawberry thick shake", time: "4 min", tag: "Sweet",
+      ing: [["whey",30], ["skyr",100], ["strawberries",90], ["milk",100], ["honey",10], ["squirty-cream",10]],
+      sea: [["Thickener", "0.5 tsp xanthan gum"]],
+      method: ["Blend two big handfuls of ice to snow.", "Add the skyr, whey, frozen strawberries, honey, xanthan gum and milk and blend until it holds a spoon.", "Top with the cream."] },
     { id: "sh-choc-pb", slot: "shake", name: "Chocolate peanut butter shake", time: "3 min", tag: "Shake",
       ing: [["milk",300], ["skyr",150], ["whey",30], ["cocoa",10], ["peanut-butter",20], ["honey",10], ["dark-choc",5]],
       method: ["Into the blender: milk, skyr, vanilla whey, cocoa, peanut butter, honey and a big handful of ice.", "Blend 30–40 seconds until thick and frothy; grate the dark chocolate on top.", "Stir in your 5 g creatine."] },
