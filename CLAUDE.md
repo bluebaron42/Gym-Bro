@@ -76,8 +76,18 @@ be in `CUPBOARD`. Methods carry no amounts.
   and each person has `HOUSE.people[x].pieces` of them (Blue 2, Harriett 1), with no other scaling. `whole: [ingredients]` = big ones,
   one each: the bread stays whole and the filling follows the person's usual scales. `scFor(id, who)` in `index.html` applies both.
   Shared parts (egg white sheet, patties, rashers, nacho cheese sauce, cheesecake batter) pool into one Sunday task by having the same label.
-- `O`, `X` and `H` components may end with a list of ingredients whose weight the step shows. An `H` label containing "one at a time"
+- `O`, `X`, `H` and `S` components may end with a list of ingredients whose weight the step shows (otherwise the main protein). An `H` label containing "one at a time"
   takes its minutes per portion.
+- **Portion sizes.** `parts(r)` in `data.js` folds a dish's Sunday components into the parts that get portioned (a marinade into
+  the tray it roasts on, veg into the pan they cook in, a sauce into what simmers in it), using the same `needs(r)` the run sheet
+  schedules by, and `portion(part, scale, lots)` gives one person's weight of a part. Cooked weights are estimates from raw weights
+  and the `COOKED` table, so they read "about". The run sheet shows them three ways: every box-up lists each person's portion of
+  each part (raw weights for a head-start bag); shaping, breading and one-at-a-time steps say the size of each piece; and a dish
+  with no box-up (treats, overnight oats) says its portion on the step that finishes each part. Cooked steps also say roughly what
+  the batch should weigh. Blue asked for this: portion weights matter, batch totals alone are not enough.
+- Every dish with components has `rest`: the ingredients no Sunday component handles. `data-check.js` fails unless it matches,
+  so a new ingredient has to be put in a component (a seasoning list, or the list at the end of an `O`, `X`, `H` or `S`) or in `rest`.
+  A `V` ending `"raw"` stays raw (salad veg). `after` also says what a sauce or pan takes in, not just what it waits for.
 - Dinners have `type`: `fresh` (cooked on the night, nothing on Sunday), `head` (marinade, coating or sauce on
   Sunday, cooked on the night), `sunday` (cooked and boxed on Sunday).
   A head-start dinner may set `sun: [rice or potatoes]` to have that cooked or par-boiled on Sunday, and may have an `H` step
@@ -135,6 +145,8 @@ Open items:
   are lunches and which are dinners. The brookie (skyr in place of banana) and the cheesecake bake time at 180°C are the least
   certain. Macros for the new ingredients are typical UK label values, not checked against Asda. The burrito lunches come out
   around 500 kcal for Blue, lighter than the rice-bowl lunches. Overnight oats is kept as a breakfast because Harriett likes them.
+- Portion weights for cooked mixtures (curries, ragù, fillings, bakes) are estimates that have not been weighed in a real prep.
+  Ask Blue how the batch weights compared and adjust `COOKED` in `data.js`.
 - Run-sheet task times need tuning after a real prep session. Ask Blue which steps ran long.
 - Screen-awake is unconfirmed on Harriett's iPhone.
 - Build the Asda basket from the shopping list when Blue asks.

@@ -1,6 +1,6 @@
 # Run from the folder that holds both repos:  python3 gym-bro/tests/app-check.py
 # Loads both apps in a headless browser and checks menus, shopping totals, recipe cards, the run sheet, sync and timers.
-import subprocess, time, json, random, sys, os, urllib.request
+import subprocess, time, json, random, sys, os, re, urllib.request
 from playwright.sync_api import sync_playwright
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 srv = subprocess.Popen(["python3", "-m", "http.server", "8765"], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -56,6 +56,13 @@ try:
                 tag = f"{app} run sheet ({cooks} cook, round {rounds})"; by = {x["id"]: x for x in st}
                 if len(by) != len(st): fail(f"{tag}: duplicate steps")
                 if any(st[i]["s"] > st[i + 1]["s"] + 1e-6 for i in range(len(st) - 1)): fail(f"{tag}: steps are not in time order")
+                # Portion sizes: every box-up says what goes in each person's portion, and every breading step says the size of each piece
+                for sid, txt in pg.eval_on_selector_all("[data-step]", "els=>els.map(e=>[e.dataset.step,e.innerText])"):
+                    if sid.startswith("P|"):
+                        rows = [l for l in txt.split("\n") if re.match(r"\s*(Each one|" + "|".join(D["HOUSE"]["people"][w]["name"] for w in D["HOUSE"]["order"]) + r")\b", l)]
+                        sized = [l for l in rows if re.search(r"\d+ (g|ml)\b|\d\S* (egg|wrap|slice)", l.split(")", 1)[-1] if not l.strip().startswith("Each one") else l)]
+                        if not rows or ("Each one" in txt and not any(l.strip().startswith("Each one") for l in sized)) or ("Each one" not in txt and len(sized) != len(rows)): fail(f"{tag}: box-up without portion sizes: {txt[:160]}")
+                    if sid.startswith("B|") and "Per portion" not in txt: fail(f"{tag}: breading step without the size of each piece: {txt[:120]}")
                 for x in st:
                     for n in x["needs"]:
                         if n not in by: fail(f"{tag}: {x['id']} needs {n}, which is not on the sheet")

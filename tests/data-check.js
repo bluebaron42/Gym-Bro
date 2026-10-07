@@ -16,6 +16,13 @@ Object.values(R).forEach((r) => {
   // Run sheet: explicit dependencies point backwards at real components; anything assembled has something to assemble.
   Object.keys(r.after || {}).forEach((ci) => { if (!r.comp[ci]) fail(r.id + ": after refers to a missing component " + ci); r.after[ci].forEach((j) => { if (!(j < ci) || !r.comp[j]) fail(r.id + ": after must point at an earlier component"); }); });
   (r.comp || []).forEach((c, ci) => { if (c[0] === "X" && /^Build/.test(c[1]) && !r.comp.slice(0, ci).some((x) => "LHSO".indexOf(x[0]) >= 0)) fail(r.id + ": '" + c[1] + "' has nothing cooked before it"); });
+  // Portions: every ingredient is either handled by a Sunday component or listed in rest, and every part that is a mixture has a name to be portioned by.
+  if (r.comp && r.comp.length) { const pt = D.parts(r), left = Object.keys(pt.rest).sort().join(", "), said = (r.rest || []).slice().sort().join(", ");
+    if (left !== said) fail(r.id + ": rest should list what no Sunday component handles (" + (left || "nothing") + "), but has " + (said || "nothing"));
+    const put = {}; pt.parts.forEach((p) => [p.items, p.marinade].forEach((m) => Object.keys(m).forEach((i) => { put[i] = (put[i] || 0) + m[i]; })));
+    r.ing.forEach(([i, g]) => { const tot = (put[i] || 0) + (pt.rest[i] || 0); if (tot > g * 1.03 + 0.3) fail(r.id + ": the parts use " + tot.toFixed(1) + " g " + i + " but the dish has " + g); if (tot < g * 0.96 - 0.5) fail(r.id + ": " + (g - tot).toFixed(1) + " g " + i + " is unaccounted for"); });
+    pt.parts.forEach((p) => { if ("VBMC".indexOf(p.kind) < 0 && !p.name) fail(r.id + ": a part has no name"); if (!Object.keys(p.items).length) fail(r.id + ": '" + (p.name || p.kind) + "' has nothing in it to portion"); }); }
+  else if (r.rest) fail(r.id + ": rest is only for dishes with Sunday components");
   // Seasoning lists: every item is a known shopping ingredient or cupboard item, and the ingredient list covers what the lists use.
   const strs = []; (r.comp || []).forEach((t) => { const s = t[SIDX[t[0]]]; if (typeof s === "string" && s) strs.push(s); }); (r.sea || []).forEach((g) => strs.push(g[1]));
   const need = {}, zest = {};
