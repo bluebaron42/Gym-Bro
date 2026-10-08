@@ -75,7 +75,7 @@ be in `CUPBOARD`. Methods carry no amounts.
 - Breakfasts are built in whole pieces and are on the run sheet for all seven days. `pieces: true` = small ones: `ing` is one piece
   and each person has `HOUSE.people[x].pieces` of them (Blue 2, Harriett 1), with no other scaling. `whole: [ingredients]` = big ones,
   one each: the bread stays whole and the filling follows the person's usual scales. `scFor(id, who)` in `index.html` applies both.
-  Shared parts (egg white sheet, patties, rashers, nacho cheese sauce, cheesecake batter) pool into one Sunday task by having the same label.
+  Shared parts (egg sheet, patties, rashers, nacho cheese sauce, cheesecake batter) pool into one Sunday task by having the same label.
 - `O`, `X`, `H` and `S` components may end with a list of ingredients whose weight the step shows (otherwise the main protein). An `H` label containing "one at a time"
   takes its minutes per portion.
 - **Portion sizes.** `parts(r)` in `data.js` folds a dish's Sunday components into the parts that get portioned (a marinade into

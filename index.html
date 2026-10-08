@@ -339,7 +339,7 @@ const lots=sc=>sc.flat||(sc.p+sc.c)/2;
 // small ones are a set number of pieces each, big ones keep the bread whole and scale only the filling.
 function scFor(id,who){const r=RECIPES[id],pe=person(who||ME);if(r&&r.pieces)return {flat:pe.pieces||1};return r&&r.whole?Object.assign({},pe.scales,{whole:r.whole}):pe.scales}
 function scaleOf(i,sc){const n=ING[i];sc=sc||person(ME).scales;if(sc.flat)return sc.flat;if(sc.whole&&sc.whole.indexOf(i)>=0)return 1;if(!n||n[8]==="fixed")return 1;if(n[8]==="aroma")return lots(sc);return sc[CAT[n[1]]]!=null?sc[CAT[n[1]]]:1}
-const LIQUID={"orange-juice":1,"milk":1,"skimmed-milk":1,"egg-whites":1,"coffee":1};
+const LIQUID={"orange-juice":1,"milk":1,"skimmed-milk":1,"coffee":1};
 const AISLES=["Protein","Carbs","Dairy and eggs","Fruit and veg","Sauces and cupboard"];
 const SLOTNAME={breakfast:"Breakfast",shake:"Morning shake",lunch:"Lunch",dinner:"Dinner",snack:"Treat"};
 const macroCache={};
@@ -429,9 +429,9 @@ function runSheet(nCooks){
   const list=a=>{a=[...new Set(a)];return a.length<3?a.join(" and "):a.slice(0,-1).join(", ")+" and "+a[a.length-1]};
   const lower=id=>ING[id]?ING[id][0].toLowerCase():id;
   const mins=m=>m<60?m+" min":Math.floor(m/60)+" h"+(m%60?" "+(m%60)+" min":"");
-  const SHORT={"jasmine-rice":"jasmine or basmati rice",pasta:"pasta",penne:"penne","rice-noodles":"rice noodles","chicken-thigh":"chicken thigh","beef-mince":"beef mince","lamb-mince":"lamb mince","turkey-mince":"turkey mince",steak:"sirloin steak","turkey-rashers":"turkey rashers",tuna:"drained tuna",prawns:"king prawns",eggs:"egg","egg-whites":"egg whites","greek-yog":"Greek yoghurt",broccoli:"broccoli",greens:"pak choi or greens",edamame:"edamame",peas:"peas",berries:"berries",corn:"sweetcorn","kidney-beans":"kidney beans",brioche:"brioche bun",wrap:"wrap","mini-wrap":"mini wrap","english-muffin":"English muffin","thin-bagel":"thin bagel","sub-roll":"sub roll","pizza-base":"pizza base",mozzarella:"mozzarella",cheddar:"cheddar","cheese-slice":"cheese slice",jalapenos:"pickled jalapeños",oreo:"Oreo"};
+  const SHORT={"jasmine-rice":"jasmine or basmati rice",pasta:"pasta",penne:"penne","rice-noodles":"rice noodles","chicken-thigh":"chicken thigh","beef-mince":"beef mince","lamb-mince":"lamb mince","turkey-mince":"turkey mince",steak:"sirloin steak","turkey-rashers":"turkey rashers",tuna:"drained tuna",prawns:"king prawns",eggs:"egg","greek-yog":"Greek yoghurt",broccoli:"broccoli",greens:"pak choi or greens",edamame:"edamame",peas:"peas",berries:"berries",corn:"sweetcorn","kidney-beans":"kidney beans",brioche:"brioche bun",wrap:"wrap","mini-wrap":"mini wrap","english-muffin":"English muffin","thin-bagel":"thin bagel","sub-roll":"sub roll","pizza-base":"pizza base",mozzarella:"mozzarella",cheddar:"cheddar","cheese-slice":"cheese slice",jalapenos:"pickled jalapeños",oreo:"Oreo"};
   const sname=i=>SHORT[i]||ING[i][0].replace(/\s*\(.*\)/,"").split(",")[0].toLowerCase();
-  // One amount, as it is counted or weighed: "2 wraps", "60 ml egg whites", "200 g chicken breast".
+  // One amount, as it is counted or weighed: "2 wraps", "150 ml milk", "200 g chicken breast".
   const qty=(i,g)=>{const n=ING[i];if(n[6]){const c=Math.max(.5,Math.round(g/n[6]*2)/2),u=singular(n[7]||""),own=sname(i).toLowerCase().indexOf(u)>=0,nm=own?sname(i).replace(/s$/,""):u;return (c+"").replace(/\.5$/,"½").replace(/^0½/,"½")+" "+nm+(c>1?"s":"")+(own?"":" of "+sname(i))}
     return roundG(g)+(LIQUID[i]?" ml ":" g ")+sname(i)};
   const amt=p=>Object.keys(p).filter(i=>p[i]>0).map(i=>ING[i][6]?qty(i,p[i]):amount(i,p[i])+" "+lower(i)).join(" + ");
