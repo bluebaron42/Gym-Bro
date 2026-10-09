@@ -56,8 +56,13 @@ try:
                 tag = f"{app} run sheet ({cooks} cook, round {rounds})"; by = {x["id"]: x for x in st}
                 if len(by) != len(st): fail(f"{tag}: duplicate steps")
                 if any(st[i]["s"] > st[i + 1]["s"] + 1e-6 for i in range(len(st) - 1)): fail(f"{tag}: steps are not in time order")
+                # Cooking together, each phone shows only its owner's jobs (the rest are hidden, not removed)
+                role = "chef" if me == D["HOUSE"]["prep"]["chef"] else "helper"
+                vis = pg.eval_on_selector_all("[data-step]:not([hidden])", "els=>els.map(e=>e.dataset.by)")
+                if cooks == "2" and (not vis or any(b != role for b in vis)) and any(x["who"] == role for x in st): fail(f"{tag}: the run sheet shows jobs that are not this phone's")
+                if cooks == "1" and len(vis) != len(st): fail(f"{tag}: one cook should see every step")
                 # Portion sizes: every box-up says what goes in each person's portion, and every breading step says the size of each piece
-                for sid, txt in pg.eval_on_selector_all("[data-step]", "els=>els.map(e=>[e.dataset.step,e.innerText])"):
+                for sid, txt in pg.eval_on_selector_all("[data-step]", "els=>els.map(e=>[e.dataset.step,e.innerHTML.replace(/<br>/g,'\\n').replace(/<[^>]+>/g,'')])"):
                     if sid.startswith("P|"):
                         rows = [l for l in txt.split("\n") if re.match(r"\s*(Each one|" + "|".join(D["HOUSE"]["people"][w]["name"] for w in D["HOUSE"]["order"]) + r")\b", l)]
                         sized = [l for l in rows if re.search(r"\d+ (g|ml)\b|\d\S* (egg|wrap|slice)", l.split(")", 1)[-1] if not l.strip().startswith("Each one") else l)]

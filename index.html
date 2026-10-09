@@ -74,6 +74,7 @@ h2.sec{font-family:var(--display);font-weight:700;font-size:22px;text-transform:
 .rs-h i.who-helper{background:var(--accent-soft);color:var(--accent)}
 .rs-h em{font-style:normal;font-size:12px;color:var(--muted);margin-left:auto}
 .rs-ready{display:block;font-size:12.5px;font-weight:600;color:var(--ok)}
+.rs-wait{display:block;font-size:12.5px;font-weight:600;color:var(--warn)}
 .check.rs i{color:var(--muted)}
 .chip.dt-fresh{background:var(--ok-soft);color:var(--ok)}
 .chip.dt-head{background:var(--warn-soft);color:var(--warn)}
@@ -721,9 +722,13 @@ function renderFood(){
     (SL.cup.length?'<div><div class="eyebrow" style="margin-top:6px">Seasonings: tick what’s in the cupboard</div><p class="rest-note" style="margin:0 0 4px">Ticks here stay week to week and keep the item off your copied list.</p>'+SL.cup.map(c=>'<div class="check'+(pantry[c.key]?' on':'')+'" data-pantry="'+esc(c.key)+'" role="checkbox" tabindex="0" aria-checked="'+!!pantry[c.key]+'"><span class="box" aria-hidden="true" style="'+(pantry[c.key]?'background:var(--ok);border-color:var(--ok)':'')+'">✓</span><span><b class="num">'+esc(c.amt)+'</b> '+esc(c.name)+'</span></div>').join("")+'</div>':'');
   const nCooks=get("cooks",2), RS=runSheet(nCooks), roleName={chef:pname(HOUSE.prep.chef),helper:pname(HOUSE.prep.helper)};
   const hm=m=>m>=60?Math.floor(m/60)+' h'+(m%60?' '+(m%60)+' min':''):m+' min';
-  const prep=RS.steps.map(t=>{const key="r:"+t.id,on=!!shop[key];
-    return '<div class="check rs'+(on?' on':'')+'" data-shop="'+esc(key)+'" role="checkbox" tabindex="0" aria-checked="'+on+'" data-step="'+esc(t.id)+'" data-s="'+t.start+'" data-e="'+(t.end==null?t.start:t.end)+'" data-d="'+(t.done==null?t.start:t.done)+'" data-by="'+t.who+'" data-kit="'+(t.kit||"")+'" data-temp="'+(t.temp||"")+'" data-needs="'+esc(Object.keys(t.needs).join("~"))+'"'+(t.tm?' data-timer="'+t.tm+'" data-tl="'+esc((t.html.match(/<b>(.*?)<\/b>/)||["","Timer"])[1].replace(/<[^>]+>/g,""))+'"':'')+'>'+
-      '<span class="box" aria-hidden="true" style="'+(on?'background:var(--ok);border-color:var(--ok)':'')+'">✓</span><span><span class="rs-h"><b class="num">'+RS.cl(t.start)+'</b>'+(RS.cooks>1?'<i class="who-'+t.who+'">'+esc(roleName[t.who])+'</i>':'')+(t.a?'<em class="num">'+t.a+' min</em>':'')+'</span>'+t.html+(t.tm?'<span class="rs-timer">'+(get("timers",{})[key]?'Timer running':on?'':'Tick when it goes on to start a '+t.tm+' min timer')+'</span>':'')+'</span></div>'}).join("");
+  // Cooking together, each phone shows its owner's jobs; a job that waits on one of the other person's says so until it is ticked.
+  const myRole=ME===HOUSE.prep.chef?"chef":"helper",split=RS.cooks>1,mineOnly=split&&!get("rsall",false);
+  const byId={},title=t=>(t.html.match(/<b>(.*?)<\/b>/)||["",""])[1].replace(/<[^>]+>/g,"");RS.steps.forEach(t=>{byId[t.id]=t});
+  const prep=RS.steps.map(t=>{const key="r:"+t.id,on=!!shop[key],hide=mineOnly&&t.who!==myRole;
+    const wait=mineOnly&&!on&&!hide?Object.keys(t.needs).map(n=>byId[n]).filter(x=>x&&x.who!==myRole&&!shop["r:"+x.id]).map(title):[];
+    return '<div class="check rs'+(on?' on':'')+'"'+(hide?' hidden':'')+' data-shop="'+esc(key)+'" role="checkbox" tabindex="0" aria-checked="'+on+'" data-step="'+esc(t.id)+'" data-s="'+t.start+'" data-e="'+(t.end==null?t.start:t.end)+'" data-d="'+(t.done==null?t.start:t.done)+'" data-by="'+t.who+'" data-kit="'+(t.kit||"")+'" data-temp="'+(t.temp||"")+'" data-needs="'+esc(Object.keys(t.needs).join("~"))+'"'+(t.tm?' data-timer="'+t.tm+'" data-tl="'+esc((t.html.match(/<b>(.*?)<\/b>/)||["","Timer"])[1].replace(/<[^>]+>/g,""))+'"':'')+'>'+
+      '<span class="box" aria-hidden="true" style="'+(on?'background:var(--ok);border-color:var(--ok)':'')+'">✓</span><span><span class="rs-h"><b class="num">'+RS.cl(t.start)+'</b>'+(RS.cooks>1?'<i class="who-'+t.who+'">'+esc(roleName[t.who])+'</i>':'')+(t.a?'<em class="num">'+t.a+' min</em>':'')+'</span>'+t.html+(wait.length?'<span class="rs-wait">Waits for '+esc(roleName[myRole==="chef"?"helper":"chef"])+': '+esc(wait.join("; "))+'</span>':'')+(t.tm?'<span class="rs-timer">'+(get("timers",{})[key]?'Timer running':on?'':'Tick when it goes on to start a '+t.tm+' min timer')+'</span>':'')+'</span></div>'}).join("");
   const isNext=viewWk===NEXT_MONDAY, planned=!!allMenus()[viewWk];
   const seg=(attr,cur,opts)=>'<div class="seg wide" role="group">'+opts.map(o=>'<button type="button" data-'+attr+'="'+o[0]+'" aria-pressed="'+(cur===o[0])+'">'+esc(o[1])+'</button>').join("")+'</div>';
   const lunchN=w=>new Set([1,2,3,4,5,6].map(d=>choice("lunch",d,w))).size, treatN=new Set(ORDER.map(d=>choice("snack",d)).filter(id=>RECIPES[id].comp)).size;
@@ -736,7 +741,7 @@ function renderFood(){
     '<h2 class="sec">Recipes</h2>'+lib+
     '<h2 class="sec">Shopping list</h2><section class="card">'+seg("sv",shopView,[["house","Household"],[ME,"Just me"],[OTHER,"Just "+pname(OTHER)]])+'<p class="rest-note"><b>'+weekRange(viewWk)+'.</b> '+(shopView==="house"?'Everything both of you eat this week, at each person’s portions.':shopView===ME?'Only your portions.':'Only '+esc(poss(OTHER))+' portions.')+' Weights include an allowance for peel and trim; pack counts are a guide.</p><div class="data-btns"><button type="button" class="btn small" id="shop-copy">Copy shopping list</button></div><p class="rest-note" id="shop-msg" aria-live="polite"></p>'+lists+'</section>'+
     '<h2 class="sec">Sunday run sheet'+(viewWk===THIS_MONDAY?'':' for next week')+'</h2><section class="card">'+(RS.steps.length?
-      '<div class="prep-est"><b>About '+hm(RS.total)+'</b><span>start to finish with '+(RS.cooks>1?'two of you':'one cook')+', for Monday '+fmtDate(viewWk)+' to Saturday</span></div>'+seg("cooks",String(nCooks),[["2","Two of us"],["1","One cook"]])+
+      '<div class="prep-est"><b>About '+hm(RS.total)+'</b><span>start to finish with '+(RS.cooks>1?'two of you':'one cook')+', for Monday '+fmtDate(viewWk)+' to Saturday</span></div>'+seg("cooks",String(nCooks),[["2","Two of us"],["1","One cook"]])+(split?seg("rsv",mineOnly?"mine":"all",[["mine","My jobs"],["all","Both of us"]]):'')+
       '<p class="rest-note">Work down the list. Times count from when you start; each step shows who does it and the hands-on minutes. Ticking an oven or hob step starts its timer on both phones. It covers both your lunches, the treats, and head start or Sunday batch dinners, and rebuilds whenever you swap a meal.</p>'+prep+
       '<p class="rest-note"><b>Cooling and storing:</b> spread rice, noodles and pasta on trays and get them boxed and chilled within 1 hour, everything else within 90 minutes. Lids on only once cold. Label every box and bag with the day. Each night, move the next day’s freezer boxes to the fridge, and reheat cooked food until piping hot.</p>'
       :'<p class="empty">Nothing to prep for this menu: every dinner is cook-fresh and the lunches and treats need no Sunday work.</p>')+
@@ -1072,6 +1077,8 @@ $("#view").addEventListener("click",async ev=>{
   if(wb){foodWk=wb.dataset.wk;render();return}
   const whb=ev.target.closest("[data-who]:not([data-recipe]):not([data-swap])");
   if(whb){keep(()=>{menuWho=whb.dataset.who});return}
+  const rsv=ev.target.closest("[data-rsv]");
+  if(rsv){keep(()=>save("rsall",rsv.dataset.rsv==="all"));return}
   const ckb=ev.target.closest("[data-cooks]");
   if(ckb){keep(()=>{const n=Number(ckb.dataset.cooks);save("cooks",n);syncPush({c:n+"@"+Date.now()})});return}
   const svb=ev.target.closest("[data-sv]");

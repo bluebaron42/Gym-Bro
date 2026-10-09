@@ -101,7 +101,9 @@ checklist whose ticks persist.
 
 **Sunday run sheet** (`runSheet` in `index.html`): turns every Sunday component of the chosen dishes into tasks with
 hands-on minutes, unattended minutes, kit and dependencies, then schedules them on one or two cooks. Kit limits are
-two oven trays at one temperature, four hob rings, one Instant Pot. The oven runs at 180°C or 200°C only. Dependencies
+two oven trays at one temperature, four hob rings, one Instant Pot. With two cooks, each phone shows only its owner's jobs (Blue is
+`HOUSE.prep.chef`, Harriett the helper; the others are rendered but hidden), a "Both of us" switch shows everything (`rsall`,
+per phone, not synced), and a job that depends on one of the other person's unticked jobs says "Waits for <name>: <job>". The oven runs at 180°C or 200°C only. Dependencies
 are derived from component order by kind; `after` on a recipe adds exceptions. Task durations are estimates that have
 not been measured in a real prep session.
 
