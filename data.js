@@ -252,7 +252,7 @@ window.BB_DATA = (function () {
     }
   };
   // The menu a new week starts from (0 = Sunday).
-  const DEFAULTS = {"dinner":{"0":"d-meatballs", "1":"d-ragu", "2":"d-smash", "3":"d-fried-rice", "4":"d-peri-peri", "5":"d-bigmac", "6":"d-carbonara"},"snack":{"0":"s-bark", "1":"s-brownie", "2":"s-brownie", "3":"s-brownie", "4":"s-brownie", "5":"s-bark", "6":"s-bark"},"lunch":{"blue":{"0":"l-tuna-poke", "1":"l-teriyaki", "2":"l-teriyaki", "3":"l-teriyaki", "4":"l-ragu-box", "5":"l-ragu-box", "6":"l-ragu-box"},"harriett":{"0":"l-spicy-tuna-salad", "1":"l-shawarma", "2":"l-shawarma", "3":"l-shawarma", "4":"l-green-curry", "5":"l-green-curry", "6":"l-green-curry"}},"breakfast":{"blue":{"0":"bf-weetabix", "1":"bf-mcbuffin", "2":"bf-mcbuffin", "3":"bf-mcbuffin", "4":"bf-bagel", "5":"bf-bagel", "6":"bf-bagel"},"harriett":{"0":"bf-weetabix", "1":"bf-mcbuffin", "2":"bf-mcbuffin", "3":"bf-mcbuffin", "4":"bf-bagel", "5":"bf-bagel", "6":"bf-bagel"}},"shake":{"blue":{"0":"sh-strawberry", "1":"sh-choc-pb", "2":"sh-mocha", "3":"sh-strawberry", "4":"sh-berry-oat", "5":"sh-lassi", "6":"sh-choc-pb"},"harriett":{"0":"sh-strawberry", "1":"sh-choc-pb", "2":"sh-mocha", "3":"sh-strawberry", "4":"sh-berry-oat", "5":"sh-lassi", "6":"sh-choc-pb"}}};
+  const DEFAULTS = {"dinner":{"0":"d-meatballs", "1":"d-ragu", "2":"d-smash", "3":"d-fried-rice", "4":"d-peri-peri", "5":"d-bigmac", "6":"d-carbonara"},"snack":{"0":"s-bark", "1":"s-brownie", "2":"s-brownie", "3":"s-brownie", "4":"s-brownie", "5":"s-bark", "6":"s-bark"},"lunch":{"blue":{"0":"l-tuna-poke", "1":"l-teriyaki", "2":"l-teriyaki", "3":"l-teriyaki", "4":"l-ragu-box", "5":"l-ragu-box", "6":"l-ragu-box"},"harriett":{"0":"l-spicy-tuna-salad", "1":"l-shawarma", "2":"l-shawarma", "3":"l-shawarma", "4":"l-green-curry", "5":"l-green-curry", "6":"l-green-curry"}},"breakfast":{"blue":{"0":"bf-weetabix", "1":"bf-mcbuffin", "2":"bf-mcbuffin", "3":"bf-mcbuffin", "4":"bf-bagel", "5":"bf-bagel", "6":"bf-bagel"},"harriett":{"0":"bf-weetabix", "1":"bf-mcbuffin", "2":"bf-mcbuffin", "3":"bf-mcbuffin", "4":"bf-bagel", "5":"bf-bagel", "6":"bf-bagel"}},"shake":{"blue":{"0":"sh-strawberry", "1":"sh-cookies-cream", "2":"sh-mocha", "3":"sh-strawberry", "4":"sh-berry-oat", "5":"sh-lassi", "6":"sh-strawb-thick"},"harriett":{"0":"sh-strawberry", "1":"sh-cookies-cream", "2":"sh-mocha", "3":"sh-strawberry", "4":"sh-berry-oat", "5":"sh-lassi", "6":"sh-strawb-thick"}}};
 
   // One-off weeks that start from something other than DEFAULTS. Delete an entry once its week has passed
   // (tests/data-check.js fails when one is more than two weeks old).
@@ -262,7 +262,7 @@ window.BB_DATA = (function () {
     snack: {"1": "s-choc-mousse", "2": "s-brownie", "3": "s-cheesecake", "4": "s-bark", "5": "s-crumble", "6": "s-pbj", "0": "snack"},
     breakfast: {blue: {"1": "bf-weetabix", "2": "bf-weetabix", "3": "bf-weetabix", "4": "bf-weetabix", "5": "bf-weetabix", "6": "bf-weetabix", "0": "bf-weetabix"}, harriett: {"1": "bf-weetabix", "2": "bf-weetabix", "3": "bf-weetabix", "4": "bf-weetabix", "5": "bf-weetabix", "6": "bf-weetabix", "0": "bf-weetabix"}},
     lunch: {blue: {"1": "l-teriyaki", "2": "l-bulgogi", "3": "l-prawn-egg", "4": "l-spicy-salmon", "5": "l-shawarma", "6": "l-prawn-egg", "0": "l-tuna-poke"}},
-    shake: {blue: {"1": "sh-choc-pb", "2": "sh-mocha", "3": "sh-strawberry", "4": "sh-berry-oat", "5": "sh-lassi", "6": "sh-choc-pb", "0": "sh-strawberry"}}
+    shake: {blue: {"1": "sh-mocha", "2": "sh-mocha", "3": "sh-strawberry", "4": "sh-berry-oat", "5": "sh-lassi", "6": "sh-mocha", "0": "sh-strawberry"}}
   } };
 
   // Recipes: ing = grams per full portion. sea = [label, list] seasoning groups not covered by a Sunday component.
@@ -445,17 +445,14 @@ window.BB_DATA = (function () {
       finish: "One square, cold or warmed for 20 seconds. 1 min",
       comp: [["T", "Brookie batters", "Blitz the oats to flour, mix everything except the cocoa and chocolate, split in two and stir the cocoa into one half; marble both into a lined tin and press the chopped chocolate on top", "1 x egg; 15 g vanilla whey; 17 g peanut butter powder; 10 g oats; 20 g honey; 40 g skyr; 5 g cocoa; 8 g dark chocolate; 2 tsp milk; 1 pinch salt"],
         ["O",180,20,"Brookie, until just set; cool and cut into squares"]] },
-    { id: "s-scoreo", slot: "snack", name: "Cookies and cream thick shake", time: "4 min", tag: "Sweet",
+    { id: "sh-cookies-cream", slot: "shake", name: "Cookies and cream thick shake", time: "4 min", tag: "Shake",
       ing: [["whey",30], ["skyr",100], ["cocoa",10], ["honey",15], ["milk",100], ["oreo",22], ["squirty-cream",15]],
       sea: [["Thickener", "0.5 tsp xanthan gum"]],
-      method: ["Blend two big handfuls of ice to snow.", "Add the skyr, whey, half the cocoa, the honey, the xanthan gum and the milk and blend until it holds a spoon.", "Stir the rest of the cocoa with a splash of milk to a sauce.", "Top with the cream, the crushed Oreos and the cocoa sauce."] },
-    { id: "s-strawb-shake", slot: "snack", name: "Strawberry thick shake", time: "4 min", tag: "Sweet",
-      ing: [["whey",30], ["skyr",100], ["strawberries",90], ["milk",100], ["honey",10], ["squirty-cream",10]],
+      method: ["Blend two big handfuls of ice to snow.", "Add the skyr, whey, half the cocoa, the honey, the xanthan gum and the milk and blend until it holds a spoon.", "Stir the rest of the cocoa with a splash of milk to a sauce.", "Top with the cream, the crushed Oreos and the cocoa sauce.", "Stir in your 5 g creatine."] },
+    { id: "sh-strawb-thick", slot: "shake", name: "Strawberry thick shake", time: "4 min", tag: "Shake",
+      ing: [["whey",30], ["skyr",150], ["strawberries",150], ["milk",100], ["honey",15], ["squirty-cream",10]],
       sea: [["Thickener", "0.5 tsp xanthan gum"]],
-      method: ["Blend two big handfuls of ice to snow.", "Add the skyr, whey, frozen strawberries, honey, xanthan gum and milk and blend until it holds a spoon.", "Top with the cream."] },
-    { id: "sh-choc-pb", slot: "shake", name: "Chocolate peanut butter shake", time: "3 min", tag: "Shake",
-      ing: [["milk",300], ["skyr",150], ["whey",30], ["cocoa",10], ["peanut-butter",20], ["honey",10], ["dark-choc",5]],
-      method: ["Into the blender: milk, skyr, vanilla whey, cocoa, peanut butter, honey and a big handful of ice.", "Blend 30–40 seconds until thick and frothy; grate the dark chocolate on top.", "Stir in your 5 g creatine."] },
+      method: ["Blend two big handfuls of ice to snow.", "Add the skyr, whey, frozen strawberries, honey, xanthan gum and milk and blend until it holds a spoon.", "Top with the cream.", "Stir in your 5 g creatine."] },
     { id: "sh-strawberry", slot: "shake", name: "Berry cheesecake shake", time: "3 min", tag: "Shake",
       ing: [["greek-yog",200], ["milk",200], ["berries",150], ["cream-cheese",20], ["digestives",15], ["honey",10]],
       sea: [["Flavouring", "0.25 tsp vanilla extract"]],
