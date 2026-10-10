@@ -130,7 +130,8 @@ not been measured in a real prep session.
 Run-sheet wording (rewritten 10 Oct 2026 because Harriett often helps and couldn't tell what each sauce was for): every
 step is written for someone who has not cooked it before. Each starts with its name and a "for <dish>" line, then
 Kit, Weigh out, Take (what it picks up from earlier steps), Do, Done when (meat: no pink, 75°C), Then (the labelled bowl,
-tub or bag it goes in, and "Used in" the later steps that use it), Check (batch weight) and Per portion. Shared veg is cut
+tub or bag it goes in, and "Used in" the later steps that use it), Check (batch weight), and Make or Portions: every size
+to make with how many of it ("3 × 40 g turkey mince (Harriett, Classic breakfast burrito)"), counted from the boxes (`cnt`). Shared veg is cut
 into one labelled bowl per dish ("Onion – Lean beef lasagne"), and the cooking step takes that bowl. "Uses" is decided by
 `eats(t, s)` in `runSheet`, not by the scheduler's dependencies (which also order steps that don't use each other): the meat
 a marinade holds goes to the oven step that cooks it, a veg bowl goes to the step whose wording names it, a sauce or part

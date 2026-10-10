@@ -68,7 +68,7 @@ try:
                         rows = [l for l in txt.split("\n") if re.match(r"\s*(Each one|" + "|".join(D["HOUSE"]["people"][w]["name"] for w in D["HOUSE"]["order"]) + r")\b", l)]
                         sized = [l for l in rows if re.search(r"\d+ (g|ml)\b|\d\S* (egg|wrap|slice)", l.split(")", 1)[-1] if not l.strip().startswith("Each one") else l)]
                         if not rows or ("Each one" in txt and not any(l.strip().startswith("Each one") for l in sized)) or ("Each one" not in txt and len(sized) != len(rows)): fail(f"{tag}: box-up without portion sizes: {txt[:160]}")
-                    if sid.startswith("B|") and "Per portion" not in txt: fail(f"{tag}: breading step without the size of each piece: {txt[:120]}")
+                    if sid.startswith("B|") and not re.search(r"Make:\n• \d+ × ", txt): fail(f"{tag}: breading step without how many pieces of what size: {txt[:120]}")
                     # Written for someone who has not cooked it before: no chef shorthand, and every step says what it is for or where it goes
                     m = VAGUE.search(txt)
                     if m: fail(f"{tag}: unclear wording '{m.group(0)}' in: {txt[:120]}")

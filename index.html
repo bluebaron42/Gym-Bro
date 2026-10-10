@@ -470,7 +470,9 @@ function runSheet(nCooks){
   Object.keys(use).forEach(id=>{const r=RECIPES[id],u=use[id],comps=r.comp||[],ids=[],nd=FD.needs(r),pt=FD.parts(r);
     // Portion sizes are per person; a dish built in pieces is the same for everyone, so it is worked out once.
     const eaters=r.pieces?[{who:"each",sc:{flat:1}}]:HOUSE.order.filter(w=>u.boxes.some(b=>b.who===w)).map(w=>({who:w,sc:scFor(id,w)}));
-    const por=(o,t)=>{const m=o.por[r.name]=o.por[r.name]||{},g=FD.weighs(r,t);eaters.forEach(e=>{const x=m[e.who]=m[e.who]||{};Object.keys(g).forEach(i=>{x[i]=g[i]*scaleOf(i,e.sc)})})};
+    // How many of each size get made: pieces for everyone, otherwise one per box for each person.
+    const cnt={};if(r.pieces)cnt.each=u.boxes.reduce((a,b)=>a+(person(b.who).pieces||1),0);else u.boxes.forEach(b=>{cnt[b.who]=(cnt[b.who]||0)+1});
+    const por=(o,t)=>{const m=o.por[r.name]=o.por[r.name]||{},g=FD.weighs(r,t);(o.cnt=o.cnt||{})[r.name]=cnt;eaters.forEach(e=>{const x=m[e.who]=m[e.who]||{};Object.keys(g).forEach(i=>{x[i]=g[i]*scaleOf(i,e.sc)})})};
     const showAll=(o,t,sc)=>{const g=FD.weighs(r,t);Object.keys(g).forEach(i=>{o.p[i]=(o.p[i]||0)+g[i]*scaleOf(i,sc)})};
     // Potatoes are cut as chips, or as cubes where the dish roasts cubes.
     const cids=FD.carbs(r).map(i=>{const c=task("C|"+i,{kind:"C",ing:i,g:0,vin:0,forms:{}}),form=comps.some(t=>t[0]==="O"&&/^Potato cubes/.test(t[3]))?"cubes":"chips";
@@ -496,7 +498,7 @@ function runSheet(nCooks){
     // The step that finishes a cooked part says roughly what the whole batch should weigh, as a check before portioning.
     pt.parts.forEach(p=>{if(p.ci<0||!p.heat)return;const o=T[ids[p.ci]];u.scs.forEach(sc=>{o.tot=(o.tot||0)+FD.portion(p,i=>scaleOf(i,sc),lots(sc)).w})});
     // A dish with no box-up step (treats, overnight oats) says its portion sizes on the step that finishes each part.
-    if(!comps.some(t=>t[0]==="P"))pt.parts.forEach(p=>{if(p.ci<0)return;const m=T[ids[p.ci]].out[r.name]={};eaters.forEach(e=>{m[e.who]=FD.portion(p,i=>scaleOf(i,e.sc),lots(e.sc)).w})})});
+    if(!comps.some(t=>t[0]==="P"))pt.parts.forEach(p=>{if(p.ci<0)return;const m=T[ids[p.ci]].out[r.name]={};(T[ids[p.ci]].cnt=T[ids[p.ci]].cnt||{})[r.name]=cnt;eaters.forEach(e=>{m[e.who]=FD.portion(p,i=>scaleOf(i,e.sc),lots(e.sc)).w})})});
   // ---- 2. time, kit and wording for each task
   // Every step is written for someone who has not cooked it before: what it is for, what to weigh out, what to do, how to
   // tell it is done, and where it goes next (a labelled bowl, pot or tray, and which later step uses it).
@@ -578,10 +580,6 @@ function runSheet(nCooks){
     // What no prep step handles goes in too, so the box is complete; a head-start bag holds only what was prepped.
     const also=r.type==="head"?[]:Object.keys(pt.rest).filter(i=>i!=="olive-oil"&&i!=="sesame-oil"&&ING[i][8]!=="aroma").map(i=>{const g=pt.rest[i]*scaleOf(i,sc);return FD.CARB_YIELD[i]?roundG(g)+" g dry "+sname(i)+" (cook on the day)":qty(i,g)});
     return a.join(", ")+(also.length?(a.length?". Also: ":"")+also.join(", "):"")};
-  // "Per portion" wording: one size if everyone's is the same, otherwise by person, and by dish when a step serves several.
-  const same=a=>a.every(x=>x===a[0]);
-  const perText=(m,fmt)=>{const one=d=>{const ws=Object.keys(m[d]),ss=ws.map(w=>fmt(m[d][w]));return ws[0]==="each"||(ws.length>1&&same(ss))?ss[0]+" each":ws.map((w,j)=>pname(w)+" "+ss[j]).join(", ")};
-    const ds=Object.keys(m),ts=ds.map(one);return same(ts)?ts[0]:ds.map((d,j)=>d+": "+ts[j]).join("; ")};
   const riceName=(id,w)=>{const r=RECIPES[id];const has=k=>r.ing.some(x=>x[0]===k);const nm=has("sushi-rice")?"sushi rice":has("jasmine-rice")?"jasmine or basmati rice":null;
     return nm?w.replace(/(^|, |; |and )(seasoned |lime |spicy )?rice\b(?! noodles)/g,(m,a,b)=>a+(b||"")+nm):w};
   const dayRun=ds=>{ds=ds.slice().sort((a,b)=>a-b);const out=[];let i=0;while(i<ds.length){let j=i;while(j+1<ds.length&&ds[j+1]===ds[j]+1)j++;out.push(j>i+1?DNAME[ds[i]%7]+" to "+DNAME[ds[j]%7]:ds.slice(i,j+1).map(d=>DNAME[d%7]).join(", "));i=j+1}return out.join(", ")};
@@ -622,8 +620,10 @@ function runSheet(nCooks){
     // Sizes on the step itself: what each piece weighs where pieces are shaped, and what a portion is where nothing gets boxed.
     const pq=x=>Object.keys(x).map(i=>qty(i,x[i])).join(" + ");
     if(o.tot)o.html+=line("Check","the whole batch should weigh about "+(o.tot>=1000?(Math.round(o.tot/50)/20).toFixed(2).replace(/0$/,"")+" kg":roundG(o.tot)+" g")+".");
-    if(Object.keys(o.por).length)o.html+=line("Per portion",perText(o.por,pq)+".");
-    if(Object.keys(o.out).length)o.html+=line("Per portion",perText(o.out,v=>"about "+roundG(v)+" g")+".")});
+    // Every size to make, with how many of it: "4 × 70 g turkey mince (Spicy McBuffins)".
+    const make=(m,fmt)=>Object.keys(m).map(d=>Object.keys(m[d]).map(w=>"<br>• "+((o.cnt||{})[d]||{})[w]+" × "+fmt(m[d][w])+(w!=="each"||o.d.length>1?" ("+[w==="each"?"":pname(w),o.d.length>1?d:""].filter(Boolean).join(", ")+")":"")).join("")).join("");
+    if(Object.keys(o.por).length)o.html+="<br><b>Make:</b>"+make(o.por,pq);
+    if(Object.keys(o.out).length)o.html+="<br><b>Portions:</b>"+make(o.out,v=>"about "+roundG(v)+" g")});
   // ---- 3. schedule
   const ids=Object.keys(T),kids={},tail={};ids.forEach(i=>Object.keys(T[i].needs).forEach(n=>{(kids[n]=kids[n]||[]).push(i)}));
   const tl=i=>tail[i]!=null?tail[i]:(tail[i]=T[i].a+T[i].w+Math.max(0,...(kids[i]||[]).map(tl)));
