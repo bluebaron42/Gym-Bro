@@ -170,7 +170,8 @@ body.has-kt main{padding-bottom:132px}
 .data-btns{display:flex;flex-wrap:wrap;gap:8px}
 #q-msg:empty,#sh-msg:empty,#shop-msg:empty,#m-msg:empty{display:none}
 .missed{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:8px}
-.missed summary{cursor:pointer;font-weight:600;color:var(--accent);font-size:14px}
+.missed summary,.catchup summary{cursor:pointer;font-weight:600;color:var(--accent);font-size:14px}
+.catchup{margin-top:8px}
 .missed[open] summary{margin-bottom:8px}
 .pl{margin:4px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:5px;font-size:13.5px;color:var(--fg);font-weight:400}
 .pl li b{font-weight:700}
@@ -797,14 +798,24 @@ function mealsBlock(dow,interactive){
   return '<section class="card">'+meters+'<div>'+rows+'</div><p class="rest-note num">This menu: '+fmtN(tot.k)+' kcal · '+tot.p+' g protein. Sunday so far: '+fmtN(openDay().k)+' kcal. Tap a meal for its recipe.'+(phase().mealNote?' '+esc(phase().mealNote):'')+'</p></section>';
 }
 
+// ---------- Catching up a missed session ----------
+// A session this week is missed if fewer than half its exercises have a ticked set since its day (gym or home).
+// Today can show one missed session instead of its own; sets save under today's date. The choice is per phone, for today only.
+function missedDays(){const mon=parse(THIS_MONDAY);return ORDER.filter(d=>{const D=DAYS[d];if(D.rest||!D.ex)return false;const x=new Date(mon);x.setDate(x.getDate()+(d+6)%7);const day=iso(x);if(day>=TODAY)return false;
+  const done=D.ex.filter(e=>["gym","home"].some(m=>(get("ex-"+e[0]+"-"+m,{h:[]}).h||[]).some(en=>en.d>=day&&en.d<=TODAY&&en.sets.some(st=>st.done)))).length;return done*2<D.ex.length}).reverse()}
+function sessionToday(){const dow=new Date().getDay(),sw=get("swapday",{});return sw.d===TODAY&&DAYS[sw.day]&&!DAYS[sw.day].rest&&sw.day!==dow?sw.day:dow}
+function catchButtons(list){return list.map(d=>'<button type="button" class="btn small" data-catch="'+d+'">Catch up: '+esc(DFULL[d])+', '+esc(DAYS[d].title)+'</button>').join("")}
 function renderToday(){
-  const dow=new Date().getDay(), D=DAYS[dow];
-  let h='<div><div class="eyebrow">'+DFULL[dow]+' · '+fmtDate(TODAY)+'</div><h1 class="day">'+esc(D.title)+'</h1><p class="lead">'+esc(D.focus)+'</p></div>';
+  const dow=new Date().getDay(),plan=sessionToday(),D=DAYS[plan],swapped=plan!==dow,missed=swapped?[]:missedDays();
+  let h='<div><div class="eyebrow">'+DFULL[dow]+' · '+fmtDate(TODAY)+(swapped?' · catching up '+DFULL[plan]+'’s session':'')+'</div><h1 class="day">'+esc(D.title)+'</h1><p class="lead">'+esc(D.focus)+'</p>'+
+    (swapped?'<button type="button" class="btn ghost small" data-catch="">Back to '+(DAYS[dow].rest?'a rest day':'today’s session: '+esc(DAYS[dow].title))+'</button>':
+     !D.rest&&missed.length?'<details class="catchup"><summary>Do a missed session instead</summary><div class="data-btns">'+catchButtons(missed)+'</div></details>':'')+'</div>';
   if(P.banner&&P.banner.weeks.indexOf(weekNo())>=0){h+='<div class="banner">'+P.banner.text+'</div>'}
   h+=weighInCard()+suppCard();
   if(D.rest){
     const nx=ORDER[(ORDER.indexOf(dow)+1)%7];
-    h+='<section class="card rest-card"><h3 style="margin:0">Rest day</h3><p class="empty">Walk 8–10k steps and sleep 7–9 hours. Recovery is when the muscle is built.</p><p class="empty">Tomorrow: <b>'+esc(DAYS[nx].title)+'</b>.</p>'+'</section>';
+    h+='<section class="card rest-card"><h3 style="margin:0">Rest day</h3><p class="empty">Walk 8–10k steps and sleep 7–9 hours. Recovery is when the muscle is built.</p><p class="empty">Tomorrow: <b>'+esc(DAYS[nx].title)+'</b>.</p>'+
+      (missed.length?'<p style="margin:0">Missed a session this week? Do it today instead of resting:</p><div class="data-btns">'+catchButtons(missed)+'</div>':'')+'</section>';
   } else {
     h+='<p class="rest-note">'+(mode()==="home"?"Home version: slow the lowering to 3 seconds and finish each set close to failure. Heavy strength work needs the gym.":"Warm up 5 minutes, then build up to your heavy lift over 3–4 lighter sets. Tap Form guide on any exercise for cues and videos.")+' Tick a set to start its rest timer.</p>';
     h+=D.ex.map(exerciseCard).join("");
@@ -1070,6 +1081,7 @@ $("#view").addEventListener("click",ev=>{
   const mb=ev.target.closest("[data-meal]");
   if(mb){let md=get("meals",{d:TODAY,t:{}});if(md.d!==TODAY)md={d:TODAY,t:{}};md={d:TODAY,t:Object.assign({},md.t)};md.t[mb.dataset.meal]=!md.t[mb.dataset.meal];save("meals",md);logMeals(md);const y=window.scrollY;render();window.scrollTo(0,y);return}
   const dy=ev.target.closest("[data-day]"); if(dy){weekSel=Number(dy.dataset.day);render();return}
+  const cu=ev.target.closest("[data-catch]"); if(cu){save("swapday",cu.dataset.catch===""?{}:{d:TODAY,day:Number(cu.dataset.catch)});render();window.scrollTo(0,0);return}
   const sh=ev.target.closest("[data-shop]"); if(sh){toggleShop(sh.dataset.shop,sh);return}
   if(ev.target.id==="clear-shop"){const b=ev.target;if(b.dataset.armed){const o={},now=Date.now();const lk=shopState().t.lock;Object.keys(shopState().t).filter(k=>k!=="lock").forEach(k=>{o["s/"+viewWk+"/"+enc(k)]=-now});saveShop({t:lk?{lock:true}:{}});syncPush(o);render()}else{b.dataset.armed="1";b.textContent="Tap again to clear all ticks";setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.textContent="Clear ticks now"}},4000)}return}
   if(ev.target.id==="p-save"){const d=$("#p-date").value||TODAY,wa=$("#p-waist").value;

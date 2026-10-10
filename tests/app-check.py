@@ -140,6 +140,22 @@ try:
     pg.click('[data-tab="food"]')
     if "Open day" not in pg.inner_text("#view") or pg.query_selector('#view [data-dow="0"]'): fail("open day: the Food tab plans Sunday")
     if er: fail(f"open day: page errors {er}")
+    # Catching up: on Sunday, the week's missed sessions are offered; one replaces the rest day, logs under Sunday's date,
+    # and once done it is no longer offered
+    pg = b.new_context(service_workers="block").new_page(); er = []; pg.on("pageerror", lambda e: er.append(str(e))); pg.clock.install(time="2026-10-11T10:00:00")
+    pg.goto("http://localhost:8765/gym-bro/index.html"); P = pg.evaluate("window.GB_PROFILE")
+    sat = [e[0] for e in P["days"]["6"]["ex"]]
+    if not pg.query_selector('[data-catch="6"]'): fail("catch-up: Sunday does not offer Saturday's missed session")
+    pg.click('[data-catch="6"]')
+    shown = pg.eval_on_selector_all(".excard .set", "els=>[...new Set(els.map(e=>e.dataset.id))]")
+    if shown != sat: fail(f"catch-up: Sunday shows {shown}, not Saturday's exercises {sat}")
+    for i in range(len(sat)):
+        row = pg.locator(f'.set[data-id="{sat[i]}"]').first; row.locator('[data-f="w"]').fill("20"); row.locator('[data-f="r"]').fill("8"); row.locator("[data-tick]").click()
+    h = json.loads(pg.evaluate(f"localStorage.getItem('banebuild:ex-{sat[0]}-gym')") or "{}").get("h", [])
+    if not any(x["d"] == "2026-10-11" for x in h): fail("catch-up: sets were not saved under the day they were done")
+    pg.click('[data-catch=""]')
+    if pg.query_selector('[data-catch="6"]') or not pg.query_selector(".rest-card"): fail("catch-up: Saturday is still offered after it was done, or the rest day did not come back")
+    if er: fail(f"catch-up: page errors {er}")
     # "Shopping ordered" keeps a week's amounts when the app's portions change later; undoing it lets them follow again
     ctx = b.new_context(service_workers="block"); pg = ctx.new_page(); er = []; pg.on("pageerror", lambda e: er.append(str(e))); pg.clock.install(time="2026-10-14T10:00:00")
     pg.goto("http://localhost:8765/gym-bro/index.html"); pg.click('[data-tab="food"]'); pg.click('[data-wk="2026-10-19"]')

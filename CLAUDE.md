@@ -173,6 +173,10 @@ Open items:
 - `PRESETS` in `data.js` pins the week of 5 Oct 2026 to what was already prepped (breakfast shows Weetabix, because the old egg and oat breakfasts were removed mid-week). Delete it after that week;
   `data-check.js` starts failing three weeks later as a reminder.
 - Blue cannot yet do a bodyweight pull-up, so his Monday slot is "Wide-grip lat pulldown" at his request. If he later wants pull-ups back, the weighted pull-up slot and guide are in git history before 6 Oct 2026, along with its line in `mainLifts`.
+- Catching up (10 Oct 2026): `missedDays()` finds this week's sessions with fewer than half their exercises ticked since their
+  day. A rest day offers them in place of resting, and a training day offers them under its title ("Do a missed session
+  instead"). The pick (`swapday`, per phone, today only) replaces Today's exercises; sets save under the actual date. One
+  session a day; earlier weeks are not carried over.
 - Training reviews happen when Blue asks for one (not on a schedule). Weights and exercises are both adjusted in the review, in conversation; he declined an automatic "drop the weight" prompt in the app, so do not build one. Read his record, and swap an exercise only when it is clearly not working: below the rep range two sessions running despite less weight, or he cannot do the movement. Swap to an easier version of the same movement using kit NRG has, change at most two exercises a week, and tell him what changed and why.
 - Review of 7 Oct 2026: Blue found the plan too many sets (about 110 a week) and prefers fewer, heavier sets. It was cut to about 74:
   no exercise above 3 sets, nothing above 15 reps in the gym, and cable fly, pec deck, upright row, sled push and Tuesday's neck work
