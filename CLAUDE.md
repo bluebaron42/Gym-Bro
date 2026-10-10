@@ -127,6 +127,20 @@ per phone, not synced), and a job that depends on one of the other person's unti
 are derived from component order by kind; `after` on a recipe adds exceptions. Task durations are estimates that have
 not been measured in a real prep session.
 
+Run-sheet wording (rewritten 10 Oct 2026 because Harriett often helps and couldn't tell what each sauce was for): every
+step is written for someone who has not cooked it before. Each starts with its name and a "for <dish>" line, then
+Kit, Weigh out, Take (what it picks up from earlier steps), Do, Done when (meat: no pink, 75°C), Then (the labelled bowl,
+tub or bag it goes in, and "Used in" the later steps that use it), Check (batch weight) and Per portion. Shared veg is cut
+into one labelled bowl per dish ("Onion – Lean beef lasagne"), and the cooking step takes that bowl. "Uses" is decided by
+`eats(t, s)` in `runSheet`, not by the scheduler's dependencies (which also order steps that don't use each other): the meat
+a marinade holds goes to the oven step that cooks it, a veg bowl goes to the step whose wording names it, a sauce or part
+goes to the step whose wording mentions it, and a box-up takes only its dish's finished parts (`P.src`). Garlic is measured
+in teaspoons of purée (a teaspoon a clove), lemon and lime in teaspoons of juice or zest, part-eggs as grams of beaten egg,
+and steps that use them say which Aromatics bowl to take from. Potatoes are cut as chips (1 cm) or, for dishes that roast
+cubes, 2 cm cubes, all par-boiled together. Meat that is sliced thin later gets a "Freezer" step at the start. Oven labels in
+`data.js` read "Name: what to do". Both checks fail on chef shorthand (brown hard, sear hard, rest, glossy, until just,
+a little oil, a splash, blitz, caramelise, natural release) in prep components or on the run sheet, so keep new wording plain.
+
 **Kitchen kit**: fan oven, four induction rings, Instant Pot (pressure, steam, rice, small air fryer), microwave, blender.
 
 **Sync**: Firebase Realtime Database over plain REST and `EventSource`, no SDK. Address in `SYNC_URL`. Data sits under

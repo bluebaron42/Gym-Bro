@@ -17,6 +17,7 @@ def allowed(D, rid, slot, dow, who):
     if r.get("kind") and any(r["kind"] in H["people"][w]["skip"] for w in eat): return False
     return not (slot == "lunch" and dow >= 3 and r.get("late") == "no")
 SLOTS = ["breakfast", "shake", "lunch", "dinner", "snack"]
+VAGUE = re.compile(r"brown(ed)? (it )?hard|sear hard|steam-dry|until just|glossy|a little (oil|water)|a splash|blitz|caramelis|to taste|\brest(,| and| then)|natural release|\bundefined\b|\bNaN\b|Do: \.|Weigh out: *(\n|$)|Take: *(\n|$)", re.I)
 try:
   with sync_playwright() as p:
     b = p.chromium.launch(); codes = {}
@@ -68,6 +69,10 @@ try:
                         sized = [l for l in rows if re.search(r"\d+ (g|ml)\b|\d\S* (egg|wrap|slice)", l.split(")", 1)[-1] if not l.strip().startswith("Each one") else l)]
                         if not rows or ("Each one" in txt and not any(l.strip().startswith("Each one") for l in sized)) or ("Each one" not in txt and len(sized) != len(rows)): fail(f"{tag}: box-up without portion sizes: {txt[:160]}")
                     if sid.startswith("B|") and "Per portion" not in txt: fail(f"{tag}: breading step without the size of each piece: {txt[:120]}")
+                    # Written for someone who has not cooked it before: no chef shorthand, and every step says what it is for or where it goes
+                    m = VAGUE.search(txt)
+                    if m: fail(f"{tag}: unclear wording '{m.group(0)}' in: {txt[:120]}")
+                    if not sid.startswith(("P|", "A", "oven@")) and "for " not in txt.split("\n", 2)[0] + txt: fail(f"{tag}: step does not say what it is for: {txt[:120]}")
                 for x in st:
                     for n in x["needs"]:
                         if n not in by: fail(f"{tag}: {x['id']} needs {n}, which is not on the sheet")

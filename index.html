@@ -75,6 +75,8 @@ h2.sec{font-family:var(--display);font-weight:700;font-size:22px;text-transform:
 .rs-h em{font-style:normal;font-size:12px;color:var(--muted);margin-left:auto}
 .rs-ready{display:block;font-size:12.5px;font-weight:600;color:var(--ok)}
 .rs-wait{display:block;font-size:12.5px;font-weight:600;color:var(--warn)}
+.rs-for{display:block;font-size:13px;font-weight:600;color:var(--accent);margin-bottom:2px}
+.rs-for+br{display:none}
 .check.rs i{color:var(--muted)}
 .chip.dt-fresh{background:var(--ok-soft);color:var(--ok)}
 .chip.dt-head{background:var(--warn-soft);color:var(--warn)}
@@ -407,12 +409,14 @@ const seaFmt=s=>{const q=s.q;
   if(s.u==="g"||s.u==="ml")return (q<20?Math.max(1,Math.round(q)):Math.round(q/5)*5)+" "+s.u+" "+s.n;
   if(s.u==="tsp")return q>=6?fr(q/3)+" tbsp "+s.n:fr(q)+" tsp "+s.n;
   if(s.u==="tbsp")return q>=4?Math.round(q*3)*5+" ml "+s.n:fr(q)+" tbsp "+s.n;
-  if(s.n==="egg"){const c=Math.max(0.5,Math.round(q*2)/2);return (c+"").replace(".5","½").replace(/^0½/,"½")+" egg"+(c>1?"s":"")}
-  if(s.u==="clove"){const c=Math.max(1,Math.round(q));return c+" garlic clove"+(c>1?"s":"")}
+  // Part of an egg is weighed as beaten egg (an egg is about 50 g); garlic is measured as purée or grated, a teaspoon a clove.
+  if(s.n==="egg"){const c=Math.round(q*2)/2;if(c>=1&&c===Math.round(c))return c+" egg"+(c>1?"s":"");const g=Math.round(q*50/5)*5;return g+" g beaten egg (beat "+Math.ceil(q)+", weigh out "+g+" g)"}
+  if(s.u==="clove")return fr(q)+" tsp garlic";
   if(s.u==="pinch"){if(q>=4)return fr(q/8)+" tsp "+s.n;const c=Math.max(1,Math.round(q));return c===1?"a pinch of "+s.n:c+" pinches of "+s.n}
-  const m=s.n.match(/^(lemon|lime) (juice|zest)$/);if(m)return m[2]+" of "+fr(q)+" "+m[1]+(q>1.1?"s":"");
+  // A lemon gives about 45 ml of juice and 3 tsp of zest; a lime about 30 ml and 2 tsp.
+  const m=s.n.match(/^(lemon|lime) (juice|zest)$/);if(m){const t=m[2]==="juice"?q*(m[1]==="lemon"?9:6):q*(m[1]==="lemon"?3:2);return (t>=3?fr(t/3)+" tbsp ":fr(t)+" tsp ")+s.n}
   if(/bay leaf|cinnamon stick|stock cube/.test(s.n)){const c=q<=0.75?"½":Math.max(1,Math.ceil(q-0.25));return c+" "+(c>1?s.n.replace("leaf","leaves").replace("stick","sticks").replace("cube","cubes"):s.n)}
-  return (Math.max(0.5,Math.round(q*2)/2)+"").replace(".5","½").replace(/^0½/,"½")+" × "+s.n};
+  const c=Math.max(0.5,Math.round(q*2)/2);return (c+"").replace(".5","½").replace(/^0½/,"½")+" "+s.n+(c>1&&/(slice|chilli|apple|onion)$/.test(s.n)?"s":"")};
 const SIDX={L:4,M:4,B:3,X:3,S:2,H:4,T:3};
 // Every seasoning group of a dish: its prep components plus anything used only on the day.
 function seaGroups(r){const g=[];(r.comp||[]).forEach(t=>{const s=t[SIDX[t[0]]];if(typeof s!=="string"||!s)return;
@@ -454,21 +458,27 @@ function runSheet(nCooks){
   // ---- 1. pool components into tasks
   const T={};
   const task=(id,init)=>T[id]||(T[id]=Object.assign({id:id,needs:{},d:[],sp:{},p:{},por:{},out:{},n:0,a:0,w:0,role:"any",kit:null},init));
-  const tally={garlic:0,ginger:0,lemon:0,lime:0};
+  const tally={garlic:0,ginger:0,lemon:0,lime:0},zest={};
   const addSp=(t,str,sc)=>seaParse(str).forEach(s=>{const f=itemScale(s.n,sc);const k=s.u+"|"+s.n;(t.sp[k]=t.sp[k]||{u:s.u,n:s.n,q:0}).q+=s.q*f;
-    let ar=null;if(s.u==="clove")ar="garlic";else if(s.u==="tsp"&&/ginger/.test(s.n))ar="ginger";else{const c=s.n.match(/^(lemon|lime) (juice|zest)$/);if(s.u==="x"&&c)ar=c[1]}
+    let ar=null;if(s.u==="clove")ar="garlic";else if(s.u==="tsp"&&/ginger/.test(s.n))ar="ginger";else{const c=s.n.match(/^(lemon|lime) (juice|zest)$/);if(s.u==="x"&&c){ar=c[1];if(c[2]==="zest")zest[c[1]]=1}}
     if(ar){tally[ar]+=s.q*f;t.needs.A=1}});
-  const spText=t=>Object.values(t.sp).map(seaFmt).join(", ");
+  // Garlic, ginger, lemon and lime come from the Aromatics bowls, so the step says which bowl.
+  const fromBowl=s=>s.u==="clove"?"Garlic":s.u==="tsp"&&/ginger/.test(s.n)?"Ginger":s.u==="x"&&/^(lemon|lime) (juice|zest)$/.test(s.n)?s.n.replace(/^./,c=>c.toUpperCase()):"";
+  const spText=t=>Object.values(t.sp).map(s=>seaFmt(s)+(fromBowl(s)?" (from the “"+fromBowl(s)+"” bowl)":"")).join(", ");
   // FD.weighs, FD.needs and FD.parts (data.js) say what each component weighs out, what it waits for and what it ends up as.
   Object.keys(use).forEach(id=>{const r=RECIPES[id],u=use[id],comps=r.comp||[],ids=[],nd=FD.needs(r),pt=FD.parts(r);
     // Portion sizes are per person; a dish built in pieces is the same for everyone, so it is worked out once.
     const eaters=r.pieces?[{who:"each",sc:{flat:1}}]:HOUSE.order.filter(w=>u.boxes.some(b=>b.who===w)).map(w=>({who:w,sc:scFor(id,w)}));
     const por=(o,t)=>{const m=o.por[r.name]=o.por[r.name]||{},g=FD.weighs(r,t);eaters.forEach(e=>{const x=m[e.who]=m[e.who]||{};Object.keys(g).forEach(i=>{x[i]=g[i]*scaleOf(i,e.sc)})})};
     const showAll=(o,t,sc)=>{const g=FD.weighs(r,t);Object.keys(g).forEach(i=>{o.p[i]=(o.p[i]||0)+g[i]*scaleOf(i,sc)})};
-    const cids=FD.carbs(r).map(i=>{const c=task("C|"+i,{kind:"C",ing:i,g:0,vin:0});u.scs.forEach(sc=>{c.g+=gOf(r,i,sc)});if(c.d.indexOf(r.name)<0)c.d.push(r.name);return c.id});
+    // Potatoes are cut as chips, or as cubes where the dish roasts cubes.
+    const cids=FD.carbs(r).map(i=>{const c=task("C|"+i,{kind:"C",ing:i,g:0,vin:0,forms:{}}),form=comps.some(t=>t[0]==="O"&&/^Potato cubes/.test(t[3]))?"cubes":"chips";
+      u.scs.forEach(sc=>{const g=gOf(r,i,sc);c.g+=g;const f=c.forms[form]=c.forms[form]||{g:0,d:[]};f.g+=g;if(f.d.indexOf(r.name)<0)f.d.push(r.name)});if(c.d.indexOf(r.name)<0)c.d.push(r.name);return c.id});
     pt.parts.forEach(p=>{if(p.kind==="C"&&p.items["sushi-vinegar"])u.scs.forEach(sc=>{T["C|sushi-rice"].vin+=p.items["sushi-vinegar"]*scaleOf("sushi-vinegar",sc)})});
     comps.forEach((t,ci)=>{const k=t[0];let o;
-      if(k==="V"){o=task("V|"+t[1],{kind:"V",ing:t[1],g:0,cuts:{}});u.scs.forEach(sc=>{const g=gOf(r,t[1],sc);o.g+=g;const c=o.cuts[t[2]]=o.cuts[t[2]]||{g:0,d:[]};c.g+=g;c.d.push(r.name)})}
+      // Each dish's share of a cut goes in its own bowl. Salad veg for a split lunch's freezer days is cut on the day instead.
+      if(k==="V"){o=task("V|"+t[1],{kind:"V",ing:t[1],g:0,cuts:{}});const raw=r.late==="split"&&comps.every((c2,j)=>c2[0]==="P"||nd[j].n.indexOf(ci)<0);
+        u.scs.forEach((sc,ix)=>{if(raw&&u.boxes[ix].d>2)return;const g=gOf(r,t[1],sc);o.g+=g;const c=o.cuts[t[2]]=o.cuts[t[2]]||{g:0,d:{}};c.g+=g;c.d[r.name]=(c.d[r.name]||0)+g})}
       else if(k==="L"){o=task("L|"+t[1],{kind:"L",lab:t[1],eq:t[2],min:t[3],m:t[5],role:"chef"});u.scs.forEach(sc=>{addSp(o,t[4],sc);showAll(o,t,sc)})}
       else if(k==="M"){o=task("M|"+t[1]+"|"+t[2]+"|"+t[3],{kind:"M",ty:t[1],lab:t[2],pr:t[3],g:0,min:t[5],role:"chef"});u.scs.forEach(sc=>{o.g+=gOf(r,t[3],sc);addSp(o,t[4],sc)})}
       else if(k==="B"){o=task("B|"+id,{kind:"B",coat:t[2],pr:t[1],cut:t[4],g:0,egg:0,crumb:0,role:"chef"});u.scs.forEach(sc=>{o.n++;o.g+=gOf(r,t[1],sc);if(t[2]==="panko"){o.egg+=gOf(r,"eggs",sc);o.crumb+=gOf(r,"panko",sc)}else o.crumb+=gOf(r,"cornflour",sc);addSp(o,t[3],sc)});por(o,["M",0,0,t[1]])}
@@ -480,39 +490,86 @@ function runSheet(nCooks){
       else{o=task("P|"+id,{kind:"P",rid:id,what:t[1],boxes:u.boxes,role:"helper"})}
       if(o.d.indexOf(r.name)<0)o.d.push(r.name);ids.push(o.id);
       nd[ci].n.map(j=>ids[j]).concat(nd[ci].c?cids:[]).forEach(x=>{if(x!==o.id)o.needs[x]=1})});
+    // A box-up takes the finished parts of its dish (and the dish's rice, pasta or potatoes), not everything made on the way.
+    if(T["P|"+id])T["P|"+id].src=pt.parts.filter(p=>p.ci>=0).map(p=>ids[p.ci]).concat(comps.some((t,j)=>t[0]!=="P"&&nd[j].c)?[]:cids);
     // The step that finishes a cooked part says roughly what the whole batch should weigh, as a check before portioning.
     pt.parts.forEach(p=>{if(p.ci<0||!p.heat)return;const o=T[ids[p.ci]];u.scs.forEach(sc=>{o.tot=(o.tot||0)+FD.portion(p,i=>scaleOf(i,sc),lots(sc)).w})});
     // A dish with no box-up step (treats, overnight oats) says its portion sizes on the step that finishes each part.
     if(!comps.some(t=>t[0]==="P"))pt.parts.forEach(p=>{if(p.ci<0)return;const m=T[ids[p.ci]].out[r.name]={};eaters.forEach(e=>{m[e.who]=FD.portion(p,i=>scaleOf(i,e.sc),lots(e.sc)).w})})});
   // ---- 2. time, kit and wording for each task
+  // Every step is written for someone who has not cooked it before: what it is for, what to weigh out, what to do, how to
+  // tell it is done, and where it goes next (a labelled bowl, pot or tray, and which later step uses it).
+  Object.keys(T).forEach(i=>{if(T[i].kind==="V"&&T[i].g<=0){delete T[i];Object.values(T).forEach(t=>{delete t.needs[i]})}});
   const cl=m=>Math.floor(m/60)+":"+pad(Math.round(m)%60);
-  if(tally.garlic>=0.5||tally.ginger>0||tally.lemon>0||tally.lime>0){const a=task("A",{kind:"A",role:"helper"});a.a=Math.max(2,Math.ceil(tally.garlic*0.4)+(tally.ginger?2:0)+Math.ceil(tally.lemon+tally.lime));
-    const L=[];if(tally.garlic>=0.5)L.push("peel and grate "+Math.max(1,Math.ceil(tally.garlic))+" garlic clove"+(tally.garlic>1?"s":"")+" into a small covered bowl");
-    if(tally.ginger>0)L.push("grate "+fr(tally.ginger)+" tsp ginger (about "+Math.max(2,Math.round(tally.ginger*1.5))+" cm)");
-    ["lemon","lime"].forEach(c=>{if(tally[c]>0){const n=Math.max(1,Math.ceil(tally[c]-0.15));L.push("zest then juice "+n+" "+c+(n>1?"s":""))}});
-    a.html="<b>Aromatics</b>: "+L.join("; ")+". Everything later draws from these."}
+  const line=(k,v)=>v?"<br><b>"+k+":</b> "+v.replace(/^[a-z]/,c=>c.toUpperCase()):"";
+  const q_=s=>"“"+s+"”";
+  const tin=g=>g<500?"15 cm square":g<1000?"20 cm square":g<1600?"23 cm square":"20 × 30 cm";
+  const batch=o=>Object.values(o.sp).reduce((a,s)=>a+(s.u==="g"||s.u==="ml"?s.q:s.n==="egg"?s.q*50:0),0)+Object.values(o.p).reduce((a,g)=>a+g,0);
+  const kitText=(m,o)=>(m||"").replace(/\ba lined tin\b|\bin a lined tin\b/g,x=>(x.indexOf("in ")===0?"in ":"")+"a "+tin(batch(o))+" tin lined with baking paper").replace(/\ba lined tray\b/g,"a baking tray lined with baking paper");
+  const POULTRY=/^(chicken|turkey)/,MINCE=/mince$/;
+  const doneWhen=keys=>{if(keys.some(i=>POULTRY.test(i)&&!MINCE.test(i)&&i!=="turkey-rashers"&&i!=="turkey-ham"&&i!=="turkey-pepperoni"))return "cut the thickest piece open: no pink inside and the juices run clear (75°C on a probe thermometer).";
+    if(keys.some(i=>MINCE.test(i)))return "no pink left anywhere when you break it up.";if(keys.indexOf("salmon")>=0)return "the thickest part flakes apart when pressed with a fork.";return ""};
+  const PAN=o=>{const t=(o.lab+" "+(o.m||"")).toLowerCase();if(/omelette|quesadilla|scramble/.test(t))return "non-stick frying pan";if(/steam/.test(t))return "saucepan with a lid, 2 cm of water";
+    if(/boil|poach|compote|curry|masala|jalfrezi|ragù|ragu|chilli|stroganoff|simmer|sauce/.test(t))return "medium saucepan";return "large non-stick frying pan"};
+  const titleOf=o=>{const k=o.kind;if(k==="V")return ING[o.ing][0];if(k==="C")return o.ing==="potatoes"?"Potatoes":o.ing==="sushi-rice"?"Sushi rice":o.ing==="jasmine-rice"?"Rice":o.ing==="rice-noodles"?"Rice noodles":o.ing==="penne"?"Penne":"Pasta";
+    if(k==="M")return o.lab+(/rub|seasoning|spice|marinade|salt/i.test(o.lab)?"":o.ty==="dry"?" rub":" marinade");if(k==="B")return (o.coat==="panko"?"Breaded":"Coated")+" chicken for "+o.d[0];
+    if(k==="O")return o.lab.split(/[:;(]|, /)[0].trim();if(k==="P")return "Box up: "+RECIPES[o.rid].name;if(k==="A")return "Aromatics";return k==="S"?o.lab.replace(/\s*\(.*\)$/,""):o.lab};
+  Object.values(T).forEach(o=>{o.title=titleOf(o)});
+  // Which later steps actually use each step, and which earlier ones a step takes from. A step can wait for another without
+  // using it (the scheduler orders them by kind), so "uses" is decided by what goes in: the meat a marinade holds, a veg the
+  // step's wording names, a sauce or part whose name it mentions, or the finished parts a box-up holds.
+  const words=o=>(o.title||"").toLowerCase().replace(/[()“”]/g,"").split(/[^a-zà-ÿ]+/).filter(w=>w.length>3&&!/^(with|from|this|that|then|into|each|until|sliced|softened|baked|steam|boil|sear|build)$/.test(w));
+  const text=t=>((t.lab||"")+" "+(t.m||"")).toLowerCase();
+  const VEGW={onion:"onion",peppers:"pepper",greens:"greens|pak choi|\\bveg",broccoli:"broccoli|tenderstem|\\bveg",tomato:"tomato",mushrooms:"mushroom",spinach:"spinach",cucumber:"cucumber",lettuce:"lettuce","spring-onion":"spring onion"};
+  const eats=(t,s)=>{if(!s||!t.needs[s.id])return false;if(t.kind==="P")return (t.src||[]).indexOf(s.id)>=0;
+    if(s.kind==="M"||s.kind==="B")return t.kind==="O"||(t.p[s.pr]>0&&!Object.values(T).some(o=>o.kind==="O"&&o.needs[s.id]));if(s.kind==="V")return new RegExp(VEGW[s.ing]||s.ing.replace(/s$/,"")).test(text(t))||/\bveg\b/.test(text(t));
+    if(s.kind==="C")return true;if((s.kind==="X"||s.kind==="T")&&t.kind==="O")return true;return words(s).some(w=>text(t).indexOf(w)>=0)};
+  const usedBy=o=>Object.values(T).filter(t=>eats(t,o)).map(t=>t.kind==="P"?"the "+RECIPES[t.rid].name+" boxes":q_(t.title));
+  // What a step makes, as a thing to pick up: "Sear the steak" makes the seared steak.
+  const DONE={Sear:"seared",Steam:"steamed",Brown:"browned",Boil:"boiled",Poach:"poached",Build:"assembled"};
+  const thing=s=>{const t=s.title.replace(/, one at a time$/,""),m=t.match(/^(Sear|Steam|Brown|Boil|Poach|Build) (the )?(.*)$/);return "the "+(m?DONE[m[1]]+" "+m[3]:/^[A-Z][a-z]/.test(t)&&!/^(Big Mac|Cajun|Thai|Italian|Greek|Caesar|Oreo|Alfredo|Nashville|Philly|Frank|Buffalo)/.test(t)?t[0].toLowerCase()+t.slice(1):t)};
+  const gives=s=>s.kind==="M"||s.kind==="B"?[s.pr]:s.kind==="C"?[s.ing]:Object.keys(s.p||{});
+  const own=o=>{const got={};Object.keys(o.needs).forEach(n=>{if(eats(o,T[n]))gives(T[n]).forEach(i=>{got[i]=1})});const p={};Object.keys(o.p).forEach(i=>{if(!got[i])p[i]=o.p[i]});return p};
+  const bowl=(v,dish)=>q_(ING[v.ing][0].replace(/\s*\(.*\)/,"").replace(/oes$/,"o").replace(/([^s])s$/,"$1")+" – "+dish);
+  const takes=o=>Object.keys(o.needs).filter(n=>n!=="A"&&eats(o,T[n])).map(n=>{const s=T[n];if(s.kind==="V"){const b=[];Object.keys(s.cuts).forEach(c=>Object.keys(s.cuts[c].d).forEach(d=>{if(o.d.indexOf(d)>=0)b.push("the "+bowl(s,d)+" bowl")}));return list(b)}
+    return s.kind==="C"?(s.ing==="potatoes"&&o.kind==="P"?"the par-boiled chips":"the "+s.title.toLowerCase()):s.kind==="M"?"the "+sname(s.pr)+" in its "+s.title.toLowerCase():thing(s)}).filter(Boolean);
+  const keepFor=o=>{const u=[...new Set(usedBy(o))];return u.length?"Used in "+list(u)+".":""};
+  const label=o=>q_(o.title+(o.d.length===1?" – "+o.d[0]:""));
+  if(tally.garlic>=0.5||tally.ginger>0||tally.lemon>0||tally.lime>0){const a=task("A",{kind:"A",role:"helper",title:"Aromatics",d:[]});a.a=Math.max(2,Math.ceil(tally.garlic*0.4)+(tally.ginger?2:0)+Math.ceil(tally.lemon+tally.lime));
+    const L=[];if(tally.garlic>=0.5){const n=Math.max(1,Math.ceil(tally.garlic));L.push("<b>Garlic</b>: "+n+" tsp garlic purée into a small bowl labelled "+q_("Garlic")+" (or peel and finely grate "+n+" clove"+(n>1?"s":"")+").")}
+    if(tally.ginger>0)L.push("<b>Ginger</b>: scrape the skin off about "+Math.max(2,Math.round(tally.ginger*1.5))+" cm of fresh ginger with a teaspoon and finely grate it: you need "+fr(tally.ginger)+" tsp. Small bowl labelled "+q_("Ginger")+".");
+    ["lemon","lime"].forEach(c=>{if(tally[c]>0){const n=Math.max(1,Math.ceil(tally[c]-0.15)),C=c[0].toUpperCase()+c.slice(1);
+      L.push("<b>"+C+(n>1?"s":"")+"</b>: "+(zest[c]?"finely grate just the coloured skin of "+n+" "+c+(n>1?"s":"")+" into a small bowl labelled "+q_(C+" zest")+", then ":"")+"cut "+(n>1?"them":"it")+" in half and squeeze the juice into a small bowl labelled "+q_(C+" juice")+". Catch the pips.")}});
+    a.html="<b>Aromatics</b> <span class=\"rs-for\">for every step that uses garlic, ginger, lemon or lime</span>"+L.map(x=>"<br>"+x).join("")+line("Then","cover the bowls. Later steps say how many teaspoons to take from each.")}
   else Object.values(T).forEach(t=>{delete t.needs.A});
   const longs=Object.values(T).filter(t=>t.kind==="L").sort((x,y)=>y.min-x.min);let ipTaken=false;
   longs.forEach(o=>{const ip=o.eq==="ip"&&!ipTaken;if(ip)ipTaken=true;o.kit=ip?"ip":"hob";o.a=12;o.w=ip?o.min+10:(o.eq==="ip"?o.min*3:o.min);if(!ip)o.tm=o.w;
-    o.html="<b>"+o.lab+"</b> ("+(ip?"Instant Pot, "+mins(o.min)+" at pressure":o.eq==="ip"?"hob, covered, about "+mins(o.min*3)+" because the Instant Pot is taken; top up with water":"hob, "+mins(o.min))+")"+(Object.keys(o.p).length?": "+amt(o.p):"")+". "+o.m+". You need: "+spText(o)+"."});
+    o.html="<b>"+o.title+"</b> <span class=\"rs-for\">for "+list(o.d)+"</span>"+line("Kit",ip?"Instant Pot, "+mins(o.min)+" at high pressure":o.eq==="ip"?"large saucepan with a lid (the Instant Pot is taken), about "+mins(o.min*3)+" on a low simmer; add 2 tbsp water if it starts to stick":"large saucepan, "+mins(o.min))+
+      line("Weigh out",[Object.keys(own(o)).length?amt(own(o)):"",spText(o)].filter(Boolean).join(", "))+line("Take",list(takes(o)))+line("Do",o.m+".")+(ip?line("Pressure","lid on, valve to Sealing, Pressure Cook on High for the time above. When it beeps, leave it 10 min, then turn the valve to Venting (keep your hand clear of the steam) before opening."):"")+
+      line("Done when",doneWhen(Object.keys(o.p)))+line("Then","leave in the pot to cool. "+keepFor(o))});
   let riceIP=!ipTaken;
-  Object.values(T).filter(t=>t.kind==="C").sort((x,y)=>y.g-x.g).forEach(o=>{const i=o.ing,g=roundG(o.g),su=i==="sushi-rice";
-    if(i==="sushi-rice"||i==="jasmine-rice"){const nm=su?"sushi rice":"jasmine or basmati rice",ip=riceIP&&o.g>=150;if(ip)riceIP=false;o.kit=ip?"ip":"hob";o.a=4;o.w=(ip?22:24)+15;if(!ip)o.tm=22;
-      o.html="<b>"+(su?"Sushi rice":"Rice")+"</b> ("+(ip?"Instant Pot":"hob")+"): rinse "+g+" g "+nm+" until the water runs clear; add "+Math.round(g*(ip?(su?1.1:1.25):(su?1.15:1.4)))+" ml water; "+(ip?"pressure-cook "+(su?6:4)+" min, natural release 10 min":"bring to the boil, lid on, lowest heat 12 min, then 10 min off the heat with the lid on")+"."+(su?" Season with "+(o.vin?Math.round(o.vin)+" ml of ":"")+"the sushi seasoning while hot.":"")+" Spread on a tray to cool."}
-    else if(i==="pasta"||i==="penne"){o.kit="hob";o.a=3;o.w=12+10;o.html="<b>"+(i==="pasta"?"Pasta":"Penne")+"</b> (hob): cook "+g+" g 2 min short of the packet time; drain, toss in a little oil, spread out to cool."}
-    else if(i==="rice-noodles"){o.a=3;o.w=6;o.html="<b>Rice noodles</b>: soak "+g+" g in boiling water 5 min, rinse cold, toss in a few drops of oil."}
-    else{o.kit="hob";o.a=6+Math.round(o.g/250);o.w=8+10;o.tm=5;o.html="<b>Potatoes</b> (hob): cut "+shopAmount("potatoes",o.g)+" into chips or cubes; boil 5 min, drain, steam-dry and cool."}
-    o.html+=" <i>For "+list(o.d)+".</i>"});
-  const MT={yog:"yoghurt marinade: mix, coat, cover, fridge",wet:"wet marinade: mix in a bowl or bag with the meat",dry:"dry rub: mix and rub on"};
+  Object.values(T).filter(t=>t.kind==="C").sort((x,y)=>y.g-x.g).forEach(o=>{const i=o.ing,g=roundG(o.g),su=i==="sushi-rice",for_=" <span class=\"rs-for\">for "+list(o.d)+"</span>";
+    if(i==="sushi-rice"||i==="jasmine-rice"){const nm=su?"sushi rice":"jasmine or basmati rice",ip=riceIP&&o.g>=150;if(ip)riceIP=false;o.kit=ip?"ip":"hob";o.a=4;o.w=(ip?22:24)+15;if(!ip)o.tm=22;const water=Math.round(g*(ip?(su?1.1:1.25):(su?1.15:1.4)));
+      o.html="<b>"+o.title+"</b>"+for_+line("Kit",ip?"Instant Pot":"saucepan with a tight lid")+line("Weigh out",g+" g "+nm+", "+water+" ml cold water")+
+        line("Do","put the rice in a sieve and rinse under the cold tap, swirling with your hand, until the water runs clear. "+(ip?"Into the Instant Pot with the water. Lid on, valve to Sealing, Pressure Cook on High "+(su?6:4)+" min. When it beeps, leave it 10 min, then turn the valve to Venting and open.":"Into the pan with the water, bring to the boil, put the lid on and turn to the lowest heat for 12 min. Turn the heat off and leave the lid on for 10 more min. Don’t lift the lid."))+
+        (su?line("Season",(o.vin?fr(o.vin/5)+" tsp":"1 tsp")+" sushi seasoning (rice vinegar), stirred in gently while the rice is hot."):"")+line("Then","spread thin on a tray to cool. "+keepFor(o))}
+    else if(i==="pasta"||i==="penne"){o.kit="hob";o.a=3;o.w=12+10;o.html="<b>"+o.title+"</b>"+for_+line("Kit","large saucepan")+line("Weigh out",g+" g dry "+o.title.toLowerCase())+
+      line("Do","fill the pan two-thirds with water, add 1 tsp salt and bring to a rolling boil. Add the pasta, stir, and boil for 2 minutes less than the packet says. Drain, then toss with 1 tsp olive oil so it doesn’t stick.")+line("Then","spread on a tray to cool. "+keepFor(o))}
+    else if(i==="rice-noodles"){o.a=3;o.w=6;o.html="<b>"+o.title+"</b>"+for_+line("Weigh out",g+" g dry rice noodles")+line("Do","put in a bowl, cover with just-boiled water from the kettle and leave 5 min. Drain, rinse under the cold tap and toss with ½ tsp oil.")+line("Then",keepFor(o))}
+    else{o.kit="hob";o.a=6+Math.round(o.g/250);o.w=8+10;o.tm=5;const F=o.forms,cut={chips:"chips 1 cm thick (cut each potato into 1 cm slices, then the slices into 1 cm sticks)",cubes:"2 cm cubes"};
+      o.html="<b>Potatoes</b>"+for_+line("Kit","large saucepan, colander")+line("Weigh out",shopAmount("potatoes",o.g)+" potatoes, skins on")+
+        Object.keys(F).map(f=>"<br>• "+shopAmount("potatoes",F[f].g)+" as "+cut[f]+": for "+list(F[f].d)).join("")+
+        line("Do","scrub the potatoes under the tap; leave the skins on. Cut as above"+(Object.keys(F).length>1?", keeping chips and cubes in separate piles":"")+". Put them in the pan, cover with cold water by 2 cm and add 2 tsp salt. Bring to the boil, then boil for 5 min. Tip into the colander and leave 5 min so the steam dries them.")+
+        line("Done when","a knife goes in with a little resistance: soft at the edge, still firm in the middle.")+line("Then","spread on trays to cool"+(Object.keys(F).length>1?", chips and cubes apart":"")+". "+keepFor(o))}});
+  const MT={yog:"in a bowl, stir the marinade together, add the meat and turn until every piece is coated",wet:"in a bowl or zip bag, mix the marinade, add the meat and turn until every piece is coated",dry:"mix the spices in a small bowl, sprinkle all over the meat and rub it in on both sides"};
   // Portion sizes at box-up: each part of the dish as it stands at the end of prep, for one person. Cooked weights are estimates
   // from the raw weight (FD.portion), so they say "about" and give the raw weight alongside where one ingredient dominates.
   const partText=(r,p,sc)=>{const x=FD.portion(p,i=>scaleOf(i,sc),lots(sc)),i=x.top;if(!i||x.w<=0)return "";const n=ING[i],g=roundG(x.topRaw);
-    if(p.kind==="C")return FD.CARB_YIELD[i]?"about "+roundG(x.topRaw*FD.CARB_YIELD[i])+" g cooked "+sname(i)+" ("+g+" g dry)":g+" g potatoes (raw weight)";
-    if(p.kind==="V")return qty(i,x.topRaw);
+    if(p.kind==="C")return FD.CARB_YIELD[i]?"about "+roundG(x.topRaw*FD.CARB_YIELD[i])+" g cooked "+sname(i)+" ("+g+" g dry)":g+" g par-boiled "+(r.comp.some(t=>t[0]==="O"&&/^Potato cubes/.test(t[3]))?"potato cubes":"chips");
+    if(p.kind==="V")return qty(i,x.topRaw)+(r.comp[p.ci]?" ("+r.comp[p.ci][2].replace(/\s*\((.*)\)/,", $1")+")":"");
     if(p.kind==="B")return g+" g "+sname(i)+" (weight before crumbing)";
     if(p.kind==="M")return g+" g "+sname(i)+(r.comp[p.ci][1]==="dry"?", seasoned":" in its marinade")+" (raw weight)";
-    const plain=FD.portion(p,()=>1,1).share>=0.85&&"OHX".indexOf(p.kind)>=0&&(n[1]==="Protein"||n[1]==="Fruit and veg"||/^egg/.test(i));
-    if(plain&&i==="eggs"&&Object.keys(p.items).length===1)return qty(i,x.topRaw);
+    const plain=FD.portion(p,()=>1,1).share>=0.85&&"OHX".indexOf(p.kind)>=0&&(n[1]==="Protein"||n[1]==="Fruit and veg");
     if(plain&&!p.heat)return g+" g "+sname(i)+(n[1]==="Protein"?" (raw weight)":"");
     if(plain)return "about "+roundG(x.w)+" g cooked "+sname(i)+" ("+g+(LIQUID[i]?" ml":" g")+" raw)";
     return (p.heat||p.wet?"about ":"")+roundG(x.w)+" g "+p.name};
@@ -527,29 +584,45 @@ function runSheet(nCooks){
   const riceName=(id,w)=>{const r=RECIPES[id];const has=k=>r.ing.some(x=>x[0]===k);const nm=has("sushi-rice")?"sushi rice":has("jasmine-rice")?"jasmine or basmati rice":null;
     return nm?w.replace(/(^|, |; |and )(seasoned |lime |spicy )?rice\b(?! noodles)/g,(m,a,b)=>a+(b||"")+nm):w};
   const dayRun=ds=>{ds=ds.slice().sort((a,b)=>a-b);const out=[];let i=0;while(i<ds.length){let j=i;while(j+1<ds.length&&ds[j+1]===ds[j]+1)j++;out.push(j>i+1?DNAME[ds[i]%7]+" to "+DNAME[ds[j]%7]:ds.slice(i,j+1).map(d=>DNAME[d%7]).join(", "));i=j+1}return out.join(", ")};
-  Object.values(T).forEach(o=>{const k=o.kind,for_=" <i>For "+list(o.d)+".</i>";
-    if(k==="V"){const each=VEGE[o.ing];o.a=Math.round(2+o.g/100*1.5);o.html="<b>"+ING[o.ing][0]+(each?" (about "+Math.max(1,Math.round(o.g/each[0]*2)/2)+")":"")+"</b>: "+Object.keys(o.cuts).map(c=>c+", "+amount(o.ing,o.cuts[c].g)+" for "+list(o.cuts[c].d)).join("; ")+"."}
-    else if(k==="M"){o.a=Math.round(3+o.g/300);o.w=Math.min(o.min||0,45);o.html="<b>"+o.lab+"</b> ("+MT[o.ty]+") for "+amount(o.pr,o.g)+" "+lower(o.pr)+": "+spText(o)+"."+(o.min?" Leave at least "+mins(o.min)+".":"")+for_}
-    else if(k==="B"){o.a=Math.round(4+o.n*1.5);const egg=Math.max(1,Math.ceil(o.egg/50-0.2));
-      o.html="<b>"+(o.coat==="panko"?"Bread":"Coat")+" the chicken for "+o.d[0]+"</b>: "+amount(o.pr,o.g)+" "+lower(o.pr)+(o.coat==="panko"?", "+(o.cut||"butterflied and bashed to 1.5 cm")+"; dip in "+egg+" beaten egg"+(egg>1?"s":"")+", then "+Math.round(o.crumb)+" g panko seasoned with ":", diced; toss in "+Math.round(o.crumb)+" g cornflour seasoned with ")+spText(o)+"."+(o.coat==="panko"?" Lay on a lined tray and freeze raw, then bag.":" Onto an oven tray.")}
-    else if(k==="X"){o.a=5+o.n;o.html="<b>"+o.lab+"</b>"+(Object.keys(o.p).length?" ("+amt(o.p)+")":"")+": "+o.m+(Object.keys(o.sp).length?(o.build?". With: ":". Mix in: ")+spText(o):"")+"."+for_}
-    else if(k==="S"){o.a=o.sim?4+(o.bl?2:0):3;o.w=o.sim;if(o.sim){o.kit="hob";if(o.sim>=5)o.tm=o.sim}o.html="<b>"+o.lab+"</b>"+(o.sim?" (hob, simmer "+o.sim+" min"+(o.bl?", then blend":"")+")":" (cold: whisk in a jar or pot)")+": "+(Object.keys(o.p).length?amt(o.p)+", ":"")+spText(o)+"."+for_}
+  const PREP={onion:"cut off both ends and peel",peppers:"cut in half, pull out the stalk and seeds",garlic:"peel",ginger:"scrape off the skin",mango:"peel and cut the flesh off the stone",avocado:"halve, remove the stone, scoop out"};
+  Object.values(T).forEach(o=>{const k=o.kind,for_=" <span class=\"rs-for\">for "+list(o.d)+"</span>",tk=list(takes(o));
+    if(k==="V"){const each=VEGE[o.ing];o.a=Math.round(2+o.g/100*1.5);
+      o.html="<b>"+o.title+"</b>"+for_+line("Weigh out",amount(o.ing,o.g)+(each?" (about "+Math.max(1,Math.round(o.g/each[0]*2)/2)+" "+each[1]+(o.g/each[0]>1.25?"s":"")+")":""))+line("Do",(PREP[o.ing]||"wash and dry")+". Then cut and weigh into bowls:")+
+        Object.keys(o.cuts).map(c=>Object.keys(o.cuts[c].d).map(d=>"<br>• "+amount(o.ing,o.cuts[c].d[d])+" "+c+" → bowl labelled "+bowl(o,d)).join("")).join("")+line("Then","cover the bowls; the step for each dish says which bowl to take.")}
+    else if(k==="M"){o.a=Math.round(3+o.g/300);o.w=Math.min(o.min||0,45);
+      o.html="<b>"+o.title+"</b>"+for_+line("Weigh out",amount(o.pr,o.g)+" "+lower(o.pr)+"; for the "+(o.ty==="dry"?"rub":"marinade")+": "+spText(o))+line("Do",MT[o.ty]+".")+
+        line("Then","cover (or seal the bag), label it "+label(o)+" and put it in the fridge"+(o.min?" for at least "+mins(o.min):"")+". "+keepFor(o))}
+    else if(k==="B"){o.a=Math.round(4+o.n*1.5);const egg=Math.max(1,Math.ceil(o.egg/50-0.2)),pk=o.coat==="panko";
+      o.html="<b>"+o.title+"</b>"+line("Kit","3 wide bowls, a baking tray lined with baking paper"+(pk&&!o.cut?", cling film and a rolling pin":""))+
+        line("Weigh out",amount(o.pr,o.g)+" "+lower(o.pr)+"; "+(pk?egg+" egg"+(egg>1?"s":"")+", beaten in one bowl; "+Math.round(o.crumb)+" g panko mixed with ":Math.round(o.crumb)+" g cornflour mixed with ")+spText(o)+" in another")+
+        line("Do",pk?(o.cut?"cut the chicken "+o.cut+". ":"lay each breast flat, cut it in half sideways through the middle like opening a book, then cover with cling film and bash with a rolling pin until it is 1.5 cm thick all over. ")+"Dip each piece in the egg, let the extra drip off, then press into the panko on both sides.":"dice the chicken into 2 cm pieces and toss in the seasoned cornflour until coated.")+
+        line("Then",pk?"lay the pieces on the tray without touching and freeze them raw for 1 hour, then bag. "+keepFor(o):"onto the tray. "+keepFor(o))}
+    else if(k==="X"){o.a=5+o.n;o.html="<b>"+o.title+"</b>"+for_+line("Weigh out",[Object.keys(own(o)).length?amt(own(o)):"",Object.keys(o.sp).length?spText(o):""].filter(Boolean).join(", "))+line("Take",tk)+line("Do",kitText(o.m,o)+".")+line("Then",keepFor(o))}
+    else if(k==="S"){o.a=o.sim?4+(o.bl?2:0):3;o.w=o.sim;if(o.sim){o.kit="hob";if(o.sim>=5)o.tm=o.sim}const blend=o.bl||/blend/i.test(o.lab),nm=o.title,extra=((/\(([^)]*)\)/.exec(o.lab)||["",""])[1]).replace(/^blended$/,"");
+      const soon=usedBy(o).length&&!Object.values(T).some(t=>t.kind==="P"&&eats(t,o));
+      o.html="<b>"+nm+"</b>"+for_+line("Kit",o.sim?"small saucepan"+(blend?", blender":""):blend?"blender or stick blender":"jar or small bowl, a spoon")+line("Weigh out",(Object.keys(own(o)).length?amt(own(o))+", ":"")+spText(o))+line("Take",tk)+
+        line("Do",(/^first, /.test(extra)?extra.slice(7).replace(/^./,c=>c.toUpperCase())+". ":"")+(o.sim?(blend&&!o.bl?"Blend smooth, then pour into the pan. ":"Put everything in the pan. ")+"Medium heat, stirring all the time, until it bubbles, then low heat for "+o.sim+" min, still stirring."+(o.bl?" Leave 5 min, then blend until smooth (hold the blender lid down with a tea towel).":""):(blend?"Blend until smooth.":"Stir together until smooth."))+(extra&&!/^first, /.test(extra)?" "+extra.replace(/^./,c=>c.toUpperCase())+".":""))+
+        line("Then",soon?"keep it to one side. "+keepFor(o):(o.sim?"leave to cool, then ":"")+"into a small tub with a lid labelled "+q_(nm+(o.d.length===1?" – "+o.d[0]:""))+", fridge. "+keepFor(o))}
     else if(k==="O"){// Two oven settings only, so trays can share: anything hotter than 200°C runs at 200°C for a few minutes longer.
-      const hot=o.temp>200,m=o.min+(hot?4:0);if(hot)o.temp=200;o.a=2;o.w=m;o.tm=m;o.kit="oven";o.html="<b>Oven "+o.temp+"°C fan: "+o.lab+"</b>"+(Object.keys(o.p).length?" ("+amt(o.p)+")":"")+", "+m+" min."+for_}
-    else if(k==="H"){o.kit="hob";if(o.min<=8){o.a=o.min}else{o.a=Math.max(4,Math.round(o.min*0.5));o.w=o.min-o.a;if(o.w>=5)o.tm=o.w}o.html="<b>"+o.lab+"</b> (hob, "+o.min+" min)"+(Object.keys(o.p).length?": "+amt(o.p):"")+". "+o.m+(Object.keys(o.sp).length?". With: "+spText(o):"")+"."+for_}
-    else if(k==="T"){o.a=Math.round(5+o.n*0.5);o.html="<b>"+o.lab+"</b>, "+o.n+" portion"+(o.n>1?"s":"")+" ("+dayRun(o.days)+"): "+spText(o)+". "+o.m+"."}
+      const hot=o.temp>200,m=o.min+(hot?4:0);if(hot)o.temp=200;o.a=2;o.w=m;o.tm=m;o.kit="oven";const rest=o.lab.slice(o.title.length).replace(/^[\s:;,]+/,"").replace(/^\(|\)$/g,"");
+      o.html="<b>"+o.title+"</b>"+for_+line("Oven",o.temp+"°C fan, "+m+" min")+line("Weigh out",Object.keys(own(o)).length?amt(own(o)):"")+line("Take",tk)+line("Do",kitText(rest?rest.replace(/^./,c=>c.toUpperCase())+".":"spread out in one layer on a baking tray lined with baking paper.",o))+
+        line("Done when",doneWhen(Object.keys(o.p)))+line("Then",keepFor(o))}
+    else if(k==="H"){o.kit="hob";if(o.min<=8){o.a=o.min}else{o.a=Math.max(4,Math.round(o.min*0.5));o.w=o.min-o.a;if(o.w>=5)o.tm=o.w}
+      o.html="<b>"+o.title+"</b>"+for_+line("Kit",PAN(o)+", about "+o.min+" min")+line("Weigh out",[Object.keys(own(o)).length?amt(own(o)):"",Object.keys(o.sp).length?spText(o):""].filter(Boolean).join(", "))+line("Take",tk)+line("Do",o.m+".")+
+        line("Done when",doneWhen(Object.keys(o.p)))+line("Then",keepFor(o))}
+    else if(k==="T"){o.a=Math.round(5+o.n*0.5);o.html="<b>"+o.title+"</b>"+for_+line("Makes",o.n+" portion"+(o.n>1?"s":"")+" ("+dayRun(o.days)+")")+line("Weigh out",spText(o))+line("Do",kitText(o.m,o)+".")+line("Then",keepFor(o))}
     else if(k==="P"){const r=RECIPES[o.rid],raw=r.type==="head",bf=r.slot==="breakfast",by={};o.boxes.forEach(b=>{(by[b.who]=by[b.who]||[]).push(b.d)});o.a=Math.round(2+o.boxes.length*0.7);
       const where=ds=>{const lim=raw?1:2,fr_=ds.filter(d=>d<=lim),fz=ds.filter(d=>d>lim),a=[];if(fr_.length)a.push(dayRun(fr_)+" in the fridge");
-        if(fz.length)a.push(dayRun(fz)+(r.slot==="lunch"&&r.late==="split"?": freeze the cooked part, cut or mix the fresh part on the day":" in the freezer"));return a.join("; ")};
+        if(fz.length)a.push(dayRun(fz)+(r.slot==="lunch"&&r.late==="split"?" in the freezer: the cooked part only, cut the salad veg on the day":" in the freezer"));return a.join("; ")};
       const count=w=>bf?by[w].length*(r.pieces?person(w).pieces||1:1)+" in all"+(r.pieces?", "+(person(w).pieces||1)+" a day":""):by[w].length+" "+(raw?"bag":"box")+(by[w].length>1?(raw?"s":"es"):"");
-      const sizes=sc=>{const s=portionText(o.rid,sc);return s?"<i>"+s+"</i>.":""};
-      o.html="<b>Box up: "+r.name+"</b>: "+riceName(o.rid,o.what)+"."+(r.pieces?"<br><b>Each one</b>: "+sizes({flat:1}):"")+
+      const sizes=sc=>{const s=portionText(o.rid,sc);return s?s+".":""};
+      o.html="<b>Box up: "+r.name+"</b>"+line("Take",tk)+line(/^[a-z]/.test(o.what)?"In each "+(raw?"bag":"box"):"Do",riceName(o.rid,o.what).replace(/^./,c=>c.toUpperCase())+". Weigh each part using the weights below. Write the name and the day on every "+(raw?"bag":bf?"wrapper":"lid")+".")+(r.pieces?"<br><b>Each one</b>: "+sizes({flat:1}):"")+
         HOUSE.order.filter(w=>by[w]).map(w=>"<br><b>"+pname(w)+"</b>, "+count(w)+" ("+where(by[w])+")"+(r.pieces?".":": "+(sizes(scFor(o.rid,w))||"."))).join("")}
     // Sizes on the step itself: what each piece weighs where pieces are shaped, and what a portion is where nothing gets boxed.
     const pq=x=>Object.keys(x).map(i=>qty(i,x[i])).join(" + ");
-    if(o.tot)o.html+=" Makes about "+(o.tot>=1000?(Math.round(o.tot/50)/20).toFixed(2).replace(/0$/,"")+" kg":roundG(o.tot)+" g")+".";
-    if(Object.keys(o.por).length)o.html+=" <b>Per portion</b>: "+perText(o.por,pq)+".";
-    if(Object.keys(o.out).length)o.html+=" <b>Per portion</b>: "+perText(o.out,v=>"about "+roundG(v)+" g")+"."});
+    if(o.tot)o.html+=line("Check","the whole batch should weigh about "+(o.tot>=1000?(Math.round(o.tot/50)/20).toFixed(2).replace(/0$/,"")+" kg":roundG(o.tot)+" g")+".");
+    if(Object.keys(o.por).length)o.html+=line("Per portion",perText(o.por,pq)+".");
+    if(Object.keys(o.out).length)o.html+=line("Per portion",perText(o.out,v=>"about "+roundG(v)+" g")+".")});
   // ---- 3. schedule
   const ids=Object.keys(T),kids={},tail={};ids.forEach(i=>Object.keys(T[i].needs).forEach(n=>{(kids[n]=kids[n]||[]).push(i)}));
   const tl=i=>tail[i]!=null?tail[i]:(tail[i]=T[i].a+T[i].w+Math.max(0,...(kids[i]||[]).map(tl)));
@@ -568,6 +641,8 @@ function runSheet(nCooks){
   const steps=ids.filter(i=>T[i].start!=null).map(i=>T[i]).sort((x,y)=>x.start-y.start||(x.who<y.who?-1:1));
   // oven on in time for each change of temperature
   let lastTemp=null;steps.filter(t=>t.kit==="oven").forEach(t=>{if(t.temp!==lastTemp){steps.push({id:"oven@"+Math.round(t.start),kind:"N",start:Math.max(0,t.start-(lastTemp==null?12:5)),who:"chef",needs:{},html:"<b>Oven</b>: "+(lastTemp==null?"on to ":"change to ")+t.temp+"°C fan."});lastTemp=t.temp}});
+  // Meat that is sliced thin later goes in the freezer at the start, so it is firm enough to slice.
+  steps.filter(t=>t.kind==="X"&&/freezer/i.test(t.m)).forEach(t=>{steps.push({id:"freeze@"+t.id,kind:"N",start:0,who:"chef",needs:{},html:"<b>Freezer</b> <span class=\"rs-for\">for "+list(t.d)+"</span><b>Do:</b> put the "+amt(t.p)+" in the freezer now. You take it out for "+q_(t.title)+" later: half-frozen meat slices much thinner."})});
   steps.sort((x,y)=>x.start-y.start||(x.kind==="N"?-1:1));
   steps.forEach(t=>{if(t.kind!=="N"&&t.w>=5)t.html+=' <span class="rs-ready">'+(t.kit==="oven"?"Out":t.kind==="M"?"Ready to cook":t.kind==="C"?"Cool enough to box":"Done")+" at "+cl(t.done)+".</span>"});
   const total=Math.max(0,...steps.map(t=>t.done||t.start));

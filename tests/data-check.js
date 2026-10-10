@@ -41,6 +41,9 @@ Object.keys(D.ALIAS).forEach((n) => { if (!D.ING[D.ALIAS[n][0]]) fail("alias " +
 ["TRIM", "PACKS"].forEach((t) => Object.keys(D[t]).forEach((i) => { if (!D.ING[i]) fail(t + " has unknown ingredient " + i); }));
 // The default week must be valid for the people eating it.
 const H = D.HOUSE, ok = (id, slot, dow, who) => { const r = R[id]; if (!r || r.slot !== slot) return false; const eat = H.shared.indexOf(slot) >= 0 ? H.order : [who]; if (r.kind && eat.some((w) => H.people[w].skip.indexOf(r.kind) >= 0)) return false; return !(slot === "lunch" && dow >= 3 && r.late === "no"); };
+// Prep wording is for someone who has not cooked it before: no chef shorthand in any prep component.
+const VAGUE = /brown(ed)? (it )?hard|sear hard|steam-dry|until just|glossy|a little (oil|water)|a splash|blitz|caramelis|to taste|\brest(,| and| then)|natural release/i;
+Object.values(R).forEach((r) => (r.comp || []).forEach((c) => { const m = JSON.stringify(c).match(VAGUE); if (m) fail(r.id + ": unclear prep wording '" + m[0] + "' in " + JSON.stringify(c).slice(0, 80)); }));
 // Smallest starch portions name real carbs.
 Object.keys(H.least || {}).forEach((i) => { if (!D.ING[i] || D.ING[i][1] !== "Carbs") fail("HOUSE.least: " + i + " is not a carb"); });
 // Sunday is an open day: nothing planned for it.
