@@ -63,7 +63,7 @@ window.GB_PROFILE = {
     ["heavy-shrug","Dumbbell shrug",2,10,12,"DB shrug, slow",20,25,90],
     ["ez-curl","EZ-bar curl",2,8,12,"DB curl, 3-sec lowering",10,15,75],
     ["skull","Skull crusher",2,10,12,"DB skull crusher",12,15,75]]},
-  0:{rest:true, title:"Rest", focus:"8–10k steps, Sunday food prep"}
+  0:{rest:true, title:"Rest", focus:"8–10k steps. Open day for food"}
 },
   mainLifts: [["bench","Bench press"],["ohp","Overhead press"],["deadlift","Deadlift"],["squat","Back squat"],["dips","Dips (added kg)"],["bb-row","Barbell row"],["rackpull","Rack pull"]],
   e1rm: [["bench","Bench"],["ohp","Overhead press"],["deadlift","Deadlift"],["squat","Squat"]]

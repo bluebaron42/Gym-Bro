@@ -78,7 +78,7 @@ h2.sec{font-family:var(--display);font-weight:700;font-size:22px;text-transform:
 .check.rs i{color:var(--muted)}
 .chip.dt-fresh{background:var(--ok-soft);color:var(--ok)}
 .chip.dt-head{background:var(--warn-soft);color:var(--warn)}
-.chip.dt-sunday{background:var(--plate);color:var(--plate-ink)}
+.chip.dt-batch{background:var(--plate);color:var(--plate-ink)}
 .chip.muted{background:var(--sunk);color:var(--muted)}
 .sets{display:flex;flex-direction:column;gap:6px}
 .set{display:grid;grid-template-columns:40px 1fr auto 1fr 44px;align-items:center;gap:6px}
@@ -312,6 +312,8 @@ body.has-kt main{padding-bottom:132px}
 const P=window.GB_PROFILE;
 const DAYS=P.days;
 const ORDER=[1,2,3,4,5,6,0];
+// Meals are planned Monday to Saturday. Sunday is an open day: no plan, just what is left of the week's calories.
+const EAT=[1,2,3,4,5,6];
 const DNAME=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const DFULL=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 
@@ -352,7 +354,8 @@ function menuKey(slot,dow,who){return (isShared(slot)||(who||ME)===ME?"":"p:")+s
 // fits = this person can have this dish in this slot. allowed = fits, and can be picked for that day (lunch keeping rule).
 function fits(id,slot,who){const r=RECIPES[id];if(!r||r.slot!==slot)return false;
   return !(r.kind&&eaters(slot,who).some(w=>person(w).skip.indexOf(r.kind)>=0))}
-function allowed(id,slot,dow,who){return fits(id,slot,who)&&!(slot==="lunch"&&dow>=4&&RECIPES[id].late==="no")}
+// Saturday prep: Monday and Tuesday come from the fridge, Wednesday on from the freezer, so a lunch that does not freeze is Monday or Tuesday only.
+function allowed(id,slot,dow,who){return fits(id,slot,who)&&!(slot==="lunch"&&dow>=3&&RECIPES[id].late==="no")}
 // A week's meal, in order: what was chosen for that week; a one-off preset for that week; what the week before had
 // (a new week starts as a copy of the last one); the standard default.
 function choice(slot,dow,who){who=who||ME;const k=menuKey(slot,dow,who),own=allMenus()[viewWk];
@@ -361,15 +364,23 @@ function choice(slot,dow,who){who=who||ME;const k=menuKey(slot,dow,who),own=allM
   if(!own){const v=menuFor(viewWk)[k];if(fits(v,slot,who))return v}
   return isShared(slot)?DEF[slot][dow]:DEF[slot][who][dow]}
 // The first change to a week fixes the whole week as it currently shows, so later edits to other weeks cannot shift it.
-function weekSnapshot(){const m={};SLOTS.forEach(sl=>ORDER.forEach(d=>(isShared(sl)?[ME]:HOUSE.order).forEach(w=>{m[menuKey(sl,d,w)]=choice(sl,d,w)})));return m}
+function weekSnapshot(){const m={};SLOTS.forEach(sl=>EAT.forEach(d=>(isShared(sl)?[ME]:HOUSE.order).forEach(w=>{m[menuKey(sl,d,w)]=choice(sl,d,w)})));return m}
 function setChoice(slot,days,id,who){const all=Object.assign({},allMenus()),old=all[viewWk]||{};const m=all[viewWk]?Object.assign({},all[viewWk]):weekSnapshot();
   days.forEach(d=>{if(allowed(id,slot,d,who))m[menuKey(slot,d,who)]=id});all[viewWk]=m;
   save("menus",all);
   const out={},now=Date.now();Object.keys(m).forEach(k=>{if(old[k]!==m[k])out["m/"+viewWk+"/"+canon(k)]=m[k]+"@"+now});syncPush(out)}
-function pool(slot,dow,who){const T={fresh:0,head:1,sunday:2};
+function pool(slot,dow,who){const T={fresh:0,head:1,batch:2};
   return Object.keys(RECIPES).filter(id=>allowed(id,slot,dow,who)).sort((a,b)=>{const x=RECIPES[a],y=RECIPES[b];return ((T[x.type]||0)-(T[y.type]||0))||(x.name<y.name?-1:1)})}
-function dayMenu(dow,who){return SLOTS.map(s=>({slot:s,id:choice(s,dow,who)}))}
+function dayMenu(dow,who){return dow===0?[]:SLOTS.map(s=>({slot:s,id:choice(s,dow,who)}))}
 function dayTotals(dow,who){let k=0,p=0;dayMenu(dow,who).forEach(m=>{const x=macros(m.id,who);k+=x.k;p+=x.p});return {k:k,p:p}}
+// Sunday's budget on this phone: the week's calories (7 days at target) less Monday to Saturday. A past day counts what was
+// ticked as eaten, or the target if nothing was ticked; today and later days count the plan. Never under three quarters of a day.
+function openDay(){const T=kcalTarget(),mh=get("mealhist",{}),wk=parse(viewWk),r50=x=>Math.round(x/50)*50;let used=0;
+  EAT.forEach(d=>{const x=new Date(wk);x.setDate(x.getDate()+d-1);const ds=iso(x);used+=ds<TODAY?(mh[ds]?mh[ds].k:T):dayTotals(d).k});
+  return {k:Math.max(r50(T*0.75),r50(7*T-used)),used:used,week:7*T}}
+function openDayBlock(){const b=openDay();
+  return '<section class="card" data-budget="'+b.k+'"><div class="prep-est"><b class="num">'+fmtN(b.k)+' kcal</b><span>for Sunday</span></div>'+
+    '<p style="margin:0">Open day: cook and eat what you like within this. It is the week’s '+fmtN(b.week)+' kcal less '+fmtN(b.used)+' for Monday to Saturday. Aim for '+P.protein+' g protein.</p></section>'}
 function singular(w){return w.replace(/s$/,"")}
 function roundG(g){return g<20?Math.round(g):Math.round(g/5)*5}
 function amount(id,g){const n=ING[id];if(!n)return Math.round(g)+" g";
@@ -399,7 +410,7 @@ const seaFmt=s=>{const q=s.q;
   if(/bay leaf|cinnamon stick|stock cube/.test(s.n)){const c=q<=0.75?"½":Math.max(1,Math.ceil(q-0.25));return c+" "+(c>1?s.n.replace("leaf","leaves").replace("stick","sticks").replace("cube","cubes"):s.n)}
   return (Math.max(0.5,Math.round(q*2)/2)+"").replace(".5","½").replace(/^0½/,"½")+" × "+s.n};
 const SIDX={L:4,M:4,B:3,X:3,S:2,H:4,T:3};
-// Every seasoning group of a dish: its Sunday components plus anything used only on the day.
+// Every seasoning group of a dish: its prep components plus anything used only on the day.
 function seaGroups(r){const g=[];(r.comp||[]).forEach(t=>{const s=t[SIDX[t[0]]];if(typeof s!=="string"||!s)return;
     g.push([t[0]==="M"?t[2]+(/rub|seasoning|spice|marinade|salt/i.test(t[2])?"":t[1]==="dry"?" rub":" marinade"):t[0]==="B"?(t[2]==="panko"?"Crumb seasoning":"Coating seasoning"):t[1],s])});
   (r.sea||[]).forEach(x=>g.push(x));return g}
@@ -407,7 +418,7 @@ function seaText(str,scs,mult){const acc={};scs.forEach(sc=>seaParse(str).forEac
 let shopView="house";
 function shopPeople(){return shopView==="house"?HOUSE.order:[shopView]}
 function shopList(){const agg={},uses={},cup={};
-  shopPeople().forEach(w=>{ORDER.forEach(d=>SLOTS.forEach(sl=>{const r=RECIPES[choice(sl,d,w)];if(!r)return;const sc=scFor(r.id,w);
+  shopPeople().forEach(w=>{EAT.forEach(d=>SLOTS.forEach(sl=>{const r=RECIPES[choice(sl,d,w)];if(!r)return;const sc=scFor(r.id,w);
     r.ing.forEach(([i,g])=>{agg[i]=(agg[i]||0)+g*scaleOf(i,sc);(uses[i]=uses[i]||{})[r.name]=1});
     seaGroups(r).forEach(g=>seaParse(g[1]).forEach(s=>{if(ALIAS[s.n]||!CUP[s.n])return;
       const u=s.u==="pinch"||s.u==="tbsp"?"tsp":s.u,q=s.q*(s.u==="pinch"?0.125:s.u==="tbsp"?3:1)*lots(sc);const k=u+"|"+s.n;(cup[k]=cup[k]||{u:u,n:s.n,q:0}).q+=q}))}))});
@@ -416,16 +427,16 @@ function shopList(){const agg={},uses={},cup={};
     return {id:i,name:n[0],need:agg[i],amt:own?amt.split(" ")[0]:amt,pack:packHint(i,buy),uses:Object.keys(uses[i])}})]).filter(x=>x[1].length);
   const cupb=Object.values(cup).sort((x,y)=>CUP[x.n].toLowerCase()<CUP[y.n].toLowerCase()?-1:1).map(s=>({key:s.n,name:CUP[s.n],amt:s.u==="x"?String(Math.ceil(s.q-0.01)):seaFmt({u:s.u,q:s.q,n:""}).trim()}));
   return {aisles:aisles,cup:cupb}}
-// ---------- Sunday run sheet ----------
-// One ordered plan for the whole household. Every Sunday component of every chosen dish becomes a task with
+// ---------- Saturday run sheet ----------
+// One ordered plan for the whole household. Every prep component of every chosen dish becomes a task with
 // hands-on minutes (a), unattended minutes (w), the kit it holds and the tasks it needs first. The scheduler
 // then places tasks on one or two cooks so nothing starts before what it depends on and the kit is never double-booked.
 const KIT={oven:2,hob:4,ip:1}; // trays at one temperature, rings, Instant Pot
 function runSheet(nCooks){
   const VEGE=FD.VEG_EACH;
   const use={};const addUse=(id,slot,d,who)=>{const u=use[id]=use[id]||{slot:slot,scs:[],boxes:[]};u.scs.push(scFor(id,who));u.boxes.push({d:d,who:who})};
-  // Monday to Saturday lunches and dinners for both people, plus the week's breakfasts and treats. Cook-fresh dinners are not prepped.
-  [1,2,3,4,5,6,0].forEach(d=>(d?["breakfast","lunch","dinner","snack"]:["breakfast","snack"]).forEach(sl=>HOUSE.order.forEach(w=>{const id=choice(sl,d,w);if(RECIPES[id].type==="fresh")return;addUse(id,sl,d,w)})));
+  // Made on the Saturday before: Monday to Saturday breakfasts, lunches, dinners and treats for both people. Cook-fresh dinners are not prepped.
+  EAT.forEach(d=>["breakfast","lunch","dinner","snack"].forEach(sl=>HOUSE.order.forEach(w=>{const id=choice(sl,d,w);if(RECIPES[id].type==="fresh")return;addUse(id,sl,d,w)})));
   const gOf=(r,ing,sc)=>{const e=r.ing.find(x=>x[0]===ing);return e?e[1]*scaleOf(ing,sc):0};
   const list=a=>{a=[...new Set(a)];return a.length<3?a.join(" and "):a.slice(0,-1).join(", ")+" and "+a[a.length-1]};
   const lower=id=>ING[id]?ING[id][0].toLowerCase():id;
@@ -489,7 +500,7 @@ function runSheet(nCooks){
     else{o.kit="hob";o.a=6+Math.round(o.g/250);o.w=8+10;o.tm=5;o.html="<b>Potatoes</b> (hob): cut "+shopAmount("potatoes",o.g)+" into chips or cubes; boil 5 min, drain, steam-dry and cool."}
     o.html+=" <i>For "+list(o.d)+".</i>"});
   const MT={yog:"yoghurt marinade: mix, coat, cover, fridge",wet:"wet marinade: mix in a bowl or bag with the meat",dry:"dry rub: mix and rub on"};
-  // Portion sizes at box-up: each part of the dish as it stands on Sunday night, for one person. Cooked weights are estimates
+  // Portion sizes at box-up: each part of the dish as it stands at the end of prep, for one person. Cooked weights are estimates
   // from the raw weight (FD.portion), so they say "about" and give the raw weight alongside where one ingredient dominates.
   const partText=(r,p,sc)=>{const x=FD.portion(p,i=>scaleOf(i,sc),lots(sc)),i=x.top;if(!i||x.w<=0)return "";const n=ING[i],g=roundG(x.topRaw);
     if(p.kind==="C")return FD.CARB_YIELD[i]?"about "+roundG(x.topRaw*FD.CARB_YIELD[i])+" g cooked "+sname(i)+" ("+g+" g dry)":g+" g potatoes (raw weight)";
@@ -502,7 +513,7 @@ function runSheet(nCooks){
     if(plain)return "about "+roundG(x.w)+" g cooked "+sname(i)+" ("+g+(LIQUID[i]?" ml":" g")+" raw)";
     return (p.heat||p.wet?"about ":"")+roundG(x.w)+" g "+p.name};
   const portionText=(rid,sc)=>{const r=RECIPES[rid],pt=FD.parts(r),a=pt.parts.map(p=>partText(r,p,sc)).filter(Boolean);
-    // What no Sunday step handles goes in too, so the box is complete; a head-start bag holds only what was prepped.
+    // What no prep step handles goes in too, so the box is complete; a head-start bag holds only what was prepped.
     const also=r.type==="head"?[]:Object.keys(pt.rest).filter(i=>i!=="olive-oil"&&i!=="sesame-oil"&&ING[i][8]!=="aroma").map(i=>{const g=pt.rest[i]*scaleOf(i,sc);return FD.CARB_YIELD[i]?roundG(g)+" g dry "+sname(i)+" (cook on the day)":qty(i,g)});
     return a.join(", ")+(also.length?(a.length?". Also: ":"")+also.join(", "):"")};
   // "Per portion" wording: one size if everyone's is the same, otherwise by person, and by dish when a step serves several.
@@ -522,9 +533,9 @@ function runSheet(nCooks){
     else if(k==="O"){// Two oven settings only, so trays can share: anything hotter than 200°C runs at 200°C for a few minutes longer.
       const hot=o.temp>200,m=o.min+(hot?4:0);if(hot)o.temp=200;o.a=2;o.w=m;o.tm=m;o.kit="oven";o.html="<b>Oven "+o.temp+"°C fan: "+o.lab+"</b>"+(Object.keys(o.p).length?" ("+amt(o.p)+")":"")+", "+m+" min."+for_}
     else if(k==="H"){o.kit="hob";if(o.min<=8){o.a=o.min}else{o.a=Math.max(4,Math.round(o.min*0.5));o.w=o.min-o.a;if(o.w>=5)o.tm=o.w}o.html="<b>"+o.lab+"</b> (hob, "+o.min+" min)"+(Object.keys(o.p).length?": "+amt(o.p):"")+". "+o.m+(Object.keys(o.sp).length?". With: "+spText(o):"")+"."+for_}
-    else if(k==="T"){o.a=Math.round(5+o.n*0.5);o.html="<b>"+o.lab+"</b>, "+o.n+" portion"+(o.n>1?"s":"")+" ("+dayRun(o.days.map(d=>d||7))+"): "+spText(o)+". "+o.m+"."}
-    else if(k==="P"){const r=RECIPES[o.rid],raw=r.type==="head",bf=r.slot==="breakfast",by={};o.boxes.forEach(b=>{(by[b.who]=by[b.who]||[]).push(b.d||7)});o.a=Math.round(2+o.boxes.length*0.7);
-      const where=ds=>{const lim=raw?2:3,fr_=ds.filter(d=>d<=lim),fz=ds.filter(d=>d>lim),a=[];if(fr_.length)a.push(dayRun(fr_)+" in the fridge");
+    else if(k==="T"){o.a=Math.round(5+o.n*0.5);o.html="<b>"+o.lab+"</b>, "+o.n+" portion"+(o.n>1?"s":"")+" ("+dayRun(o.days)+"): "+spText(o)+". "+o.m+"."}
+    else if(k==="P"){const r=RECIPES[o.rid],raw=r.type==="head",bf=r.slot==="breakfast",by={};o.boxes.forEach(b=>{(by[b.who]=by[b.who]||[]).push(b.d)});o.a=Math.round(2+o.boxes.length*0.7);
+      const where=ds=>{const lim=raw?1:2,fr_=ds.filter(d=>d<=lim),fz=ds.filter(d=>d>lim),a=[];if(fr_.length)a.push(dayRun(fr_)+" in the fridge");
         if(fz.length)a.push(dayRun(fz)+(r.slot==="lunch"&&r.late==="split"?": freeze the cooked part, cut or mix the fresh part on the day":" in the freezer"));return a.join("; ")};
       const count=w=>bf?by[w].length*(r.pieces?person(w).pieces||1:1)+" in all"+(r.pieces?", "+(person(w).pieces||1)+" a day":""):by[w].length+" "+(raw?"bag":"box")+(by[w].length>1?(raw?"s":"es"):"");
       const sizes=sc=>{const s=portionText(o.rid,sc);return s?"<i>"+s+"</i>.":""};
@@ -558,8 +569,8 @@ function runSheet(nCooks){
   const total=Math.max(0,...steps.map(t=>t.done||t.start));
   return {steps:steps,total:Math.ceil(total/5)*5,cooks:workers.length,left:left.size,cl:cl}}
 
-// Dinner types: what Sunday does for each dinner.
-const DTYPE={fresh:["Cook fresh","Nothing on Sunday. Cooked from scratch on the night."],head:["Head start","Marinade, coating or sauce on Sunday. Cooked on the night."],sunday:["Sunday batch","Cooked and portioned on Sunday. Reheat on the night."]};
+// Dinner types: what Saturday prep does for each dinner.
+const DTYPE={fresh:["Cook fresh","Nothing on prep day. Cooked from scratch on the night."],head:["Head start","Marinade, coating or sauce on Saturday. Cooked on the night."],batch:["Batch","Cooked and portioned on Saturday. Reheat on the night."]};
 const typeChip=r=>r&&DTYPE[r.type]?'<span class="chip dt-'+r.type+'">'+DTYPE[r.type][0]+'</span>':'';
 
 // ---------- Helpers ----------
@@ -592,7 +603,8 @@ const THIS_MONDAY=mondayOf(new Date());
 const NEXT_MONDAY=(()=>{const d=parse(THIS_MONDAY);d.setDate(d.getDate()+7);return iso(d)})();
 // Menus are kept per week (keyed by that week's Monday). Today and Week always read this week;
 // the Food tab reads whichever week is selected, so planning ahead never changes this week.
-let foodWk=new Date().getDay()===0?NEXT_MONDAY:THIS_MONDAY;
+// From Saturday's prep onwards the Food tab looks at the coming week.
+let foodWk=[6,0].indexOf(new Date().getDay())>=0?NEXT_MONDAY:THIS_MONDAY;
 let viewWk=THIS_MONDAY;
 function allMenus(){let all=get("menus",null);if(!all){const old=get("menu",null);all={};if(old&&Object.keys(old).length)all[THIS_MONDAY]=old;cache.menus=all;if(old&&Object.keys(old).length)lsSet("menus",all)}return all}
 function menuFor(wk){const all=allMenus();if(all[wk])return all[wk];const prev=Object.keys(all).filter(k=>k<wk).sort().pop();return prev?all[prev]:{}}
@@ -664,6 +676,7 @@ function exerciseCard(e){
 }
 
 function mealsBlock(dow,interactive){
+  if(dow===0)return openDayBlock();
   const md=get("meals",{d:TODAY,t:{}}); const t=(interactive&&md.d===TODAY)?md.t:{};
   const keys={breakfast:"b",shake:"k",lunch:"l",dinner:"d",snack:"s"};
   let kc=0,pr=0;
@@ -676,7 +689,7 @@ function mealsBlock(dow,interactive){
   const tot=dayTotals(dow), tgtK=kcalTarget(), tgtP=P.protein;
   const meters=interactive?'<div class="totals"><div class="meter"><div class="row"><span>Calories</span><span class="num"><b>'+fmtN(kc)+'</b> / '+fmtN(tgtK)+'</span></div><div class="bar"><i style="width:'+Math.min(100,kc/tgtK*100)+'%"></i></div></div>'+
     '<div class="meter"><div class="row"><span>Protein</span><span class="num"><b>'+pr+'</b> / '+tgtP+' g</span></div><div class="bar"><i style="width:'+Math.min(100,pr/tgtP*100)+'%"></i></div></div></div>':'';
-  return '<section class="card">'+meters+'<div>'+rows+'</div><p class="rest-note num">This menu: '+fmtN(tot.k)+' kcal · '+tot.p+' g protein. Tap a meal for its recipe.'+(phase().mealNote?' '+esc(phase().mealNote):'')+'</p></section>';
+  return '<section class="card">'+meters+'<div>'+rows+'</div><p class="rest-note num">This menu: '+fmtN(tot.k)+' kcal · '+tot.p+' g protein. Sunday so far: '+fmtN(openDay().k)+' kcal. Tap a meal for its recipe.'+(phase().mealNote?' '+esc(phase().mealNote):'')+'</p></section>';
 }
 
 function renderToday(){
@@ -686,7 +699,7 @@ function renderToday(){
   h+=weighInCard()+suppCard();
   if(D.rest){
     const nx=ORDER[(ORDER.indexOf(dow)+1)%7];
-    h+='<section class="card rest-card"><h3 style="margin:0">Rest day</h3><p class="empty">Walk 8–10k steps and sleep 7–9 hours. Recovery is when the muscle is built.</p><p class="empty">Tomorrow: <b>'+esc(DAYS[nx].title)+'</b>.</p>'+(dow===0?'<button type="button" class="btn ghost small" data-go="food">Open Sunday prep</button>':'')+'</section>';
+    h+='<section class="card rest-card"><h3 style="margin:0">Rest day</h3><p class="empty">Walk 8–10k steps and sleep 7–9 hours. Recovery is when the muscle is built.</p><p class="empty">Tomorrow: <b>'+esc(DAYS[nx].title)+'</b>.</p>'+'</section>';
   } else {
     h+='<p class="rest-note">'+(mode()==="home"?"Home version: slow the lowering to 3 seconds and finish each set close to failure. Heavy strength work needs the gym.":"Warm up 5 minutes, then build up to your heavy lift over 3–4 lighter sets. Tap Form guide on any exercise for cues and videos.")+' Tick a set to start its rest timer.</p>';
     h+=D.ex.map(exerciseCard).join("");
@@ -711,7 +724,8 @@ function renderFood(){
   const who=menuWho||ME;
   const shop=shopState().t||{}, pantry=get("pantry",{});
   const chk=(key,label,sub)=>'<div class="check'+(shop[key]?' on':'')+'" data-shop="'+esc(key)+'" role="checkbox" tabindex="0" aria-checked="'+!!shop[key]+'"><span class="box" aria-hidden="true" style="'+(shop[key]?'background:var(--ok);border-color:var(--ok)':'')+'">✓</span><span>'+label+(sub?'<small class="uses">'+esc(sub)+'</small>':'')+'</span></div>';
-  const menu=ORDER.map(d=>{const tot=dayTotals(d,who);return '<div class="mday"><div class="mday-h"><b>'+DFULL[d]+'</b><span class="num">'+fmtN(tot.k)+' kcal · '+tot.p+' g P</span></div>'+
+  const menu=ORDER.map(d=>{if(d===0)return '<div class="mday"><div class="mday-h"><b>Sunday</b><span class="num">Open day'+(who===ME?' · '+fmtN(openDay().k)+' kcal':'')+'</span></div></div>';
+    const tot=dayTotals(d,who);return '<div class="mday"><div class="mday-h"><b>'+DFULL[d]+'</b><span class="num">'+fmtN(tot.k)+' kcal · '+tot.p+' g P</span></div>'+
     SLOTS.map(s=>{const id=choice(s,d,who);return '<div class="mrow"><span class="lbl">'+(s==="shake"?"Shake":SLOTNAME[s])+(isShared(s)?'<i class="both">for both</i>':'')+'</span><button type="button" class="linkish" data-recipe="'+id+'" data-dow="'+d+'" data-slot="'+s+'" data-who="'+who+'">'+esc(RECIPES[id].name)+'</button><button type="button" class="swap" data-swap="'+s+'" data-dow="'+d+'" data-who="'+who+'">Swap</button></div>';}).join("")+'</div>'}).join("");
   const all=slot=>Object.keys(RECIPES).filter(k=>RECIPES[k].slot===slot).sort((a,b)=>RECIPES[a].name<RECIPES[b].name?-1:1);
   const lib='<details class="card lib"><summary>Dinners ('+all("dinner").length+')</summary>'+all("dinner").map(i=>recipeBtn(i)).join("")+'</details>'+
@@ -731,20 +745,20 @@ function renderFood(){
       '<span class="box" aria-hidden="true" style="'+(on?'background:var(--ok);border-color:var(--ok)':'')+'">✓</span><span><span class="rs-h"><b class="num">'+RS.cl(t.start)+'</b>'+(RS.cooks>1?'<i class="who-'+t.who+'">'+esc(roleName[t.who])+'</i>':'')+(t.a?'<em class="num">'+t.a+' min</em>':'')+'</span>'+t.html+(wait.length?'<span class="rs-wait">Waits for '+esc(roleName[myRole==="chef"?"helper":"chef"])+': '+esc(wait.join("; "))+'</span>':'')+(t.tm?'<span class="rs-timer">'+(get("timers",{})[key]?'Timer running':on?'':'Tick when it goes on to start a '+t.tm+' min timer')+'</span>':'')+'</span></div>'}).join("");
   const isNext=viewWk===NEXT_MONDAY, planned=!!allMenus()[viewWk];
   const seg=(attr,cur,opts)=>'<div class="seg wide" role="group">'+opts.map(o=>'<button type="button" data-'+attr+'="'+o[0]+'" aria-pressed="'+(cur===o[0])+'">'+esc(o[1])+'</button>').join("")+'</div>';
-  const lunchN=w=>new Set([1,2,3,4,5,6].map(d=>choice("lunch",d,w))).size, treatN=new Set(ORDER.map(d=>choice("snack",d)).filter(id=>RECIPES[id].comp)).size;
+  const lunchN=w=>new Set(EAT.map(d=>choice("lunch",d,w))).size, treatN=new Set(EAT.map(d=>choice("snack",d)).filter(id=>RECIPES[id].comp)).size;
   return '<div><div class="eyebrow">Food · '+weekRange(viewWk)+'</div><h1 class="day">'+(isNext?"Next":"This")+' week’s menu</h1></div>'+
     '<div class="seg wide wk" role="group" aria-label="Which week"><button type="button" data-wk="'+THIS_MONDAY+'" aria-pressed="'+!isNext+'">This week</button><button type="button" data-wk="'+NEXT_MONDAY+'" aria-pressed="'+isNext+'">Next week</button></div>'+
     '<p class="lead" style="margin:0">'+(isNext?(planned?'The plan for next week. ':'Starts as a copy of this week. ')+'Changes here don’t touch this week’s meals. It becomes this week on Monday.':'What you’re eating now. Switch to Next week to plan and shop ahead.')+' Dinners and treats are the same for both of you; breakfast, shake and lunch are each person’s own.</p>'+
     '<section class="card">'+seg("who",who,[[ME,"My meals"],[OTHER,poss(OTHER)+" meals"]])+
-    '<p class="rest-note" style="margin:0"><b>Sunday load:</b> '+["fresh","head","sunday"].map(t=>ORDER.filter(d=>(RECIPES[choice("dinner",d)]||{}).type===t).length+' '+DTYPE[t][0].toLowerCase()).join(" · ")+' dinners; '+HOUSE.order.map(w=>lunchN(w)+' lunch'+(lunchN(w)>1?'es':'')+' for '+(w===ME?'you':pname(w))).join(", ")+'; '+treatN+' batch treat'+(treatN===1?'':'s')+'.</p>'+menu+'<button type="button" class="btn ghost small" id="menu-reset" style="align-self:flex-start">Reset this menu to defaults</button></section>'+
+    '<p class="rest-note" style="margin:0"><b>Saturday prep:</b> '+["fresh","head","batch"].map(t=>EAT.filter(d=>(RECIPES[choice("dinner",d)]||{}).type===t).length+' '+DTYPE[t][0].toLowerCase()).join(" · ")+' dinners; '+HOUSE.order.map(w=>lunchN(w)+' lunch'+(lunchN(w)>1?'es':'')+' for '+(w===ME?'you':pname(w))).join(", ")+'; '+treatN+' batch treat'+(treatN===1?'':'s')+'.</p>'+menu+'<button type="button" class="btn ghost small" id="menu-reset" style="align-self:flex-start">Reset this menu to defaults</button></section>'+
     '<h2 class="sec">Sync with '+esc(pname(OTHER))+'</h2>'+syncCard()+
     '<h2 class="sec">Recipes</h2>'+lib+
     '<h2 class="sec">Shopping list</h2><section class="card">'+seg("sv",shopView,[["house","Household"],[ME,"Just me"],[OTHER,"Just "+pname(OTHER)]])+'<p class="rest-note"><b>'+weekRange(viewWk)+'.</b> '+(shopView==="house"?'Everything both of you eat this week, at each person’s portions.':shopView===ME?'Only your portions.':'Only '+esc(poss(OTHER))+' portions.')+' Weights include an allowance for peel and trim; pack counts are a guide.</p><div class="data-btns"><button type="button" class="btn small" id="shop-copy">Copy shopping list</button></div><p class="rest-note" id="shop-msg" aria-live="polite"></p>'+lists+'</section>'+
-    '<h2 class="sec">Sunday run sheet'+(viewWk===THIS_MONDAY?'':' for next week')+'</h2><section class="card">'+(RS.steps.length?
+    '<h2 class="sec">Saturday run sheet'+(viewWk===THIS_MONDAY?'':' for next week')+'</h2><section class="card">'+(RS.steps.length?
       '<div class="prep-est"><b>About '+hm(RS.total)+'</b><span>start to finish with '+(RS.cooks>1?'two of you':'one cook')+', for Monday '+fmtDate(viewWk)+' to Saturday</span></div>'+seg("cooks",String(nCooks),[["2","Two of us"],["1","One cook"]])+(split?seg("rsv",mineOnly?"mine":"all",[["mine","My jobs"],["all","Both of us"]]):'')+
-      '<p class="rest-note">Work down the list. Times count from when you start; each step shows who does it and the hands-on minutes. Ticking an oven or hob step starts its timer on both phones. It covers both your lunches, the treats, and head start or Sunday batch dinners, and rebuilds whenever you swap a meal.</p>'+prep+
-      '<p class="rest-note"><b>Cooling and storing:</b> spread rice, noodles and pasta on trays and get them boxed and chilled within 1 hour, everything else within 90 minutes. Lids on only once cold. Label every box and bag with the day. Each night, move the next day’s freezer boxes to the fridge, and reheat cooked food until piping hot.</p>'
-      :'<p class="empty">Nothing to prep for this menu: every dinner is cook-fresh and the lunches and treats need no Sunday work.</p>')+
+      '<p class="rest-note">Work down the list. Times count from when you start; each step shows who does it and the hands-on minutes. Ticking an oven or hob step starts its timer on both phones. It covers both your lunches, the treats, and head start or batch dinners, and rebuilds whenever you swap a meal.</p>'+prep+
+      '<p class="rest-note"><b>Cooling and storing:</b> spread rice, noodles and pasta on trays and get them boxed and chilled within 1 hour, everything else within 90 minutes. Lids on only once cold. Label every box and bag with the day. Monday and Tuesday go in the fridge, the rest in the freezer. Each night, move the next day’s freezer boxes to the fridge, and reheat cooked food until piping hot.</p>'
+      :'<p class="empty">Nothing to prep for this menu: every dinner is cook-fresh and the lunches and treats need no prep.</p>')+
     '<p class="rest-note">Shopping and prep ticks clear themselves every Monday.</p><button type="button" class="btn ghost small" id="clear-shop" style="align-self:flex-start">Clear ticks now</button></section>'+
     '<h2 class="sec">Recipe creators</h2><div class="links">'+CREATORS.map(c=>'<a href="https://www.youtube.com/results?search_query='+encodeURIComponent(c[1])+'" target="_blank" rel="noopener">'+esc(c[0])+'</a>').join("")+'</div>'+
     '<p class="rest-note">Swaps that matter: air fryer, 5% mince or chicken, light mayo and yoghurt sauces, measured oil.</p>';
@@ -760,13 +774,13 @@ function renderSheet(){if(!sheet)return;const T=$("#sheet-title"),B=$("#sheet-bo
   if(sheet.mode==="swap"){const cur=choice(sheet.slot,sheet.dow,who),blk=blockOf(sheet.dow);
     T.textContent=DFULL[sheet.dow]+" "+SLOTNAME[sheet.slot].toLowerCase()+(isShared(sheet.slot)?"":" · "+(who===ME?"you":pname(who)));
     let last=null;
-    B.innerHTML='<p class="rest-note">'+(isShared(sheet.slot)?'One choice for both of you. ':'')+(sheet.slot==="lunch"&&sheet.dow>=4?'Thursday to Saturday lunches are limited to ones that freeze or keep. ':'')+'The shopping list and prep update straight away.</p>'+pool(sheet.slot,sheet.dow,who).map(id=>{const r=RECIPES[id],x=macros(id,who),on=id===cur;
+    B.innerHTML='<p class="rest-note">'+(isShared(sheet.slot)?'One choice for both of you. ':'')+(sheet.slot==="lunch"&&sheet.dow>=3?'Wednesday to Saturday lunches come from the freezer, so only ones that freeze. ':'')+'The shopping list and prep update straight away.</p>'+pool(sheet.slot,sheet.dow,who).map(id=>{const r=RECIPES[id],x=macros(id,who),on=id===cur;
       const head=(r.type&&r.type!==last)?'<h3 class="rh">'+DTYPE[r.type][0]+'</h3><p class="rest-note" style="margin:0">'+DTYPE[r.type][1]+'</p>':'';last=r.type||null;
       return head+'<div class="opt'+(on?' on':'')+'"><div class="opt-top"><b>'+esc(r.name)+'</b>'+(on?'<span class="chip ok">Current</span>':'')+'</div>'+
-        '<div class="opt-meta num">'+x.k+' kcal · '+x.p+' g protein · '+x.c+' g carbs · '+x.f+' g fat'+(r.time?' · '+esc(r.time):'')+(r.late==="no"?' · Mon–Wed only':'')+'</div>'+
+        '<div class="opt-meta num">'+x.k+' kcal · '+x.p+' g protein · '+x.c+' g carbs · '+x.f+' g fat'+(r.time?' · '+esc(r.time):'')+(r.late==="no"?' · Mon–Tue only':'')+'</div>'+
         '<div class="data-btns">'+(on?'':'<button type="button" class="btn small" data-choose="'+id+'" data-days="'+sheet.dow+'">Choose</button>')+
           (sheet.slot==="lunch"&&blk&&allowed(id,"lunch",blk[0][0],who)?'<button type="button" class="btn ghost small" data-choose="'+id+'" data-days="'+blk[0].join(",")+'">Use '+blk[1]+'</button>':'')+
-          (sheet.slot==="snack"?'<button type="button" class="btn ghost small" data-choose="'+id+'" data-days="'+ORDER.join(",")+'">Use all week</button>':'')+
+          (sheet.slot==="snack"?'<button type="button" class="btn ghost small" data-choose="'+id+'" data-days="'+EAT.join(",")+'">Use all week</button>':'')+
           '<button type="button" class="btn ghost small" data-recipe="'+id+'" data-dow="'+sheet.dow+'" data-slot="'+sheet.slot+'" data-who="'+who+'" data-from="swap">Recipe</button></div></div>'}).join("");
     return}
   const r=RECIPES[sheet.id], x=macros(sheet.id,who), s=sheet.serv||1;
@@ -786,7 +800,7 @@ function renderSheet(){if(!sheet)return;const T=$("#sheet-title"),B=$("#sheet-bo
     (sameShake?'<p class="rest-note">You both have this today. Blend the total, then pour the larger glass for '+(person(ME).scales.p>=person(OTHER).scales.p?'you':esc(pname(OTHER)))+'.</p>':'')+
     '<h3 class="rh">Ingredients</h3><ul class="list ing">'+r.ing.map(([i,g])=>'<li><span>'+esc(ING[i]?ING[i][0]:i)+(both?'<small class="uses">'+ppl.map(w=>lab(w)+' '+esc(amount(i,g*s*scaleOf(i,scFor(r.id,w))))).join(' · ')+'</small>':'')+'</span><span class="num">'+esc(amount(i,g*s*scs.reduce((a,sc)=>a+scaleOf(i,sc),0)))+'</span></li>').join("")+'</ul>'+
     (groups.length?'<h3 class="rh">Seasoning and sauces</h3><p class="rest-note" style="margin:0">How the sauces, marinades and seasonings are made up'+(both?', for both of you':'')+'. Anything listed above is the same food, not extra.</p><ul class="list sea">'+groups.map(g=>'<li><span><b>'+esc(g[0])+'</b><small class="uses">'+esc(seaText(g[1],scs,s))+'</small></span></li>').join("")+'</ul>':'')+
-    (r.finish?'<p class="banner"><b>After Sunday prep:</b> '+esc(r.finish)+'.</p><h3 class="rh">From scratch</h3><p class="rest-note" style="margin:0">Use this if it wasn’t prepped.</p>':'<h3 class="rh">Method</h3>')+
+    (r.finish?'<p class="banner"><b>After prep:</b> '+esc(r.finish)+'.</p><h3 class="rh">From scratch</h3><p class="rest-note" style="margin:0">Use this if it wasn’t prepped.</p>':'<h3 class="rh">Method</h3>')+
     '<ol class="method">'+r.method.map(m=>'<li>'+esc(m)+'</li>').join("")+'</ol>'+
     (canUse?'<button type="button" class="btn" data-choose="'+r.id+'" data-days="'+sheet.dow+'">Use for '+DFULL[sheet.dow]+' '+SLOTNAME[sheet.slot].toLowerCase()+'</button>':'');
 }
@@ -950,7 +964,6 @@ $("#view").addEventListener("click",ev=>{
   const mb=ev.target.closest("[data-meal]");
   if(mb){let md=get("meals",{d:TODAY,t:{}});if(md.d!==TODAY)md={d:TODAY,t:{}};md={d:TODAY,t:Object.assign({},md.t)};md.t[mb.dataset.meal]=!md.t[mb.dataset.meal];save("meals",md);logMeals(md);const y=window.scrollY;render();window.scrollTo(0,y);return}
   const dy=ev.target.closest("[data-day]"); if(dy){weekSel=Number(dy.dataset.day);render();return}
-  const go=ev.target.closest("[data-go]"); if(go){tab=go.dataset.go;render();window.scrollTo(0,0);return}
   const sh=ev.target.closest("[data-shop]"); if(sh){toggleShop(sh.dataset.shop,sh);return}
   if(ev.target.id==="clear-shop"){const b=ev.target;if(b.dataset.armed){const o={},now=Date.now();Object.keys(shopState().t).forEach(k=>{o["s/"+viewWk+"/"+enc(k)]=-now});saveShop({t:{}});syncPush(o);render()}else{b.dataset.armed="1";b.textContent="Tap again to clear all ticks";setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.textContent="Clear ticks now"}},4000)}return}
   if(ev.target.id==="p-save"){const d=$("#p-date").value||TODAY,wa=$("#p-waist").value;
@@ -1199,7 +1212,7 @@ function buildSummary(){
   if(md.length)Object.keys(mw).sort().forEach(w=>L.push(w+", "+mw[w].n+", "+Math.round(mw[w].k/mw[w].n)+", "+Math.round(mw[w].p/mw[w].n)));else L.push("No meals ticked yet");
   L.push("");L.push("MEALS EATEN, DAILY (date, kcal of target, protein g of target, what was ticked)");
   md.filter(d=>d>=since).forEach(d=>{const x=mh[d];L.push(d+", "+x.k+" of "+x.tk+", "+x.p+" of "+x.tp+", "+Object.keys(x.ate).map(sl=>(RECIPES[x.ate[sl]]||{}).name||x.ate[sl]).join("; "))});
-  L.push("");L.push("CURRENT MENU (lunch / dinner)");ORDER.forEach(d=>L.push(DNAME[d]+": "+RECIPES[choice("lunch",d)].name+" / "+RECIPES[choice("dinner",d)].name+" ("+dayTotals(d).k+" kcal, "+dayTotals(d).p+" g protein with breakfast, shake and treat)"));
+  L.push("");L.push("CURRENT MENU (lunch / dinner)");EAT.forEach(d=>L.push(DNAME[d]+": "+RECIPES[choice("lunch",d)].name+" / "+RECIPES[choice("dinner",d)].name+" ("+dayTotals(d).k+" kcal, "+dayTotals(d).p+" g protein with breakfast, shake and treat)"));
   const sh=get("supphist",{});
   L.push("");L.push("SUPPLEMENTS (date, taken)");Object.keys(sh).sort().filter(d=>d>=since&&sh[d].length).forEach(d=>L.push(d+", "+sh[d].join(" ")));
   return L.join("\n");

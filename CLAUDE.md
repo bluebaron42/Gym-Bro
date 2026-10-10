@@ -11,7 +11,7 @@ Two installable phone web apps (static files on GitHub Pages) for one household:
 | Gym-Bro | Blue | Android, Chrome | `bluebaron42/Gym-Bro` | https://bluebaron42.github.io/Gym-Bro/ |
 | Gym-Gyal | Harriett | iPhone, Safari home-screen app | `bluebaron42/Gym-Gyal` | https://bluebaron42.github.io/Gym-Gyal/ |
 
-Each app has training (Today, Week), food (menus, recipes, shopping, Sunday run sheet, sync, timers) and progress.
+Each app has training (Today, Week), food (menus, recipes, shopping, Saturday run sheet, sync, timers) and progress.
 Blue is the cook and the person you talk to. He is a chef: be precise about quantities and kitchen workflow.
 
 ## Files
@@ -62,44 +62,54 @@ sometimes cancels the publishing run and the phones silently stay on the old ver
 **Household** (`HOUSE` in `data.js`): two people with portion scales (`p` protein and dairy, `c` carbs, fats and
 sauces, `v` veg). Dinners and treats are shared (one choice, two portions). Breakfast, shake and lunch are per person.
 Blue skips curries, so curries are lunch-only and only Harriett can pick them. No pork anywhere.
+On 10 Oct 2026 the scales were cut (Blue p 0.85 c 0.7, Harriett p 0.65 c 0.36) so that Monday to Saturday plans run a little under
+target and leave a bigger Sunday: on the default menus, about 3,550 kcal for Blue and 2,350 for Harriett.
 
-**Menus** are stored per week (`menus[mondayDate]`). Own and shared slots are keyed `slot+day` (`dinner1`, 0 = Sunday);
+**Prep day is Saturday and Sunday is an open day** (Blue's request, 10 Oct 2026). Meals are planned Monday to Saturday only (`EAT`
+in `index.html`; `DEFAULTS` and `PRESETS` have no day 0, and `data-check.js` fails if they do). Sunday has no menu, shopping or prep.
+Its budget (`openDay()`, per phone) is 7 x the daily target less Monday to Saturday: a past day counts its ticked meals
+(`mealhist`), or the target if nothing was ticked; today and later days count the plan. It is never under three quarters of a
+day. Today shows it on Sunday, the Food menu shows it on the Sunday row, and the meals card shows "Sunday so far" during the week.
+The Saturday session preps the following Monday to Saturday, so Saturday's food is a week old: Monday and Tuesday go in the fridge
+(Monday only for raw head-start bags), everything later in the freezer.
+
+**Menus** are stored per week (`menus[mondayDate]`). Own and shared slots are keyed `slot+day` (`dinner1`, 1 = Monday, 6 = Saturday);
 the other person's are prefixed `p:`. A meal resolves in this order: chosen for that week, a one-off `PRESETS` entry
 for that week, what the week before had, then `DEFAULTS`. The first edit to a week freezes the whole week as shown.
 
 **Recipes**: `ing` is grams per full portion and is the only source for shopping and macros. Seasoning lists live in
-`comp` (Sunday components) and `sea` (anything else), as `"1 tsp cumin; 30 g greek yoghurt"`. Names in `ALIAS` are
+`comp` (prep components) and `sea` (anything else), as `"1 tsp cumin; 30 g greek yoghurt"`. Names in `ALIAS` are
 the same food as an ingredient and must be covered by `ing`; `data-check.js` fails if they are not. Other names must
 be in `CUPBOARD`. Methods carry no amounts.
 
-- Breakfasts are built in whole pieces and are on the run sheet for all seven days. `pieces: true` = small ones: `ing` is one piece
+- Breakfasts are built in whole pieces and are on the run sheet for Monday to Saturday. `pieces: true` = small ones: `ing` is one piece
   and each person has `HOUSE.people[x].pieces` of them (Blue 2, Harriett 1), with no other scaling. `whole: [ingredients]` = big ones,
   one each: the bread stays whole and the filling follows the person's usual scales. `scFor(id, who)` in `index.html` applies both.
-  Shared parts (egg sheet, patties, rashers, nacho cheese sauce, cheesecake batter) pool into one Sunday task by having the same label.
+  Shared parts (egg sheet, patties, rashers, nacho cheese sauce, cheesecake batter) pool into one prep task by having the same label.
 - `O`, `X`, `H` and `S` components may end with a list of ingredients whose weight the step shows (otherwise the main protein). An `H` label containing "one at a time"
   takes its minutes per portion.
-- **Portion sizes.** `parts(r)` in `data.js` folds a dish's Sunday components into the parts that get portioned (a marinade into
+- **Portion sizes.** `parts(r)` in `data.js` folds a dish's prep components into the parts that get portioned (a marinade into
   the tray it roasts on, veg into the pan they cook in, a sauce into what simmers in it), using the same `needs(r)` the run sheet
   schedules by, and `portion(part, scale, lots)` gives one person's weight of a part. Cooked weights are estimates from raw weights
   and the `COOKED` table, so they read "about". The run sheet shows them three ways: every box-up lists each person's portion of
   each part (raw weights for a head-start bag); shaping, breading and one-at-a-time steps say the size of each piece; and a dish
   with no box-up (treats, overnight oats) says its portion on the step that finishes each part. Cooked steps also say roughly what
   the batch should weigh. Blue asked for this: portion weights matter, batch totals alone are not enough.
-- Every dish with components has `rest`: the ingredients no Sunday component handles. `data-check.js` fails unless it matches,
+- Every dish with components has `rest`: the ingredients no prep component handles. `data-check.js` fails unless it matches,
   so a new ingredient has to be put in a component (a seasoning list, or the list at the end of an `O`, `X`, `H` or `S`) or in `rest`.
   A `V` ending `"raw"` stays raw (salad veg). `after` also says what a sauce or pan takes in, not just what it waits for.
-- Dinners have `type`: `fresh` (cooked on the night, nothing on Sunday), `head` (marinade, coating or sauce on
-  Sunday, cooked on the night), `sunday` (cooked and boxed on Sunday).
-  A head-start dinner may set `sun: [rice or potatoes]` to have that cooked or par-boiled on Sunday, and may have an `H` step
-  whose label starts "Soften". On 7 Oct 2026 eight cook-fresh dinners became Sunday batches and two (fried rice, Philly) head starts. Every dinner with chips has them cut and par-boiled on Sunday, at Blue's request:
-  give any new chips dinner `sun: ["potatoes"]` (or make it a Sunday batch).
-- Lunches have `late`: `freeze`, `split` (freeze the cooked part), or `no` (Monday to Wednesday only).
+- Dinners have `type`: `fresh` (cooked on the night, nothing on prep day), `head` (marinade, coating or sauce on
+  prep day, cooked on the night), `batch` (cooked and boxed on prep day).
+  A head-start dinner may set `sun: [rice or potatoes]` to have that cooked or par-boiled on prep day, and may have an `H` step
+  whose label starts "Soften". On 7 Oct 2026 eight cook-fresh dinners became batches and two (fried rice, Philly) head starts. Every dinner with chips has them cut and par-boiled on prep day, at Blue's request:
+  give any new chips dinner `sun: ["potatoes"]` (or make it a batch).
+- Lunches have `late`: `freeze`, `split` (freeze the cooked part), or `no` (Monday and Tuesday only, since later days come from the freezer).
 
 **Shopping list**: Household by default, or one person. Adds `TRIM` (peel and trim allowance) and shows a `PACKS`
 guide. Pack sizes are typical UK sizes and have not been checked against a supermarket. Cupboard seasonings are a
 checklist whose ticks persist.
 
-**Sunday run sheet** (`runSheet` in `index.html`): turns every Sunday component of the chosen dishes into tasks with
+**Saturday run sheet** (`runSheet` in `index.html`): turns every prep component of the chosen dishes into tasks with
 hands-on minutes, unattended minutes, kit and dependencies, then schedules them on one or two cooks. Kit limits are
 two oven trays at one temperature, four hob rings, one Instant Pot. With two cooks, each phone shows only its owner's jobs (Blue is
 `HOUSE.prep.chef`, Harriett the helper; the others are rendered but hidden), a "Both of us" switch shows everything (`rsall`,

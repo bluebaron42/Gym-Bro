@@ -231,8 +231,8 @@ window.BB_DATA = (function () {
         "name": "Blue",
         "pieces": 2,
         "scales": {
-          "p": 1,
-          "c": 0.88,
+          "p": 0.85,
+          "c": 0.7,
           "v": 1
         },
         "skip": [
@@ -243,40 +243,40 @@ window.BB_DATA = (function () {
         "name": "Harriett",
         "pieces": 1,
         "scales": {
-          "p": 0.7,
-          "c": 0.45,
+          "p": 0.65,
+          "c": 0.36,
           "v": 1
         },
         "skip": []
       }
     }
   };
-  // The menu a new week starts from (0 = Sunday).
-  const DEFAULTS = {"dinner":{"0":"d-meatballs", "1":"d-ragu", "2":"d-smash", "3":"d-fried-rice", "4":"d-peri-peri", "5":"d-bigmac", "6":"d-carbonara"},"snack":{"0":"s-bark", "1":"s-brownie", "2":"s-brownie", "3":"s-brownie", "4":"s-brownie", "5":"s-bark", "6":"s-bark"},"lunch":{"blue":{"0":"l-tuna-poke", "1":"l-teriyaki", "2":"l-teriyaki", "3":"l-teriyaki", "4":"l-ragu-box", "5":"l-ragu-box", "6":"l-ragu-box"},"harriett":{"0":"l-spicy-tuna-salad", "1":"l-shawarma", "2":"l-shawarma", "3":"l-shawarma", "4":"l-green-curry", "5":"l-green-curry", "6":"l-green-curry"}},"breakfast":{"blue":{"0":"bf-weetabix", "1":"bf-mcbuffin", "2":"bf-mcbuffin", "3":"bf-mcbuffin", "4":"bf-bagel", "5":"bf-bagel", "6":"bf-bagel"},"harriett":{"0":"bf-weetabix", "1":"bf-mcbuffin", "2":"bf-mcbuffin", "3":"bf-mcbuffin", "4":"bf-bagel", "5":"bf-bagel", "6":"bf-bagel"}},"shake":{"blue":{"0":"sh-strawberry", "1":"sh-cookies-cream", "2":"sh-mocha", "3":"sh-strawberry", "4":"sh-berry-oat", "5":"sh-lassi", "6":"sh-strawb-thick"},"harriett":{"0":"sh-strawberry", "1":"sh-cookies-cream", "2":"sh-mocha", "3":"sh-strawberry", "4":"sh-berry-oat", "5":"sh-lassi", "6":"sh-strawb-thick"}}};
+  // The menu a new week starts from, Monday (1) to Saturday (6). Sunday is an open day with no menu.
+  const DEFAULTS = {"dinner":{"1":"d-ragu", "2":"d-smash", "3":"d-fried-rice", "4":"d-peri-peri", "5":"d-bigmac", "6":"d-carbonara"}, "snack":{"1":"s-brownie", "2":"s-brownie", "3":"s-brownie", "4":"s-brownie", "5":"s-bark", "6":"s-bark"}, "lunch":{"blue":{"1":"l-teriyaki", "2":"l-teriyaki", "3":"l-teriyaki", "4":"l-ragu-box", "5":"l-ragu-box", "6":"l-ragu-box"}, "harriett":{"1":"l-shawarma", "2":"l-shawarma", "3":"l-shawarma", "4":"l-green-curry", "5":"l-green-curry", "6":"l-green-curry"}}, "breakfast":{"blue":{"1":"bf-mcbuffin", "2":"bf-mcbuffin", "3":"bf-mcbuffin", "4":"bf-bagel", "5":"bf-bagel", "6":"bf-bagel"}, "harriett":{"1":"bf-mcbuffin", "2":"bf-mcbuffin", "3":"bf-mcbuffin", "4":"bf-bagel", "5":"bf-bagel", "6":"bf-bagel"}}, "shake":{"blue":{"1":"sh-cookies-cream", "2":"sh-mocha", "3":"sh-strawberry", "4":"sh-berry-oat", "5":"sh-lassi", "6":"sh-strawb-thick"}, "harriett":{"1":"sh-cookies-cream", "2":"sh-mocha", "3":"sh-strawberry", "4":"sh-berry-oat", "5":"sh-lassi", "6":"sh-strawb-thick"}}};
 
   // One-off weeks that start from something other than DEFAULTS. Delete an entry once its week has passed
   // (tests/data-check.js fails when one is more than two weeks old).
   // Week of 5 Oct 2026: prepped and shopped before the household update, so it keeps Blue's menu from then.
   const PRESETS = { "2026-10-05": {
-    dinner: {"1": "d-gyros", "2": "d-philly", "3": "d-fried-rice", "4": "d-doner", "5": "d-bigmac", "6": "d-lasagne", "0": "d-meatballs"},
-    snack: {"1": "s-choc-mousse", "2": "s-brownie", "3": "s-cheesecake", "4": "s-bark", "5": "s-crumble", "6": "s-pbj", "0": "snack"},
-    breakfast: {blue: {"1": "bf-weetabix", "2": "bf-weetabix", "3": "bf-weetabix", "4": "bf-weetabix", "5": "bf-weetabix", "6": "bf-weetabix", "0": "bf-weetabix"}, harriett: {"1": "bf-weetabix", "2": "bf-weetabix", "3": "bf-weetabix", "4": "bf-weetabix", "5": "bf-weetabix", "6": "bf-weetabix", "0": "bf-weetabix"}},
-    lunch: {blue: {"1": "l-teriyaki", "2": "l-bulgogi", "3": "l-prawn-egg", "4": "l-spicy-salmon", "5": "l-shawarma", "6": "l-prawn-egg", "0": "l-tuna-poke"}},
-    shake: {blue: {"1": "sh-mocha", "2": "sh-mocha", "3": "sh-strawberry", "4": "sh-berry-oat", "5": "sh-lassi", "6": "sh-mocha", "0": "sh-strawberry"}}
+    dinner: {"1": "d-gyros", "2": "d-philly", "3": "d-fried-rice", "4": "d-doner", "5": "d-bigmac", "6": "d-lasagne"},
+    snack: {"1": "s-choc-mousse", "2": "s-brownie", "3": "s-cheesecake", "4": "s-bark", "5": "s-crumble", "6": "s-pbj"},
+    breakfast: {blue: {"1": "bf-weetabix", "2": "bf-weetabix", "3": "bf-weetabix", "4": "bf-weetabix", "5": "bf-weetabix", "6": "bf-weetabix"}, harriett: {"1": "bf-weetabix", "2": "bf-weetabix", "3": "bf-weetabix", "4": "bf-weetabix", "5": "bf-weetabix", "6": "bf-weetabix"}},
+    lunch: {blue: {"1": "l-teriyaki", "2": "l-bulgogi", "3": "l-prawn-egg", "4": "l-spicy-salmon", "5": "l-shawarma", "6": "l-prawn-egg"}},
+    shake: {blue: {"1": "sh-mocha", "2": "sh-mocha", "3": "sh-strawberry", "4": "sh-berry-oat", "5": "sh-lassi", "6": "sh-mocha"}}
   } };
 
-  // Recipes: ing = grams per full portion. sea = [label, list] seasoning groups not covered by a Sunday component.
-  // method = from scratch, no amounts (they are in the lists). finish = on the day, after Sunday prep.
-  // A head-start dinner may list sun: [rice or potatoes] to have that cooked or par-boiled on Sunday, and may soften veg on Sunday.
-  // Dinners: type fresh | head | sunday. Lunches: late freeze | split | no (Monday to Wednesday only).
+  // Recipes: ing = grams per full portion. sea = [label, list] seasoning groups not covered by a prep component.
+  // method = from scratch, no amounts (they are in the lists). finish = on the day, after Saturday prep.
+  // A head-start dinner may list sun: [rice or potatoes] to have that cooked or par-boiled on prep day, and may soften veg then.
+  // Dinners: type fresh | head | batch. Lunches: late freeze | split | no (Monday and Tuesday only: later days come from the freezer).
   // Breakfasts built in whole pieces: pieces: true = small ones, ing is one piece and each person has their own number of them
   // (HOUSE pieces). whole: [ingredients] = big ones, one each: those ingredients stay whole and the filling follows the person's scales.
   // A B component may end with how the chicken is cut. Lunch burritos use whole: [...] too.
   // A V component ending "raw" stays raw (a salad or a pot), so cooked steps neither wait for it nor take it in.
-  // rest = ingredients no Sunday component handles (packed as they are, used for cooking, or added on the day);
+  // rest = ingredients no prep component handles (packed as they are, used for cooking, or added on the day);
   // tests/data-check.js fails if the list does not match what the components leave over.
   // O, X, H and S components may end with a list of ingredients to show the weight of, instead of the dish's main protein.
-  // comp = Sunday components: V veg, L long cook, M marinade, B breading, X shape, S sauce, O oven, H hob, T treat, P pack.
+  // comp = prep components (made on Saturday): V veg, L long cook, M marinade, B breading, X shape, S sauce, O oven, H hob, T treat, P pack.
   // The run sheet works out what each component needs first; after = {component index: [indexes it also needs]} for the exceptions.
   const R = [
     { id: "bf-weetabix", slot: "breakfast", name: "Chocolate chip Weetabix minis", time: "1 min",
@@ -671,7 +671,7 @@ window.BB_DATA = (function () {
       finish: "Rice on. Air-fry or grill the chicken at 200°C for 18 min, rest and slice. Warm the beans and corn with a pinch of cumin and salt. Stir the zest and juice of ¼ lime and chopped coriander through the rice. Build with shredded lettuce, salsa, yoghurt and cheese. 25 min",
       comp: [["M", "dry", "Burrito spice", "chicken-breast", "1 tsp smoked paprika; 0.5 tsp cumin; 0.5 tsp chilli powder; 0.5 tsp garlic granules; 0.25 tsp dried oregano; 0.5 tsp salt; 0.125 x lime juice",0],
         ["P", "spice-rubbed raw chicken, bagged flat"]] },
-    { id: "d-chilli", slot: "dinner", name: "Beef chilli con carne", time: "5 min on the day", tag: "Spicy", type: "sunday",
+    { id: "d-chilli", slot: "dinner", name: "Beef chilli con carne", time: "5 min on the day", tag: "Spicy", type: "batch",
       ing: [["beef-mince",180], ["kidney-beans",100], ["chopped-tom",200], ["onion",60], ["peppers",60], ["garlic",5], ["jasmine-rice",70], ["greek-yog",40], ["dark-choc",5]],
       rest: ["greek-yog"],
       method: ["Brown the mince; soften onion, peppers and garlic.", "Add cumin, smoked paprika and chilli; tomatoes and beans.", "Simmer 30 minutes. Rice and a spoon of yoghurt."],
@@ -680,7 +680,7 @@ window.BB_DATA = (function () {
         ["V", "peppers", "diced"],
         ["L", "Chilli con carne", "hob",40,"1 clove garlic; 1 tsp cumin; 1 tsp smoked paprika; 0.5 tsp chilli powder; 0.5 tsp dried oregano; 0.25 tsp cinnamon; 1 tsp tomato purée; 100 ml beef stock; 0.5 tsp salt; 5 g dark chocolate; 200 g chopped tomatoes; 100 g kidney beans", "Brown the mince hard, soften the onion, peppers and garlic, add the spices and purée, then tomatoes, stock and beans; simmer 30 min, stir in the chocolate"],
         ["P", "rice, chilli; yoghurt pot"]] },
-    { id: "l-massaman", slot: "lunch", name: "Beef massaman curry", time: "Sunday batch", tag: "Thai", late: "freeze", kind: "curry",
+    { id: "l-massaman", slot: "lunch", name: "Beef massaman curry", time: "Batch prep", tag: "Thai", late: "freeze", kind: "curry",
       ing: [["beef-shin",180], ["potatoes",150], ["coconut-light",120], ["curry-paste",25], ["onion",50], ["peanuts",10], ["jasmine-rice",50], ["fish-sauce",5], ["honey",7]],
       rest: ["peanuts"],
       method: ["Brown the beef; fry the paste.", "Add coconut milk, water, onion and a little fish sauce and sugar; simmer low for 1½ hours.", "Add potato chunks for the last 30 minutes. Peanuts on top; a small portion of rice."],
@@ -689,7 +689,7 @@ window.BB_DATA = (function () {
         ["V", "potatoes", "chunks"],
         ["L", "Beef massaman", "ip",40,"25 g curry paste; 120 ml light coconut milk; 150 ml water; 5 ml fish sauce; 1 tsp honey; 1 x cinnamon stick; 1 x bay leaf", "Brown the beef on Sauté, fry the paste, add everything except the potatoes, pressure-cook 25 min, add the potatoes and pressure-cook 8 min more"],
         ["P", "rice, massaman; peanuts in a bag"]] },
-    { id: "d-ragu", slot: "dinner", name: "Beef ragù pappardelle", time: "15 min on the day", tag: "Italian", type: "sunday",
+    { id: "d-ragu", slot: "dinner", name: "Beef ragù pappardelle", time: "15 min on the day", tag: "Italian", type: "batch",
       ing: [["beef-shin",180], ["onion",60], ["garlic",5], ["passata",200], ["olive-oil",5], ["pasta",100], ["parmesan",15]],
       rest: ["olive-oil", "parmesan"],
       method: ["Brown the shin in batches; soften onion and garlic.", "Add passata and a splash of stock; cook low for 3 hours (or 50 minutes in a pressure cooker).", "Shred and reduce. Toss with pappardelle, pasta water and parmesan."],
@@ -752,7 +752,7 @@ window.BB_DATA = (function () {
       ing: [["steak",180], ["broccoli",150], ["soy",21], ["cornflour",8], ["honey",10], ["garlic",5], ["jasmine-rice",90], ["sesame-oil",5], ["ginger",5]],
       sea: [["Steak coating", "4 g cornflour; 0.5 tsp soy; 1 pinch salt"], ["Sauce", "18 ml soy; 10 g honey; 1 clove garlic; 1 tsp grated ginger; 4 g cornflour; 60 ml water"], ["To finish", "5 ml sesame oil"]],
       method: ["Rice on.", "Slice the steak thin and toss in the steak coating; sear in batches in a very hot wok.", "Blanch the broccoli 2 minutes.", "Simmer the sauce until glossy, toss everything together and finish with the sesame oil."] },
-    { id: "d-doner", slot: "dinner", name: "Doner kebab and chips", time: "25 min on the day", tag: "Fakeaway", type: "sunday",
+    { id: "d-doner", slot: "dinner", name: "Doner kebab and chips", time: "25 min on the day", tag: "Fakeaway", type: "batch",
       ing: [["lamb-mince",200], ["wrap",62], ["greek-yog",50], ["garlic",5], ["lettuce",40], ["onion",30], ["tomato",50], ["sriracha",10], ["potatoes",200], ["olive-oil",5], ["lemon",13]],
       rest: ["wrap", "sriracha", "olive-oil"],
       method: ["Blitz mince with garlic, cumin, oregano and paprika to a paste; bake as a tight loaf at 180°C for 50 minutes.", "Chill, then slice paper-thin and crisp in a hot pan.", "Wrap with salad, garlic yoghurt and chilli; chips on the side."],
@@ -764,7 +764,7 @@ window.BB_DATA = (function () {
         ["O",180,60,"Doner loaf (50 min in foil, 10 min uncovered); chill, then slice paper-thin"],
         ["S", "Garlic sauce", "50 g greek yoghurt; 1 clove garlic; 0.125 x lemon juice; 1 pinch dried mint; 1 pinch salt",0],
         ["P", "doner slices; garlic sauce; salad; wraps; par-boiled chips"]] },
-    { id: "d-bigmac", slot: "dinner", name: "Big Mac bowl", time: "22 min on the day", tag: "Fakeaway", type: "sunday",
+    { id: "d-bigmac", slot: "dinner", name: "Big Mac bowl", time: "22 min on the day", tag: "Fakeaway", type: "batch",
       ing: [["beef-mince",200], ["onion",30], ["potatoes",350], ["olive-oil",5], ["lettuce",60], ["gherkins",30], ["cheese-slice",20], ["light-mayo",20], ["ketchup",10]],
       rest: ["olive-oil", "lettuce", "gherkins", "cheese-slice"],
       method: ["Dice the potatoes, toss in the oil and a little salt, air-fry at 200°C for 20 minutes.", "Mix the Big Mac sauce with a teaspoon of finely chopped gherkin and a splash of its brine.", "Brown the mince hard with the finely diced onion and the mince seasoning.", "Build the bowl with shredded lettuce, cheese, gherkins and sauce."],
@@ -777,7 +777,7 @@ window.BB_DATA = (function () {
       ing: [["pizza-base",150], ["passata",60], ["mozzarella",80], ["chicken-breast",120], ["turkey-pepperoni",40], ["garlic",2.5]],
       sea: [["Chicken seasoning", "0.5 tsp dried oregano; 0.5 tsp garlic granules; 0.25 tsp salt"], ["Pizza sauce", "60 g passata; 0.5 tsp dried oregano; 0.5 clove garlic; 1 pinch salt; 1 pinch sugar; 1 pinch chilli flakes"]],
       method: ["Oven and a tray to the hottest setting.", "Toss the chicken in the chicken seasoning; pan-fry or air-fry 10 minutes and slice.", "Stir the pizza sauce together and spread it thin on the base.", "Top with mozzarella, chicken and pepperoni; bake on the hot tray 8–10 minutes."] },
-    { id: "d-meatball-sub", slot: "dinner", name: "Meatball marinara sub", time: "10 min on the day", tag: "Italian", type: "sunday",
+    { id: "d-meatball-sub", slot: "dinner", name: "Meatball marinara sub", time: "10 min on the day", tag: "Italian", type: "batch",
       after: {"2": [1]},
       ing: [["beef-mince",180], ["panko",15], ["eggs",15], ["passata",120], ["garlic",7.5], ["mozzarella",40], ["parmesan",10], ["sub-roll",90], ["basil",3]],
       rest: ["mozzarella", "sub-roll", "basil"],
@@ -788,7 +788,7 @@ window.BB_DATA = (function () {
         ["O",200,15,"Meatballs, to brown",[]],
         ["S", "Meatballs in marinara (simmer the cooked meatballs in the sauce)", "120 g passata; 0.5 clove garlic; 0.5 tsp dried oregano; 1 pinch chilli flakes",12],
         ["P", "meatballs in marinara; mozzarella; rolls"]] },
-    { id: "d-quesadilla", slot: "dinner", name: "Chicken quesadillas", time: "8 min on the day", type: "sunday",
+    { id: "d-quesadilla", slot: "dinner", name: "Chicken quesadillas", time: "8 min on the day", type: "batch",
       ing: [["chicken-breast",180], ["wrap",124], ["mozzarella",50], ["peppers",60], ["onion",40], ["salsa",50], ["greek-yog",40], ["lime",8.1]],
       rest: ["wrap", "mozzarella", "salsa", "greek-yog"],
       method: ["Slice the chicken and toss in the fajita spice.", "Cook hot with the sliced peppers and onion, about 8 minutes.", "Fill the wraps with the filling and cheese; dry-fry 2 minutes a side.", "Salsa and yoghurt to dip."],
@@ -802,7 +802,7 @@ window.BB_DATA = (function () {
       ing: [["turkey-rashers",120], ["eggs",120], ["pecorino",25], ["pasta",110], ["chicken-breast",100], ["olive-oil",5]],
       sea: [["Seasoning", "0.5 tsp black pepper; 0.25 tsp salt; 5 ml olive oil"]],
       method: ["Spaghetti on in well-salted water.", "Dice the turkey rashers and crisp them in the oil; season the sliced chicken and pan-fry alongside.", "Whisk the eggs with the grated pecorino and the black pepper.", "Off the heat, toss the pasta with the meat, then the egg mix and a splash of pasta water until glossy."] },
-    { id: "d-lasagne", slot: "dinner", name: "Lean beef lasagne", time: "5 min on the day", tag: "Italian", type: "sunday",
+    { id: "d-lasagne", slot: "dinner", name: "Lean beef lasagne", time: "5 min on the day", tag: "Italian", type: "batch",
       ing: [["beef-mince",180], ["onion",50], ["garlic",5], ["passata",150], ["lasagne-sheets",70], ["skimmed-milk",150], ["cornflour",12], ["parmesan",15], ["mozzarella",30]],
       rest: [],
       method: ["Ragù: brown mince, onion and garlic; passata and herbs; simmer 30 minutes.", "White sauce: skimmed milk thickened with cornflour, nutmeg and half the parmesan.", "Layer, top with mozzarella and parmesan; bake at 190°C for 40 minutes. Rest before cutting."],
@@ -824,7 +824,7 @@ window.BB_DATA = (function () {
       method: ["Take the steak out of the fridge 30 minutes ahead.", "Cut the chips, toss in the oil and a little salt, air-fry at 200°C for 20 minutes.", "Season the steak and sear 2–3 minutes a side, adding the butter, crushed garlic and thyme for the last minute; rest 5 minutes.", "Rocket and shaved parmesan alongside."],
       finish: "Steak out of the fridge 30 minutes ahead. Air-fry the par-boiled chips at 200°C for 20 minutes with the oil and a little salt. Sear the steak 2 to 3 minutes a side with the butter, garlic and thyme for the last minute; rest 5 minutes. Rocket and parmesan alongside. 22 min",
       comp: [["P", "par-boiled chips"]] },
-    { id: "d-pasta-bake", slot: "dinner", name: "Chicken and turkey bacon pasta bake", time: "5 min on the day", tag: "Italian", type: "sunday",
+    { id: "d-pasta-bake", slot: "dinner", name: "Chicken and turkey bacon pasta bake", time: "5 min on the day", tag: "Italian", type: "batch",
       ing: [["chicken-breast",180], ["turkey-rashers",60], ["penne",100], ["passata",150], ["garlic",5], ["mozzarella",50], ["parmesan",10], ["basil",3]],
       rest: ["basil"],
       sea: [["To finish", "3 g fresh basil"]],
@@ -834,7 +834,7 @@ window.BB_DATA = (function () {
         ["X", "Build the pasta bake", "Stir the penne through the sauce; top with the mozzarella and parmesan", "50 g light mozzarella; 10 g grated parmesan"],
         ["O",200,15,"Pasta bake",[]],
         ["P", "pasta bake portions"]] },
-    { id: "d-pesto-chicken", slot: "dinner", name: "Chicken pesto pasta", time: "5 min on the day", tag: "Italian", type: "sunday",
+    { id: "d-pesto-chicken", slot: "dinner", name: "Chicken pesto pasta", time: "5 min on the day", tag: "Italian", type: "batch",
       ing: [["chicken-breast",180], ["pasta",100], ["pesto",25], ["tomato",100], ["rocket",30], ["parmesan",10], ["olive-oil",5], ["lemon",25]],
       rest: ["tomato", "rocket", "parmesan"],
       method: ["Spaghetti or linguine on.", "Slice the chicken, toss in the chicken seasoning and pan-fry in the oil until golden, 6–7 minutes.", "Add the halved tomatoes for 2 minutes.", "Toss with the pasta, pesto, lemon juice and a splash of pasta water; rocket and parmesan on top."],
@@ -843,14 +843,14 @@ window.BB_DATA = (function () {
         ["O",200,18,"Garlic chicken breasts, rest and slice",["chicken-breast"]],
         ["X", "Build the pesto pasta", "Toss the cooled pasta with the pesto, lemon juice, oil and sliced chicken", "25 g pesto; 0.25 x lemon juice; 5 ml olive oil"],
         ["P", "pesto chicken pasta. Tomatoes, rocket and parmesan are added on the day"]] },
-    { id: "d-rigatoni", slot: "dinner", name: "Creamy tomato chicken rigatoni", time: "5 min on the day", tag: "Italian", type: "sunday",
+    { id: "d-rigatoni", slot: "dinner", name: "Creamy tomato chicken rigatoni", time: "5 min on the day", tag: "Italian", type: "batch",
       ing: [["chicken-breast",180], ["penne",100], ["passata",150], ["cream-cheese",40], ["garlic",5], ["spinach",60], ["parmesan",10], ["olive-oil",5]],
       rest: ["parmesan"],
       method: ["Rigatoni on.", "Dice the chicken, toss in the chicken seasoning and brown in the oil.", "Add the garlic and chilli flakes for 30 seconds, then the passata; simmer 8 minutes.", "Stir in the cream cheese until smooth, wilt in the spinach, toss with the pasta and a splash of pasta water; parmesan on top."],
       finish: "Reheat with a splash of water until piping hot; parmesan on top. 5 min",
       comp: [["H", "Creamy tomato chicken",16,"Dice the chicken, toss in the seasoning and brown in the oil; add the garlic and chilli, then the passata and simmer 8 minutes; stir in the cream cheese and wilt in the spinach", "0.5 tsp salt; 0.5 tsp dried oregano; 0.25 tsp black pepper; 5 ml olive oil; 1 clove garlic; 0.25 tsp chilli flakes; 150 g passata; 40 g light cream cheese",["chicken-breast","spinach"]],
         ["P", "rigatoni tossed through the chicken and sauce; parmesan in a twist of foil"]] },
-    { id: "d-puttanesca", slot: "dinner", name: "Tuna puttanesca", time: "12 min on the day", tag: "Italian", type: "sunday",
+    { id: "d-puttanesca", slot: "dinner", name: "Tuna puttanesca", time: "12 min on the day", tag: "Italian", type: "batch",
       ing: [["tuna",150], ["pasta",110], ["chopped-tom",200], ["olives",25], ["capers",10], ["garlic",10], ["olive-oil",8], ["parmesan",10], ["parsley",3]],
       rest: ["tuna", "pasta", "parmesan", "parsley"],
       sea: [["To finish", "3 g fresh parsley"]],
@@ -858,7 +858,7 @@ window.BB_DATA = (function () {
       finish: "Spaghetti on. Warm the sauce, fold in the drained tuna and toss with the pasta and a splash of its water; parsley and parmesan on top. 12 min",
       comp: [["S", "Puttanesca sauce", "8 ml olive oil; 2 clove garlic; 0.5 tsp chilli flakes; 200 g chopped tomatoes; 25 g olives; 10 g capers; 0.5 tsp dried oregano",10],
         ["P", "puttanesca sauce in tubs. Pasta and tuna are done on the day"]] },
-    { id: "d-meatballs", slot: "dinner", name: "Spaghetti and meatballs", time: "10 min on the day", tag: "Italian", type: "sunday",
+    { id: "d-meatballs", slot: "dinner", name: "Spaghetti and meatballs", time: "10 min on the day", tag: "Italian", type: "batch",
       after: {"2": [1]},
       ing: [["beef-mince",180], ["panko",15], ["eggs",15], ["passata",150], ["garlic",7.5], ["pasta",90], ["parmesan",15], ["basil",3]],
       rest: ["parmesan", "basil"],
@@ -896,7 +896,7 @@ window.BB_DATA = (function () {
       comp: [["V", "cucumber", "diced"],
         ["S", "Lemon tuna mayo (fold through the cooled penne, tuna, cucumber and corn)", "15 g light mayo; 40 g greek yoghurt; 0.25 x lemon juice; 0.25 x lemon zest; 1 pinch salt; 1 pinch black pepper",0],
         ["P", "tuna pasta salad, ready mixed"]] },
-    { id: "l-ragu-box", slot: "lunch", name: "Beef ragù pasta box", time: "Sunday batch", late: "freeze",
+    { id: "l-ragu-box", slot: "lunch", name: "Beef ragù pasta box", time: "Batch prep", late: "freeze",
       ing: [["beef-shin",150], ["onion",50], ["garlic",5], ["passata",170], ["olive-oil",5], ["pasta",85], ["parmesan",10]],
       rest: ["olive-oil", "parmesan"],
       method: ["Make the ragù as for the pappardelle (the same pot does both).", "Cook the pasta 2 minutes short and toss through the ragù.", "Box, cool and freeze; parmesan on after reheating."],
@@ -913,14 +913,14 @@ window.BB_DATA = (function () {
         ["O",200,18,"Arrabbiata chicken (74°C inside), rest and slice"],
         ["S", "Arrabbiata (toss the cooked penne through it)", "8 ml olive oil; 2 clove garlic; 0.5 tsp chilli flakes; 200 g chopped tomatoes; 1 pinch sugar; 1 pinch salt",15],
         ["P", "penne in arrabbiata, sliced chicken on top; parmesan in a twist of foil"]] },
-    { id: "l-pizza-burrito", slot: "lunch", name: "Pizza burrito", time: "Sunday batch", tag: "Fakeaway", late: "freeze", whole: ["wrap"],
+    { id: "l-pizza-burrito", slot: "lunch", name: "Pizza burrito", time: "Batch prep", tag: "Fakeaway", late: "freeze", whole: ["wrap"],
       ing: [["beef-mince",110], ["turkey-ham",40], ["turkey-pepperoni",15], ["wrap",62], ["passata",60], ["cream-cheese",15], ["cheddar",25]],
       rest: ["wrap"],
       method: ["Brown the mince hard with the seasoning.", "Crisp the chopped ham and pepperoni in the same pan.", "Stir in the passata and cheeses until melted and thick, then cool.", "Roll tight in the wrap and crisp in a dry pan."],
       finish: "Unwrap, microwave 90 seconds, then crisp in a dry pan or the air fryer at 200°C for 3 minutes. 5 min",
       comp: [["H", "Pizza burrito filling",12,"Brown the mince hard with the seasoning, crisp the chopped ham and pepperoni in the same pan, then stir in the passata and cheeses until melted and thick", "60 g passata; 15 g light cream cheese; 25 g light cheddar; 0.5 tsp Italian herbs; 0.25 tsp garlic granules; 0.25 tsp salt; 1 pinch black pepper",["beef-mince","turkey-ham","turkey-pepperoni"]],
         ["P", "Cool the filling, roll tight in the wraps and wrap one by one"]] },
-    { id: "l-buffalo-dipper", slot: "lunch", name: "Buffalo chicken pizza dipper", time: "Sunday batch", tag: "Fakeaway", late: "freeze", whole: ["wrap"],
+    { id: "l-buffalo-dipper", slot: "lunch", name: "Buffalo chicken pizza dipper", time: "Batch prep", tag: "Fakeaway", late: "freeze", whole: ["wrap"],
       ing: [["chicken-breast",150], ["turkey-pepperoni",15], ["wrap",62], ["franks",30], ["cream-cheese",15], ["cheddar",25], ["spring-onion",5]],
       rest: ["wrap", "spring-onion"],
       method: ["Rub the chicken, roast at 200°C for 18 minutes, rest and dice.", "Warm the chicken with the chopped pepperoni, hot sauce, cheeses and a splash of water until melted.", "Stir in the sliced spring onion, cool, and roll tight in the wrap."],
@@ -930,7 +930,7 @@ window.BB_DATA = (function () {
         ["O",200,18,"Chicken breasts, rest and dice",["chicken-breast"]],
         ["H", "Buffalo pizza filling",5,"Warm the diced chicken with the chopped pepperoni, hot sauce, cheeses and a splash of water until melted; stir in the sliced spring onion", "30 g Frank's hot sauce; 15 g light cream cheese; 25 g light cheddar",["chicken-breast","turkey-pepperoni"]],
         ["P", "Cool the filling, roll tight in the wraps and wrap one by one"]] },
-    { id: "l-enchilada", slot: "lunch", name: "Enchilada chicken dipper", time: "Sunday batch", tag: "Spicy", late: "freeze", whole: ["wrap"],
+    { id: "l-enchilada", slot: "lunch", name: "Enchilada chicken dipper", time: "Batch prep", tag: "Spicy", late: "freeze", whole: ["wrap"],
       ing: [["chicken-breast",150], ["wrap",62], ["kidney-beans",50], ["chopped-tom",60], ["cream-cheese",10], ["cheddar",30], ["passata",60], ["coriander",5]],
       rest: ["wrap"],
       method: ["Rub the chicken with the taco seasoning, roast at 200°C for 22 minutes and shred.", "Crisp the shredded chicken in a pan, then stir in the mashed beans, tomatoes, cream cheese and cheddar until melted.", "Simmer the passata with the spices for the dipping sauce.", "Roll the filling tight in the wrap."],
@@ -941,7 +941,7 @@ window.BB_DATA = (function () {
         ["H", "Enchilada filling",6,"Crisp the shredded chicken, then stir in the mashed beans, tomatoes, cream cheese, cheddar and chopped coriander until melted", "50 g kidney beans; 60 g chopped tomatoes; 10 g light cream cheese; 30 g light cheddar; 5 g fresh coriander",["chicken-breast"]],
         ["S", "Enchilada dipping sauce", "60 g passata; 0.5 tsp chilli powder; 0.25 tsp cumin; 0.25 tsp garlic granules; 1 pinch salt",5],
         ["P", "Cool the filling, roll tight in the wraps and wrap one by one; dipping sauce in pots"]] },
-    { id: "l-cbr-burrito", slot: "lunch", name: "Chicken bacon ranch burrito", time: "Sunday batch", late: "no", whole: ["wrap"],
+    { id: "l-cbr-burrito", slot: "lunch", name: "Chicken bacon ranch burrito", time: "Batch prep", late: "no", whole: ["wrap"],
       ing: [["chicken-breast",150], ["turkey-rashers",25], ["wrap",62], ["greek-yog",40], ["cheddar",20], ["chipotle",5], ["lime",16.5], ["garlic",5], ["coriander",5]],
       rest: ["wrap", "cheddar"],
       method: ["Rub the chicken with the taco seasoning, roast at 200°C for 22 minutes and dice.", "Bake the rashers at 200°C for 10 minutes and chop.", "Blend the yoghurt, chipotle, lime, garlic, coriander, onion powder and dill for the ranch.", "Mix everything with the cheddar and roll tight in the wrap."],
@@ -951,7 +951,7 @@ window.BB_DATA = (function () {
         ["O",200,10,"Turkey rashers, flat on a lined tray",["turkey-rashers"]],
         ["S", "Chipotle ranch (blended)", "40 g greek yoghurt; 1 tsp chipotle paste; 0.25 x lime juice; 1 clove garlic; 5 g fresh coriander; 0.25 tsp onion powder; 0.25 tsp dried dill; 1 pinch salt",0],
         ["P", "Mix the diced chicken, chopped rashers, chipotle ranch and cheddar; roll tight in the wraps and wrap one by one"]] },
-    { id: "l-fajita-burrito", slot: "lunch", name: "Creamy chicken fajita burrito", time: "Sunday batch", tag: "Spicy", late: "freeze", whole: ["wrap"],
+    { id: "l-fajita-burrito", slot: "lunch", name: "Creamy chicken fajita burrito", time: "Batch prep", tag: "Spicy", late: "freeze", whole: ["wrap"],
       ing: [["chicken-breast",170], ["wrap",62], ["peppers",60], ["onion",40], ["cheddar",28], ["greek-yog",40], ["chipotle",10], ["milk",10]],
       rest: ["wrap"],
       method: ["Slice the chicken, peppers and onion into strips and coat in the chipotle fajita marinade.", "Roast in one layer at 200°C for 20 minutes.", "Blend the yoghurt, cheddar, chipotle and milk for the cheese sauce.", "Fold the sauce through, roll tight in the wrap and crisp in a dry pan."],
@@ -963,7 +963,7 @@ window.BB_DATA = (function () {
         ["O",200,20,"Fajita chicken strips with the peppers and onion, in one layer",["chicken-breast"]],
         ["S", "Chipotle cheese sauce (blended)", "40 g greek yoghurt; 28 g light cheddar; 1 tsp chipotle paste; 2 tsp milk; 1 pinch salt",0],
         ["P", "Fold the cheese sauce through the chicken and veg, roll tight in the wraps and wrap one by one"]] },
-    { id: "l-animal-burrito", slot: "lunch", name: "Animal-style burger burrito", time: "Sunday batch", tag: "Fakeaway", late: "freeze", whole: ["wrap"],
+    { id: "l-animal-burrito", slot: "lunch", name: "Animal-style burger burrito", time: "Batch prep", tag: "Fakeaway", late: "freeze", whole: ["wrap"],
       ing: [["beef-mince",170], ["wrap",62], ["cheese-slice",20], ["onion",40], ["potatoes",80], ["light-mayo",12], ["ketchup",6], ["gherkins",10]],
       rest: ["wrap"],
       method: ["Cube the potato, boil 5 minutes, steam-dry and roast at 200°C for 20 minutes.", "Caramelise the finely diced onion and set aside.", "Brown the mince hard with the seasoning, melt the cheese over it under a lid and stir the onion back in.", "Stir the burger sauce together.", "Spread the wrap with sauce, add the beef and potato, and roll tight."],
@@ -973,7 +973,7 @@ window.BB_DATA = (function () {
         ["O",200,20,"Potato cubes, oiled and salted, until crisp",[]],
         ["S", "Burger sauce", "12 g light mayo; 6 g ketchup; 1 tsp American mustard; 2 tsp chopped gherkin; 1 pinch smoked paprika",0],
         ["P", "Spread each wrap with burger sauce, add the beef and potato, roll tight and wrap one by one"]] },
-    { id: "l-snack-wrap", slot: "lunch", name: "Buffalo ranch chicken wrap", time: "Sunday batch", tag: "Fakeaway", late: "split", whole: ["wrap"],
+    { id: "l-snack-wrap", slot: "lunch", name: "Buffalo ranch chicken wrap", time: "Batch prep", tag: "Fakeaway", late: "split", whole: ["wrap"],
       ing: [["chicken-breast",150], ["eggs",15], ["panko",20], ["wrap",62], ["franks",15], ["lettuce",40], ["tomato",50], ["greek-yog",40], ["garlic",2.5]],
       rest: ["wrap", "lettuce", "tomato"],
       method: ["Cut the chicken into strips, dip in egg and coat in the seasoned panko.", "Bake at 200°C for 20 minutes, turning once, then toss in the hot sauce and give it 2 more minutes.", "Stir the ranch together.", "Build the wrap with lettuce, tomato, chicken and ranch."],
@@ -982,7 +982,7 @@ window.BB_DATA = (function () {
         ["O",200,20,"Crumbed chicken strips, turned once; toss in the hot sauce for the last 2 min",["chicken-breast","franks"]],
         ["S", "Ranch", "40 g greek yoghurt; 0.5 clove garlic; 0.25 tsp onion powder; 0.25 tsp dried dill; 1 pinch salt",0],
         ["P", "crumbed buffalo chicken; ranch pot. Wrap, lettuce and tomato are added on the day"]] },
-    { id: "l-turkey-marinara", slot: "lunch", name: "Creamy turkey marinara pasta", time: "Sunday batch", tag: "Italian", late: "freeze",
+    { id: "l-turkey-marinara", slot: "lunch", name: "Creamy turkey marinara pasta", time: "Batch prep", tag: "Italian", late: "freeze",
       ing: [["turkey-mince",150], ["penne",85], ["passata",120], ["cream-cheese",35], ["mozzarella",25], ["garlic",5], ["parsley",3]],
       rest: ["parsley"],
       method: ["Brown the mince hard with the herbs and chilli, breaking it up small.", "Simmer the passata with the garlic, then melt in the cream cheese and mozzarella.", "Toss with the penne and the mince; parsley on top."],
@@ -990,7 +990,7 @@ window.BB_DATA = (function () {
       comp: [["H", "Italian turkey mince",10,"Brown hard, breaking it up small", "0.5 tsp Italian herbs; 0.25 tsp chilli flakes; 0.25 tsp garlic granules; 0.25 tsp salt",["turkey-mince"]],
         ["S", "Creamy marinara", "120 g passata; 35 g light cream cheese; 25 g light mozzarella; 1 clove garlic; 1 pinch salt",5],
         ["P", "penne tossed through the turkey and creamy marinara; parsley goes on after reheating"]] },
-    { id: "l-rigatoned", slot: "lunch", name: "Spicy chicken rigatoni", time: "Sunday batch", tag: "Italian", late: "freeze",
+    { id: "l-rigatoned", slot: "lunch", name: "Spicy chicken rigatoni", time: "Batch prep", tag: "Italian", late: "freeze",
       ing: [["chicken-mince",150], ["penne",85], ["cottage-cheese",80], ["cream-cheese",20], ["mozzarella",15], ["passata",80], ["garlic",5]],
       rest: [],
       method: ["Brown the mince hard with the herbs, paprika and chilli.", "Blend the cottage cheese, cream cheese, mozzarella, passata, garlic and chilli until smooth.", "Pour over the mince, bring to a simmer and toss with the rigatoni."],
@@ -998,7 +998,7 @@ window.BB_DATA = (function () {
       comp: [["H", "Spicy chicken mince",10,"Brown hard, breaking it up small", "0.5 tsp Italian herbs; 0.5 tsp smoked paprika; 0.5 tsp chilli flakes; 0.25 tsp salt",["chicken-mince"]],
         ["S", "Spicy tomato cream sauce", "80 g cottage cheese; 20 g light cream cheese; 15 g light mozzarella; 80 g passata; 1 clove garlic; 0.25 tsp chilli flakes",5,true],
         ["P", "rigatoni tossed through the chicken and sauce"]] },
-    { id: "l-creamy-pesto", slot: "lunch", name: "Creamy chicken pesto pasta", time: "Sunday batch", tag: "Italian", late: "freeze",
+    { id: "l-creamy-pesto", slot: "lunch", name: "Creamy chicken pesto pasta", time: "Batch prep", tag: "Italian", late: "freeze",
       ing: [["chicken-thigh",180], ["penne",85], ["pesto",18], ["cottage-cheese",60], ["basil",5], ["garlic",5], ["milk",10]],
       rest: [],
       method: ["Rub the thighs, roast at 200°C for 18 minutes, rest and dice.", "Blend the pesto, cottage cheese, basil, garlic and milk until smooth.", "Toss the pasta with the chicken and sauce."],
@@ -1007,7 +1007,7 @@ window.BB_DATA = (function () {
         ["O",200,18,"Herb chicken thighs, rest and dice"],
         ["S", "Creamy pesto sauce (blended)", "18 g pesto; 60 g cottage cheese; 5 g fresh basil; 1 clove garlic; 2 tsp milk",0],
         ["P", "penne tossed through the chicken and pesto sauce"]] },
-    { id: "l-cajun", slot: "lunch", name: "Creamy Cajun chicken pasta", time: "Sunday batch", tag: "Spicy", late: "freeze",
+    { id: "l-cajun", slot: "lunch", name: "Creamy Cajun chicken pasta", time: "Batch prep", tag: "Spicy", late: "freeze",
       ing: [["chicken-breast",120], ["chicken-sausage",60], ["penne",85], ["cottage-cheese",60], ["garlic",5], ["milk",10]],
       rest: [],
       method: ["Rub the chicken with the Cajun seasoning, roast at 200°C for 18 minutes, rest and slice.", "Slice the sausages and brown until the edges crust.", "Blend the cottage cheese, garlic, Cajun seasoning and milk until smooth.", "Toss everything with the pasta and a splash of its water."],
@@ -1017,7 +1017,7 @@ window.BB_DATA = (function () {
         ["H", "Brown the chicken sausages",8,"Slice and brown until the edges crust", "",["chicken-sausage"]],
         ["S", "Cajun cream sauce (blended)", "60 g cottage cheese; 1 clove garlic; 0.5 tsp Cajun seasoning; 2 tsp milk",0],
         ["P", "penne tossed through the chicken, sausage and Cajun sauce"]] },
-    { id: "l-pollo-asado", slot: "lunch", name: "Pollo asado rice bowl", time: "Sunday batch", tag: "Spicy", late: "freeze",
+    { id: "l-pollo-asado", slot: "lunch", name: "Pollo asado rice bowl", time: "Batch prep", tag: "Spicy", late: "freeze",
       ing: [["chicken-breast",200], ["jasmine-rice",90], ["peppers",60], ["corn",60], ["lime",33], ["garlic",5], ["coriander",5], ["chipotle",5]],
       rest: ["lime"],
       method: ["Marinate the chicken in the pollo asado mix for at least an hour.", "Roast at 200°C for 22 minutes, rest and chop.", "Char the diced peppers and corn in a hot dry pan.", "Serve over rice with a wedge of lime."],
@@ -1031,7 +1031,7 @@ window.BB_DATA = (function () {
       ing: [["steak",200], ["penne",90], ["milk",60], ["cream-cheese",30], ["mozzarella",20], ["onion",30], ["garlic",10], ["parmesan",8], ["spring-onion",5]],
       sea: [["Steak seasoning", "0.5 tsp salt; 0.25 tsp black pepper; 0.25 tsp onion powder; 0.25 tsp garlic granules"], ["Alfredo sauce", "60 ml milk; 30 g light cream cheese; 20 g light mozzarella; 2 clove garlic"]],
       method: ["Pasta on in well-salted water; keep a cup of the water.", "Cube and season the steak, sear hard to medium and set aside.", "In the same pan soften the diced onion and garlic, add the milk, cream cheese and mozzarella and stir to a simmer.", "Loosen with pasta water, toss with the pasta and steak, and finish with parmesan and spring onion."] },
-    { id: "d-stroganoff", slot: "dinner", name: "Beef stroganoff pasta", time: "5 min on the day", type: "sunday",
+    { id: "d-stroganoff", slot: "dinner", name: "Beef stroganoff pasta", time: "5 min on the day", type: "batch",
       ing: [["beef-mince",190], ["penne",80], ["mushrooms",80], ["onion",50], ["greek-yog",60], ["garlic",5]],
       rest: ["greek-yog"],
       sea: [["To finish", "60 g greek yoghurt"]],
@@ -1041,7 +1041,7 @@ window.BB_DATA = (function () {
         ["V", "mushrooms", "sliced"],
         ["H", "Beef stroganoff",18,"Brown the mince hard, add the onion and mushrooms until soft, stir in the rest and reduce until glossy", "150 ml beef stock; 2 tsp Dijon mustard; 0.5 tsp smoked paprika; 1 clove garlic; 0.5 tsp salt; 0.25 tsp black pepper",["beef-mince"]],
         ["P", "penne and stroganoff; the yoghurt goes in after reheating"]] },
-    { id: "d-chicken-alfredo", slot: "dinner", name: "High-protein chicken Alfredo", time: "5 min on the day", tag: "Italian", type: "sunday",
+    { id: "d-chicken-alfredo", slot: "dinner", name: "High-protein chicken Alfredo", time: "5 min on the day", tag: "Italian", type: "batch",
       ing: [["chicken-breast",180], ["pasta",90], ["cottage-cheese",100], ["cream-cheese",28], ["mozzarella",20], ["mushrooms",60], ["garlic",5], ["milk",10]],
       rest: [],
       method: ["Rub the chicken, roast at 200°C for 18 minutes, rest and dice.", "Blend the cottage cheese, cream cheese, mozzarella, garlic and milk until smooth.", "Fry the sliced mushrooms, pour the sauce over and bring just to a simmer.", "Toss with the linguine and chicken."],
@@ -1051,7 +1051,7 @@ window.BB_DATA = (function () {
         ["O",200,18,"Italian chicken breasts, rest and dice",["chicken-breast"]],
         ["H", "Alfredo sauce with mushrooms",8,"Blend the sauce smooth; fry the mushrooms, pour the sauce over and bring just to a simmer", "100 g cottage cheese; 28 g light cream cheese; 20 g light mozzarella; 1 clove garlic; 2 tsp milk",[]],
         ["P", "linguine, diced chicken and Alfredo sauce tossed together"]] },
-    { id: "d-al-pastor", slot: "dinner", name: "Chicken al pastor mac and cheese", time: "5 min on the day", tag: "Spicy", type: "sunday",
+    { id: "d-al-pastor", slot: "dinner", name: "Chicken al pastor mac and cheese", time: "5 min on the day", tag: "Spicy", type: "batch",
       ing: [["chicken-breast",190], ["penne",90], ["cottage-cheese",130], ["cheddar",25], ["milk",15], ["orange-juice",20], ["lime",16.5], ["onion",15], ["coriander",5]],
       rest: ["onion", "coriander"],
       method: ["Marinate the chicken in the al pastor mix for at least an hour.", "Roast at 200°C for 22 minutes, rest and cube.", "Blend the cottage cheese, cheddar and milk until smooth.", "Toss the pasta with the chicken and sauce; finish with diced onion and coriander."],
@@ -1060,7 +1060,7 @@ window.BB_DATA = (function () {
         ["O",200,22,"Al pastor chicken, rest and cube",["chicken-breast"]],
         ["S", "Mac cheese sauce (blended)", "130 g cottage cheese; 25 g light cheddar; 1 tbsp milk; 1 pinch salt",0],
         ["P", "penne, cubed al pastor chicken and cheese sauce tossed together; onion and coriander go on after reheating"]] },
-    { id: "d-animal-fries", slot: "dinner", name: "Animal-style loaded fries", time: "22 min on the day", tag: "Fakeaway", type: "sunday",
+    { id: "d-animal-fries", slot: "dinner", name: "Animal-style loaded fries", time: "22 min on the day", tag: "Fakeaway", type: "batch",
       ing: [["beef-mince",190], ["potatoes",300], ["olive-oil",5], ["cheese-slice",30], ["onion",60], ["light-mayo",20], ["ketchup",15], ["gherkins",15]],
       rest: ["olive-oil", "cheese-slice"],
       method: ["Cut thin fries, toss in the oil and a little salt, air-fry at 200°C for 20 minutes.", "Caramelise the chopped onion with a pinch of salt and set aside.", "Brown the mince hard with the beef seasoning.", "Layer the fries, beef, onion and cheese slices in a tin and give it 3 minutes in the oven to melt.", "Stir the fry sauce together and spoon over."],
@@ -1077,7 +1077,7 @@ window.BB_DATA = (function () {
       comp: [["M", "wet", "Pollo asado taco", "chicken-breast", "1 tbsp orange juice; 0.25 x lime juice; 1 tsp smoked paprika; 0.5 tsp cumin; 0.5 tsp dried oregano; 1 tsp chipotle paste; 1 clove garlic; 0.5 tsp salt",60],
         ["S", "Coriander lime crema (blended)", "40 g greek yoghurt; 8 g fresh coriander; 0.25 x lime juice; 1 pinch salt",0],
         ["P", "raw marinated chicken, bagged flat; crema pot"]] },
-    { id: "d-nachos", slot: "dinner", name: "One-pan protein nachos", time: "5 min on the day", tag: "Fakeaway", type: "sunday",
+    { id: "d-nachos", slot: "dinner", name: "One-pan protein nachos", time: "5 min on the day", tag: "Fakeaway", type: "batch",
       ing: [["beef-mince",200], ["kidney-beans",60], ["chopped-tom",80], ["cheddar",30], ["tortilla-chips",40], ["greek-yog",40], ["chilli",7.5], ["coriander",5], ["lime",16.5]],
       rest: ["tortilla-chips", "greek-yog", "coriander"],
       method: ["Work the seasoning into the mince and brown it hard, chopping it small.", "Add the sliced chilli, tomatoes and roughly mashed beans and cook 5 minutes until thick.", "Stir the cheddar through until melted.", "Serve with the tortilla chips, yoghurt and coriander."],
@@ -1100,7 +1100,7 @@ window.BB_DATA = (function () {
       comp: [["B", "chicken-breast", "panko", "0.5 tsp cayenne; 0.5 tsp smoked paprika; 0.25 tsp garlic granules; 0.25 tsp sugar; 0.25 tsp salt; 1 pinch baking powder"],
         ["S", "Burger sauce", "15 g light mayo; 5 g ketchup; 1 tsp American mustard; 2 tsp chopped gherkin; 1 pinch smoked paprika",0],
         ["P", "breaded chicken (freeze raw); burger sauce pot; par-boiled chips"]] },
-    { id: "d-nuggets", slot: "dinner", name: "Cheesy chicken nuggets and fries", time: "25 min on the day", tag: "Fakeaway", type: "sunday",
+    { id: "d-nuggets", slot: "dinner", name: "Cheesy chicken nuggets and fries", time: "25 min on the day", tag: "Fakeaway", type: "batch",
       ing: [["chicken-mince",220], ["cheddar",30], ["panko",15], ["eggs",25], ["potatoes",250], ["olive-oil",5], ["greek-yog",60], ["spring-onion",10]],
       rest: ["olive-oil", "spring-onion"],
       method: ["Work the cheddar, panko, egg and seasoning into the mince and shape flat nuggets.", "Bake at 200°C for 15 minutes, turning once, until the cheese crisps at the edges.", "Air-fry the chips at 200°C for 20 minutes.", "Stir the ranch dip together with the sliced spring onion."],
@@ -1109,7 +1109,7 @@ window.BB_DATA = (function () {
         ["O",200,15,"Chicken nuggets, turned once, until the cheese crisps at the edges",["chicken-mince"]],
         ["S", "Ranch dip", "60 g greek yoghurt; 0.25 tsp onion powder; 0.25 tsp dried dill; 0.25 tsp garlic granules; 1 pinch salt",0],
         ["P", "nuggets; par-boiled chips; ranch dip pot"]] },
-    { id: "d-buffalo-melt", slot: "dinner", name: "Buffalo chicken grilled cheese", time: "8 min on the day", tag: "Fakeaway", type: "sunday",
+    { id: "d-buffalo-melt", slot: "dinner", name: "Buffalo chicken grilled cheese", time: "8 min on the day", tag: "Fakeaway", type: "batch",
       ing: [["chicken-thigh",200], ["sourdough",90], ["cream-cheese",20], ["mozzarella",30], ["cheese-slice",20], ["franks",15], ["milk",8], ["spring-onion",5]],
       rest: ["sourdough", "cheese-slice", "spring-onion"],
       method: ["Rub the thighs, sear 3 minutes a side, then cook through on a lower heat.", "Blend the mozzarella, cream cheese, hot sauce and milk.", "Chop the chicken small, return to the pan and stir in the sauce until it melts; add the sliced spring onion.", "Fill the sourdough with the chicken and a cheese slice and grill in a dry pan until golden."],
@@ -1117,7 +1117,7 @@ window.BB_DATA = (function () {
       comp: [["M", "dry", "Buffalo rub", "chicken-thigh", "0.25 tsp salt; 0.5 tsp smoked paprika; 0.5 tsp garlic granules; 0.25 tsp onion powder; 1 pinch cayenne",0],
         ["H", "Buffalo thigh filling",14,"Sear 3 minutes a side, lower the heat and cook through; chop small, return to the pan and stir in the blended sauce until it melts", "15 g Frank's hot sauce; 20 g light cream cheese; 30 g light mozzarella; 1.5 tsp milk"],
         ["P", "buffalo chicken filling in tubs; bread, cheese slices and spring onion stay separate"]] },
-    { id: "d-cbr-fries", slot: "dinner", name: "Chicken bacon ranch loaded fries", time: "22 min on the day", tag: "Fakeaway", type: "sunday",
+    { id: "d-cbr-fries", slot: "dinner", name: "Chicken bacon ranch loaded fries", time: "22 min on the day", tag: "Fakeaway", type: "batch",
       ing: [["chicken-breast",200], ["potatoes",300], ["olive-oil",5], ["turkey-rashers",40], ["cheddar",25], ["greek-yog",70], ["milk",10], ["garlic",5]],
       rest: ["olive-oil", "cheddar"],
       method: ["Cut thin fries, toss in the oil and a little salt, air-fry at 200°C for 20 minutes.", "Season the chicken and roast at 200°C for 18 minutes; rest and dice. Crisp the rashers and chop.", "Blend the ranch.", "Pile the chicken, rashers and cheddar over the fries, grill 2 to 3 minutes to melt, and spoon the ranch over."],
@@ -1133,14 +1133,14 @@ window.BB_DATA = (function () {
   const BATCH_CARBS = ["sushi-rice", "jasmine-rice", "pasta", "penne", "rice-noodles", "potatoes"];
   const NO_BATCH = ["l-onigiri", "d-puttanesca"];
 
-  // ---------- How a dish's Sunday components fit together ----------
+  // ---------- How a dish's prep components fit together ----------
   // Shared by the run sheet (what must be done first, what each step weighs out), the portion sizes at box-up
   // and tests/data-check.js, so there is one reading of the recipe data.
   const SIDX = { L: 4, M: 4, B: 3, X: 3, S: 2, H: 4, T: 3 };
   const SPRE = /^([\d.]+)\s*(g|ml|tsp|tbsp|clove|x|pinch)\s+(.+)$/;
   const mainProtein = function (r) { const e = r.ing.find(function (x) { return ING[x[0]] && ING[x[0]][1] === "Protein" && x[0] !== "whey"; }); return e ? e[0] : null; };
   const onDay = function (r) { return r.type === "fresh" || r.type === "head" || NO_BATCH.indexOf(r.id) >= 0; };
-  // Rice, pasta and potatoes cooked or par-boiled on Sunday for this dish (not ones the dish cuts up itself as veg).
+  // Rice, pasta and potatoes cooked or par-boiled on prep day for this dish (not ones the dish cuts up itself as veg).
   function carbs(r) { const veg = (r.comp || []).filter(function (t) { return t[0] === "V"; }).map(function (t) { return t[1]; });
     return r.ing.map(function (x) { return x[0]; }).filter(function (i) { return BATCH_CARBS.indexOf(i) >= 0 && veg.indexOf(i) < 0 && (!onDay(r) || (r.sun || []).indexOf(i) >= 0); }); }
   // The ingredients a component's step weighs out, beyond its seasoning list. A list at the end of the component says so
@@ -1184,9 +1184,9 @@ window.BB_DATA = (function () {
   const PROPER = /^(Big Mac|Cajun|Thai|Italian|Greek|Caesar|Oreo|Alfredo|Nashville|Philly|Frank)/;
   function partName(t) { const lab = t[0] === "O" ? t[3] : t[0] === "M" ? t[2] : "VB".indexOf(t[0]) >= 0 ? "" : t[1]; if (!lab) return "";
     const n = lab.replace(/^Build the /, "").split(/ \(|[,;:]| for the /)[0].trim(); return PROPER.test(n) ? n : n.charAt(0).toLowerCase() + n.slice(1); }
-  // The parts of a dish as they stand at the end of Sunday: components that feed into another (a marinade into the tray it
+  // The parts of a dish as they stand at the end of prep: components that feed into another (a marinade into the tray it
   // is roasted on, veg into the pan they are cooked in) are folded into it, so each part is something that gets portioned.
-  // rest = ingredients no Sunday component handles: packed as they are, used for cooking, or added on the day.
+  // rest = ingredients no prep component handles: packed as they are, used for cooking, or added on the day.
   function parts(r) { const comps = r.comp || [], nd = needs(r), G = {}; r.ing.forEach(function (x) { G[x[0]] = x[1]; });
     const lists = comps.map(listed), bySea = {}; lists.forEach(function (a) { Object.keys(a.m).forEach(function (i) { bySea[i] = (bySea[i] || 0) + a.m[i]; }); });
     const taken = {}, whole = comps.map(function () { return {}; });
@@ -1217,7 +1217,7 @@ window.BB_DATA = (function () {
     "turkey-mince": 0.75, "chicken-mince": 0.75, "turkey-ham": 0.9, "turkey-pepperoni": 0.9, "chicken-sausage": 0.85, "tuna": 1, "prawns": 1, "eggs": 0.9, 
     "onion": 0.6, "peppers": 0.7, "mushrooms": 0.55, "spinach": 0.25, "greens": 0.9, "broccoli": 0.9, "corn": 1, "peas": 1, "passata": 0.75, "chopped-tom": 0.75, "coconut-light": 0.85 };
   // One portion of a part for a person: scale(ingredient) is their share of each ingredient, lots their share of unlisted liquids.
-  // w = weight as it stands on Sunday night, raw = weight that went in, top = the biggest ingredient and topRaw its raw weight.
+  // w = weight as it stands at the end of prep, raw = weight that went in, top = the biggest ingredient and topRaw its raw weight.
   function portion(p, scale, lots) { let w = 0, raw = 0, top = null, topRaw = 0;
     Object.keys(p.items).forEach(function (i) { const g = p.items[i] * scale(i), n = ING[i]; raw += g; if (g > topRaw) { top = i; topRaw = g; }
       let y = 1;

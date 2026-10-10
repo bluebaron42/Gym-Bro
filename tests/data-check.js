@@ -6,23 +6,23 @@ const ingUsed = new Set();
 Object.values(R).forEach((r) => {
   r.ing.forEach(([i, g]) => { ingUsed.add(i); if (!D.ING[i]) fail(r.id + ": unknown ingredient " + i); if (!(g > 0)) fail(r.id + ": bad amount for " + i); });
   if (!(r.method && r.method.length)) fail(r.id + ": no method");
-  if (r.slot === "dinner" && ["fresh", "head", "sunday"].indexOf(r.type) < 0) fail(r.id + ": dinner needs a type");
+  if (r.slot === "dinner" && ["fresh", "head", "batch"].indexOf(r.type) < 0) fail(r.id + ": dinner needs a type");
   if (r.slot === "dinner" && r.kind) fail(r.id + ": a shared dinner cannot be something one person skips");
   if (r.slot === "lunch" && ["freeze", "split", "no"].indexOf(r.late) < 0) fail(r.id + ": lunch needs late");
-  if (r.type === "fresh" && (r.comp || r.finish)) fail(r.id + ": cook-fresh dinner has Sunday prep");
-  if ((r.type === "head" || r.type === "sunday") && !(r.comp && r.finish)) fail(r.id + ": needs Sunday components and a finish step");
-  if (r.type === "head" && r.comp.some((c) => "OHL".indexOf(c[0]) >= 0 && !/^Soften/.test(c[1]))) fail(r.id + ": head-start dinner is being cooked on Sunday");
+  if (r.type === "fresh" && (r.comp || r.finish)) fail(r.id + ": cook-fresh dinner has prep");
+  if ((r.type === "head" || r.type === "batch") && !(r.comp && r.finish)) fail(r.id + ": needs prep components and a finish step");
+  if (r.type === "head" && r.comp.some((c) => "OHL".indexOf(c[0]) >= 0 && !/^Soften/.test(c[1]))) fail(r.id + ": head-start dinner is being cooked on prep day");
   if (r.slot === "lunch" && r.id !== "l-onigiri" && !(r.comp && r.comp.some((c) => c[0] === "P") && r.finish)) fail(r.id + ": lunch needs a pack line and a finish step");
   // Run sheet: explicit dependencies point backwards at real components; anything assembled has something to assemble.
   Object.keys(r.after || {}).forEach((ci) => { if (!r.comp[ci]) fail(r.id + ": after refers to a missing component " + ci); r.after[ci].forEach((j) => { if (!(j < ci) || !r.comp[j]) fail(r.id + ": after must point at an earlier component"); }); });
   (r.comp || []).forEach((c, ci) => { if (c[0] === "X" && /^Build/.test(c[1]) && !r.comp.slice(0, ci).some((x) => "LHSO".indexOf(x[0]) >= 0)) fail(r.id + ": '" + c[1] + "' has nothing cooked before it"); });
-  // Portions: every ingredient is either handled by a Sunday component or listed in rest, and every part that is a mixture has a name to be portioned by.
+  // Portions: every ingredient is either handled by a prep component or listed in rest, and every part that is a mixture has a name to be portioned by.
   if (r.comp && r.comp.length) { const pt = D.parts(r), left = Object.keys(pt.rest).sort().join(", "), said = (r.rest || []).slice().sort().join(", ");
-    if (left !== said) fail(r.id + ": rest should list what no Sunday component handles (" + (left || "nothing") + "), but has " + (said || "nothing"));
+    if (left !== said) fail(r.id + ": rest should list what no prep component handles (" + (left || "nothing") + "), but has " + (said || "nothing"));
     const put = {}; pt.parts.forEach((p) => [p.items, p.marinade].forEach((m) => Object.keys(m).forEach((i) => { put[i] = (put[i] || 0) + m[i]; })));
     r.ing.forEach(([i, g]) => { const tot = (put[i] || 0) + (pt.rest[i] || 0); if (tot > g * 1.03 + 0.3) fail(r.id + ": the parts use " + tot.toFixed(1) + " g " + i + " but the dish has " + g); if (tot < g * 0.96 - 0.5) fail(r.id + ": " + (g - tot).toFixed(1) + " g " + i + " is unaccounted for"); });
     pt.parts.forEach((p) => { if ("VBMC".indexOf(p.kind) < 0 && !p.name) fail(r.id + ": a part has no name"); if (!Object.keys(p.items).length) fail(r.id + ": '" + (p.name || p.kind) + "' has nothing in it to portion"); }); }
-  else if (r.rest) fail(r.id + ": rest is only for dishes with Sunday components");
+  else if (r.rest) fail(r.id + ": rest is only for dishes with prep components");
   // Seasoning lists: every item is a known shopping ingredient or cupboard item, and the ingredient list covers what the lists use.
   const strs = []; (r.comp || []).forEach((t) => { const s = t[SIDX[t[0]]]; if (typeof s === "string" && s) strs.push(s); }); (r.sea || []).forEach((g) => strs.push(g[1]));
   const need = {}, zest = {};
@@ -40,8 +40,10 @@ Object.keys(D.ING).forEach((i) => { if (!ingUsed.has(i)) fail("unused ingredient
 Object.keys(D.ALIAS).forEach((n) => { if (!D.ING[D.ALIAS[n][0]]) fail("alias " + n + " points at a missing ingredient"); });
 ["TRIM", "PACKS"].forEach((t) => Object.keys(D[t]).forEach((i) => { if (!D.ING[i]) fail(t + " has unknown ingredient " + i); }));
 // The default week must be valid for the people eating it.
-const H = D.HOUSE, ok = (id, slot, dow, who) => { const r = R[id]; if (!r || r.slot !== slot) return false; const eat = H.shared.indexOf(slot) >= 0 ? H.order : [who]; if (r.kind && eat.some((w) => H.people[w].skip.indexOf(r.kind) >= 0)) return false; return !(slot === "lunch" && dow >= 4 && r.late === "no"); };
-["breakfast", "shake", "lunch", "dinner", "snack"].forEach((slot) => H.order.forEach((w) => [0, 1, 2, 3, 4, 5, 6].forEach((d) => { const id = H.shared.indexOf(slot) >= 0 ? D.DEFAULTS[slot][d] : D.DEFAULTS[slot][w][d]; if (!ok(id, slot, d, w)) fail("default " + slot + " day " + d + " for " + w + " is not allowed: " + id); })));
+const H = D.HOUSE, ok = (id, slot, dow, who) => { const r = R[id]; if (!r || r.slot !== slot) return false; const eat = H.shared.indexOf(slot) >= 0 ? H.order : [who]; if (r.kind && eat.some((w) => H.people[w].skip.indexOf(r.kind) >= 0)) return false; return !(slot === "lunch" && dow >= 3 && r.late === "no"); };
+// Sunday is an open day: nothing planned for it.
+if (JSON.stringify(D.DEFAULTS).indexOf('"0":') >= 0 || Object.values(D.PRESETS).some((p) => JSON.stringify(p).indexOf('"0":') >= 0)) fail("Sunday (day 0) has a planned meal, but it is an open day");
+["breakfast", "shake", "lunch", "dinner", "snack"].forEach((slot) => H.order.forEach((w) => [1, 2, 3, 4, 5, 6].forEach((d) => { const id = H.shared.indexOf(slot) >= 0 ? D.DEFAULTS[slot][d] : D.DEFAULTS[slot][w][d]; if (!ok(id, slot, d, w)) fail("default " + slot + " day " + d + " for " + w + " is not allowed: " + id); })));
 Object.keys(D.PRESETS || {}).forEach((wk) => {
   if ((Date.now() - new Date(wk).getTime()) / 864e5 > 21) fail("preset for the week of " + wk + " has passed: delete it from data.js");
   Object.keys(D.PRESETS[wk]).forEach((slot) => { const sh = H.shared.indexOf(slot) >= 0, sets = sh ? { all: D.PRESETS[wk][slot] } : D.PRESETS[wk][slot];
@@ -58,5 +60,5 @@ require("../guides.js");
   })); });
 Object.keys(window.GB_HOME_MAP).forEach((k) => { const v = window.GB_HOME_MAP[k]; if (!(window.GB_HOME_GUIDES[v] || window.GB_GUIDES[v])) fail("home guide map points at a missing guide: " + v); });
 const n = (f) => Object.values(R).filter(f).length;
-console.log("dinners " + n((r) => r.slot === "dinner") + " (fresh " + n((r) => r.type === "fresh") + ", head " + n((r) => r.type === "head") + ", sunday " + n((r) => r.type === "sunday") + "), lunches " + n((r) => r.slot === "lunch") + ", treats " + n((r) => r.slot === "snack"));
+console.log("dinners " + n((r) => r.slot === "dinner") + " (fresh " + n((r) => r.type === "fresh") + ", head " + n((r) => r.type === "head") + ", batch " + n((r) => r.type === "batch") + "), lunches " + n((r) => r.slot === "lunch") + ", treats " + n((r) => r.slot === "snack"));
 console.log(bad ? bad + " problem(s)" : "All checks passed"); process.exit(bad ? 1 : 0);

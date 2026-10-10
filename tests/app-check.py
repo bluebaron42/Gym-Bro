@@ -15,7 +15,7 @@ def allowed(D, rid, slot, dow, who):
     if not r or r["slot"] != slot: return False
     eat = H["order"] if slot in H["shared"] else [who]
     if r.get("kind") and any(r["kind"] in H["people"][w]["skip"] for w in eat): return False
-    return not (slot == "lunch" and dow >= 4 and r.get("late") == "no")
+    return not (slot == "lunch" and dow >= 3 and r.get("late") == "no")
 SLOTS = ["breakfast", "shake", "lunch", "dinner", "snack"]
 try:
   with sync_playwright() as p:
@@ -29,7 +29,7 @@ try:
         while rounds < 12 and (rounds < 4 or len(seen) < len(D["RECIPES"])):
             rounds += 1; stored = {}; menu = {me: {}, other: {}}
             for slot in SLOTS:
-                for dow in range(7):
+                for dow in range(1, 7):  # Sunday is an open day
                     for who in ([me] if slot in D["HOUSE"]["shared"] else [me, other]):
                         opts = [r for r in D["RECIPES"] if allowed(D, r, slot, dow, who)]
                         fresh = [r for r in opts if r not in seen]; rid = rng.choice(fresh or opts); seen.add(rid)
@@ -47,7 +47,7 @@ try:
                     elif abs(got[k] - v) > 0.2: fail(f"{app} {view}: {k} listed {got[k]} g, expected {v:.1f} g")
                 for k in got:
                     if k not in exp: fail(f"{app} {view}: {k} on the list but in no meal")
-            # Sunday run sheet: order, dependencies, one job per cook at a time, kit never double-booked
+            # Saturday run sheet: order, dependencies, one job per cook at a time, kit never double-booked
             prepped = set(rid for w in (me, other) for k, rid in menu[w].items() if not k.endswith("0") and k[:-1] in ("lunch", "dinner") and D["RECIPES"][rid].get("comp") and D["RECIPES"][rid].get("type") != "fresh")
             for cooks in ("2", "1"):
                 if not pg.query_selector(f'[data-cooks="{cooks}"]'): continue
@@ -123,6 +123,18 @@ try:
     pg.click('[data-who="blue"]'); pg.click('[data-swap="dinner"][data-dow="1"]'); pg.locator('#sheet [data-choose="d-ragu"]').first.click()
     wkm = json.loads(pg.evaluate("localStorage.getItem('banebuild:menus')"))["2026-10-05"]
     if wkm.get("dinner5") != "d-bigmac" or wkm.get("dinner1") != "d-ragu" or wkm.get("p:lunch2") != "l-caesar": fail(f"first edit did not freeze the week as shown: {wkm}")
+    # Sunday is an open day: no meals, and a budget of the week's calories less what Monday to Saturday used
+    # (ticked meals where a day has ticks, the target where it has none), never under three quarters of a day
+    pg = b.new_context(service_workers="block").new_page(); er = []; pg.on("pageerror", lambda e: er.append(str(e))); pg.clock.install(time="2026-10-11T10:00:00"); pg.goto("http://localhost:8765/gym-bro/index.html")
+    pg.evaluate("localStorage.setItem('banebuild:mealhist',JSON.stringify({'2026-10-05':{ate:{},k:2000,p:150},'2026-10-06':{ate:{},k:3000,p:200},'2026-10-08':{ate:{},k:2500,p:180},'2026-10-10':{ate:{},k:2700,p:190}}))"); pg.reload()
+    T = pg.evaluate("window.GB_PROFILE.phases[0].kcal"); r50 = lambda x: int((x + 25) // 50 * 50)
+    want = max(r50(T * 0.75), r50(7 * T - (2000 + 3000 + T + 2500 + T + 2700)))
+    got = pg.get_attribute("[data-budget]", "data-budget")
+    if got is None or int(got) != want: fail(f"open day: Sunday budget {got}, expected {want}")
+    if pg.query_selector("#view .meal [data-meal]"): fail("open day: Sunday shows meals to tick")
+    pg.click('[data-tab="food"]')
+    if "Open day" not in pg.inner_text("#view") or pg.query_selector('#view [data-dow="0"]'): fail("open day: the Food tab plans Sunday")
+    if er: fail(f"open day: page errors {er}")
     # ---- sync between the two phones, against the stand-in database
     def phone(app):
         ctx = b.new_context(viewport={"width": 400, "height": 850}, service_workers="block"); ctx.add_init_script("window.GB_SYNC_URL='http://localhost:8766'")
