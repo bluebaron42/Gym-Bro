@@ -206,14 +206,19 @@ window.BB_DATA = (function () {
   // Seasonings that live in the cupboard: checked off, not bought by weight.
   const CUPBOARD = {"American mustard":"American mustard", "Dijon mustard":"Dijon mustard", "Worcestershire":"Worcestershire", "baking powder":"Baking powder", "bay leaf":"Bay leaf", "beef stock":"Beef stock (cubes)", "black pepper":"Black pepper", "butter":"Butter", "cayenne":"Cayenne", "chilli flakes":"Chilli flakes", "chilli powder":"Chilli powder", "cinnamon":"Cinnamon", "cinnamon stick":"Cinnamon stick", "cumin":"Cumin", "dried mint":"Dried mint", "dried oregano":"Dried oregano", "dried thyme":"Dried thyme", "five-spice":"Five-spice", "garam masala":"Garam masala", "garlic granules":"Garlic granules", "ground cardamom":"Ground cardamom", "ground coriander":"Ground coriander", "nutmeg":"Nutmeg", "onion powder":"Onion powder", "salt":"Salt", "smoked paprika":"Smoked paprika", "stock cube":"Stock cube", "sugar":"Sugar", "tomato purée":"Tomato purée", "turmeric":"Turmeric", "vanilla extract":"Vanilla extract", "white pepper":"White pepper", "dried sage":"Dried sage", "Italian herbs":"Italian herbs", "taco seasoning":"Taco seasoning", "sprinkles":"Sprinkles", "xanthan gum":"Xanthan gum", "Cajun seasoning":"Cajun seasoning", "dried dill":"Dried dill"};
   // Buy this much more than the prepared weight (peel, trim, stones).
-  const TRIM = {"onion":1.1,"garlic":1.2,"ginger":1.25,"peppers":1.15,"lettuce":1.15,"broccoli":1.1,"greens":1.1,"mango":1.45,"avocado":1.35,"potatoes":1.05,"apple":1.1,"spring-onion":1.1,"basil":1.2,"coriander":1.2,"parsley":1.2,"mint":1.2,"cucumber":1.03,"chicken-thigh":1.05,"beef-shin":1.1};
+  const TRIM = {"onion":1.1,"garlic":1.2,"ginger":1.25,"peppers":1.15,"lettuce":1.15,"broccoli":1.1,"greens":1.1,"mango":1.45,"avocado":1.35,"potatoes":1.02,"apple":1.1,"spring-onion":1.1,"basil":1.2,"coriander":1.2,"parsley":1.2,"mint":1.2,"cucumber":1.03,"chicken-thigh":1.05,"beef-shin":1.1};
   // Typical UK pack: [grams, label]. A guide only; the weight needed is always shown.
   const PACKS = {"chopped-tom":[400,"tin"],"passata":[500,"carton"],"coconut-light":[400,"tin"],"kidney-beans":[240,"tin, drained"],"tuna":[102,"tin, drained"],"eggs":[300,"box of 6"],"beef-mince":[500,"pack"],"mozzarella":[125,"ball"],"skyr":[450,"pot"],"greek-yog":[500,"tub"],"wrap":[496,"pack of 8"],"brioche":[240,"pack of 4"],"sub-roll":[360,"pack of 4"],"pizza-base":[300,"pack of 2"],"rocket":[60,"bag"],"spinach":[200,"bag"],"beansprouts":[300,"bag"],"cream-cheese":[165,"tub"],"cheese-slice":[200,"pack of 10"],"english-muffin":[272,"pack of 4"],"thin-bagel":[270,"pack of 6"],"mini-wrap":[248,"pack of 8"],"turkey-mince":[500,"pack"],"chicken-mince":[500,"pack"],"pasta":[500,"pack"],"penne":[500,"pack"],"sushi-rice":[500,"pack"],"jasmine-rice":[1000,"bag"],"basil":[30,"pot or bunch"],"coriander":[30,"bunch"],"parsley":[30,"bunch"],"mint":[30,"bunch"],"salmon":[240,"pack of 2 fillets"]};
 
   // The household. Dinners and treats are shared; breakfast, shake and lunch are per person.
   // scales: p = protein and dairy, c = carbs, fats and sauces, v = fruit and veg.
   // pieces: how many this person has of a breakfast that is built in whole pieces (a recipe with pieces: true).
+  // least: the smallest portion of a starch anyone is given, in raw or dry grams (about a cupped hand once cooked),
+  // unless the recipe itself uses less. It stops small scales giving token amounts of potatoes, rice or pasta.
+  // Scales set on 10 Oct 2026 from guidance for Blue (muscle gain: about 2.1 g protein per kg, carbs to fuel training, a small
+  // weekday deficit) and Harriett (fat loss: protein held at her target, fat about a quarter of calories).
   const HOUSE = {
+    "least": {"potatoes": 150, "sushi-rice": 45, "jasmine-rice": 45, "pasta": 50, "penne": 50, "rice-noodles": 45},
     "order": [
       "blue",
       "harriett"
@@ -231,8 +236,8 @@ window.BB_DATA = (function () {
         "name": "Blue",
         "pieces": 2,
         "scales": {
-          "p": 0.85,
-          "c": 0.7,
+          "p": 0.8,
+          "c": 1,
           "v": 1
         },
         "skip": [
@@ -243,8 +248,8 @@ window.BB_DATA = (function () {
         "name": "Harriett",
         "pieces": 1,
         "scales": {
-          "p": 0.65,
-          "c": 0.36,
+          "p": 0.62,
+          "c": 0.34,
           "v": 1
         },
         "skip": []
@@ -257,12 +262,15 @@ window.BB_DATA = (function () {
   // One-off weeks that start from something other than DEFAULTS. Delete an entry once its week has passed
   // (tests/data-check.js fails when one is more than two weeks old).
   // Week of 5 Oct 2026: prepped and shopped before the household update, so it keeps Blue's menu from then.
+  // Week of 12 Oct 2026: shopped and prepped before the portion change of 10 Oct, so it keeps the portions it was prepped at.
   const PRESETS = { "2026-10-05": {
     dinner: {"1": "d-gyros", "2": "d-philly", "3": "d-fried-rice", "4": "d-doner", "5": "d-bigmac", "6": "d-lasagne"},
     snack: {"1": "s-choc-mousse", "2": "s-brownie", "3": "s-cheesecake", "4": "s-bark", "5": "s-crumble", "6": "s-pbj"},
     breakfast: {blue: {"1": "bf-weetabix", "2": "bf-weetabix", "3": "bf-weetabix", "4": "bf-weetabix", "5": "bf-weetabix", "6": "bf-weetabix"}, harriett: {"1": "bf-weetabix", "2": "bf-weetabix", "3": "bf-weetabix", "4": "bf-weetabix", "5": "bf-weetabix", "6": "bf-weetabix"}},
     lunch: {blue: {"1": "l-teriyaki", "2": "l-bulgogi", "3": "l-prawn-egg", "4": "l-spicy-salmon", "5": "l-shawarma", "6": "l-prawn-egg"}},
     shake: {blue: {"1": "sh-mocha", "2": "sh-mocha", "3": "sh-strawberry", "4": "sh-berry-oat", "5": "sh-lassi", "6": "sh-mocha"}}
+  }, "2026-10-12": {
+    people: {blue: {"p": 0.85, "c": 0.7, "v": 1}, harriett: {"p": 0.65, "c": 0.36, "v": 1}}, least: {}
   } };
 
   // Recipes: ing = grams per full portion. sea = [label, list] seasoning groups not covered by a prep component.

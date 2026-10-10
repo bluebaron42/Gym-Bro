@@ -9,7 +9,7 @@ bad = []
 def fail(m): bad.append(m); print("FAIL", m)
 EXPECT = """(arg)=>{const D=window.BB_DATA,H=D.HOUSE,CAT={"Protein":"p","Dairy and eggs":"p","Carbs":"c","Sauces and cupboard":"c","Fruit and veg":"v"};
   const sc=(i,s)=>{const n=D.ING[i];return n[8]==="fixed"?1:n[8]==="aroma"?(s.p+s.c)/2:s[CAT[n[1]]]};const out={};
-  arg.people.forEach(w=>{const s=H.people[w].scales;Object.keys(arg.menu[w]).forEach(k=>{const r=D.RECIPES[arg.menu[w][k]];r.ing.forEach(([i,g])=>{out[i]=(out[i]||0)+g*(r.pieces?H.people[w].pieces:(r.whole||[]).indexOf(i)>=0?1:sc(i,s))})})});return out}"""
+  arg.people.forEach(w=>{const s=H.people[w].scales;Object.keys(arg.menu[w]).forEach(k=>{const r=D.RECIPES[arg.menu[w][k]];r.ing.forEach(([i,g])=>{let f=r.pieces?H.people[w].pieces:(r.whole||[]).indexOf(i)>=0?1:sc(i,s);const m=!r.pieces&&(r.whole||[]).indexOf(i)<0&&(H.least||{})[i]?Math.min(g,H.least[i]):0;if(m&&g*f<m)f=m/g;out[i]=(out[i]||0)+g*f})})});return out}"""
 def allowed(D, rid, slot, dow, who):
     r = D["RECIPES"].get(rid); H = D["HOUSE"]
     if not r or r["slot"] != slot: return False
@@ -135,6 +135,20 @@ try:
     pg.click('[data-tab="food"]')
     if "Open day" not in pg.inner_text("#view") or pg.query_selector('#view [data-dow="0"]'): fail("open day: the Food tab plans Sunday")
     if er: fail(f"open day: page errors {er}")
+    # "Shopping ordered" keeps a week's amounts when the app's portions change later; undoing it lets them follow again
+    ctx = b.new_context(service_workers="block"); pg = ctx.new_page(); er = []; pg.on("pageerror", lambda e: er.append(str(e))); pg.clock.install(time="2026-10-14T10:00:00")
+    pg.goto("http://localhost:8765/gym-bro/index.html"); pg.click('[data-tab="food"]'); pg.click('[data-wk="2026-10-19"]')
+    need = lambda: dict(t.split("|") for t in pg.eval_on_selector_all("[data-need]", "els=>els.map(e=>e.dataset.need)"))
+    before = need(); pg.click("#ordered")
+    st_m = json.loads(pg.evaluate("localStorage.getItem('banebuild:menus')") or "{}")
+    if not st_m.get("2026-10-19"): fail("ordered: the menu was not fixed as shown")
+    src = open(os.path.join(ROOT, "gym-bro", "data.js")).read().replace('"c": 1,', '"c": 1.5,', 1)
+    pg.route("**/gym-bro/data.js", lambda route: route.fulfill(status=200, content_type="application/javascript", body=src)); pg.reload(); pg.click('[data-tab="food"]'); pg.click('[data-wk="2026-10-19"]')
+    if need() != before: fail("ordered: a portion change in the app changed an ordered week's shopping list")
+    pg.click("#unorder"); pg.click("#unorder")
+    if need() == before: fail("ordered: undoing the order did not bring the week back to the app's portions")
+    if er: fail(f"ordered: page errors {er}")
+    ctx.close()
     # ---- sync between the two phones, against the stand-in database
     def phone(app):
         ctx = b.new_context(viewport={"width": 400, "height": 850}, service_workers="block"); ctx.add_init_script("window.GB_SYNC_URL='http://localhost:8766'")
@@ -162,6 +176,10 @@ try:
     until("shopping tick did not reach the other phone", lambda: stored(B, "gymgyal:", "shops")[WK]["t"].get(tick) is True)
     B.locator("[data-pantry]").first.click(); pk = B.locator("[data-pantry]").first.get_attribute("data-pantry")
     until("cupboard tick did not reach the other phone", lambda: stored(A, "banebuild:", "pantry").get(pk) == 1)
+    A.click("#ordered")
+    until("'Shopping ordered' did not reach the other phone", lambda: stored(B, "gymgyal:", "shops")[WK]["t"].get("lock") is True and WK in (stored(B, "gymgyal:", "locks") or {}))
+    A.click("#unorder"); A.click("#unorder")
+    until("undoing 'Shopping ordered' did not reach the other phone", lambda: not stored(B, "gymgyal:", "shops")[WK]["t"].get("lock"))
     # last change wins on both phones
     A.click('[data-swap="dinner"][data-dow="3"]'); A.locator('#sheet [data-choose="d-rigatoni"]').first.click(); time.sleep(0.3); B.clock.fast_forward(60000)  # the two test clocks start a moment apart
     B.click('[data-swap="dinner"][data-dow="3"]'); B.locator('#sheet [data-choose="d-smash"]').first.click()

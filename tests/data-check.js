@@ -41,12 +41,16 @@ Object.keys(D.ALIAS).forEach((n) => { if (!D.ING[D.ALIAS[n][0]]) fail("alias " +
 ["TRIM", "PACKS"].forEach((t) => Object.keys(D[t]).forEach((i) => { if (!D.ING[i]) fail(t + " has unknown ingredient " + i); }));
 // The default week must be valid for the people eating it.
 const H = D.HOUSE, ok = (id, slot, dow, who) => { const r = R[id]; if (!r || r.slot !== slot) return false; const eat = H.shared.indexOf(slot) >= 0 ? H.order : [who]; if (r.kind && eat.some((w) => H.people[w].skip.indexOf(r.kind) >= 0)) return false; return !(slot === "lunch" && dow >= 3 && r.late === "no"); };
+// Smallest starch portions name real carbs.
+Object.keys(H.least || {}).forEach((i) => { if (!D.ING[i] || D.ING[i][1] !== "Carbs") fail("HOUSE.least: " + i + " is not a carb"); });
 // Sunday is an open day: nothing planned for it.
 if (JSON.stringify(D.DEFAULTS).indexOf('"0":') >= 0 || Object.values(D.PRESETS).some((p) => JSON.stringify(p).indexOf('"0":') >= 0)) fail("Sunday (day 0) has a planned meal, but it is an open day");
 ["breakfast", "shake", "lunch", "dinner", "snack"].forEach((slot) => H.order.forEach((w) => [1, 2, 3, 4, 5, 6].forEach((d) => { const id = H.shared.indexOf(slot) >= 0 ? D.DEFAULTS[slot][d] : D.DEFAULTS[slot][w][d]; if (!ok(id, slot, d, w)) fail("default " + slot + " day " + d + " for " + w + " is not allowed: " + id); })));
 Object.keys(D.PRESETS || {}).forEach((wk) => {
   if ((Date.now() - new Date(wk).getTime()) / 864e5 > 21) fail("preset for the week of " + wk + " has passed: delete it from data.js");
-  Object.keys(D.PRESETS[wk]).forEach((slot) => { const sh = H.shared.indexOf(slot) >= 0, sets = sh ? { all: D.PRESETS[wk][slot] } : D.PRESETS[wk][slot];
+  // A preset may also keep the portions a week was prepped at: people (scales per person) and least (smallest starch portions).
+  const pp = D.PRESETS[wk].people; if (pp && (Object.keys(pp).sort().join() !== H.order.slice().sort().join() || Object.values(pp).some((s) => ["p", "c", "v"].some((k) => typeof s[k] !== "number")))) fail("preset " + wk + ": people needs p, c and v scales for everyone");
+  Object.keys(D.PRESETS[wk]).filter((k) => k !== "people" && k !== "least").forEach((slot) => { const sh = H.shared.indexOf(slot) >= 0, sets = sh ? { all: D.PRESETS[wk][slot] } : D.PRESETS[wk][slot];
     Object.keys(sets).forEach((w) => Object.keys(sets[w]).forEach((d) => { const r = R[sets[w][d]]; if (!r || r.slot !== slot) fail("preset " + wk + " " + slot + " day " + d + ": bad dish " + sets[w][d]); })); });
 });
 // Training: every exercise in both apps has a form guide for the gym and for home, and one-sided ones say so.

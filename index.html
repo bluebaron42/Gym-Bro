@@ -340,8 +340,12 @@ const CAT={"Protein":"p","Dairy and eggs":"p","Carbs":"c","Sauces and cupboard":
 const lots=sc=>sc.flat||(sc.p+sc.c)/2;
 // The scales one person eats one dish at. Breakfasts built in whole pieces do not follow the usual scales:
 // small ones are a set number of pieces each, big ones keep the bread whole and scale only the filling.
-function scFor(id,who){const r=RECIPES[id],pe=person(who||ME);if(r&&r.pieces)return {flat:pe.pieces||1};return r&&r.whole?Object.assign({},pe.scales,{whole:r.whole}):pe.scales}
-function scaleOf(i,sc){const n=ING[i];sc=sc||person(ME).scales;if(sc.flat)return sc.flat;if(sc.whole&&sc.whole.indexOf(i)>=0)return 1;if(!n||n[8]==="fixed")return 1;if(n[8]==="aroma")return lots(sc);return sc[CAT[n[1]]]!=null?sc[CAT[n[1]]]:1}
+// No one gets less of a starch than HOUSE.least, or the recipe's own amount if that is smaller.
+function scFor(id,who){const r=RECIPES[id],pe=person(who||ME);if(r&&r.pieces)return {flat:pe.pieces||1};
+  const sc=Object.assign({},pe.scales),L=HOUSE.least||{},up={};if(r&&r.whole)sc.whole=r.whole;
+  if(r)r.ing.forEach(([i,g])=>{const m=L[i]?Math.min(g,L[i]):0;if(m&&!(sc.whole||[]).includes(i)&&g*sc[CAT[ING[i][1]]]<m)up[i]=m/g});
+  if(Object.keys(up).length)sc.least=up;return sc}
+function scaleOf(i,sc){const n=ING[i];sc=sc||person(ME).scales;if(sc.flat)return sc.flat;if(sc.whole&&sc.whole.indexOf(i)>=0)return 1;if(sc.least&&sc.least[i])return sc.least[i];if(!n||n[8]==="fixed")return 1;if(n[8]==="aroma")return lots(sc);return sc[CAT[n[1]]]!=null?sc[CAT[n[1]]]:1}
 const LIQUID={"orange-juice":1,"milk":1,"skimmed-milk":1,"coffee":1};
 const AISLES=["Protein","Carbs","Dairy and eggs","Fruit and veg","Sauces and cupboard"];
 const SLOTNAME={breakfast:"Breakfast",shake:"Morning shake",lunch:"Lunch",dinner:"Dinner",snack:"Treat"};
@@ -611,6 +615,32 @@ function menuFor(wk){const all=allMenus();if(all[wk])return all[wk];const prev=O
 function weekRange(wk){const b=parse(wk);b.setDate(b.getDate()+6);return fmtDate(wk)+" to "+fmtDate(iso(b))}
 function weekWord(wk){return wk===THIS_MONDAY?"this week":wk===NEXT_MONDAY?"next week":"the week of "+fmtDate(wk)}
 function shopState(){return (get("shops",{})[viewWk])||{t:{}}}
+// ---------- The quantities a week is shopped and prepped at ----------
+// Recipes and portions come from data.js, except for a week that has been marked "Shopping ordered": that week keeps the
+// recipes and portions it was ordered at, on both phones, so later changes to the app cannot change what it needs.
+// Meals can still be swapped by hand; a dish swapped in comes as it is now. PRESETS may also pin a week's portions.
+const BASE={recipes:Object.assign({},RECIPES),people:JSON.parse(JSON.stringify(HOUSE.people)),least:HOUSE.least||{}};
+let dataFor=null;
+const isLocked=wk=>!!(((get("shops",{})[wk]||{}).t||{}).lock);
+function weekData(wk){const ps=(FD.PRESETS||{})[wk]||{},L=isLocked(wk)?get("locks",{})[wk]:null;
+  const key=wk+"|"+(L?L.at:isLocked(wk)?"new":"");if(key===dataFor)return;dataFor=key;
+  Object.keys(RECIPES).forEach(k=>delete RECIPES[k]);Object.assign(RECIPES,BASE.recipes,L?L.recipes:{});
+  HOUSE.order.forEach(w=>{const p=JSON.parse(JSON.stringify(BASE.people[w]));if(ps.people)p.scales=Object.assign({},ps.people[w]);if(L)Object.assign(p,L.people[w]);HOUSE.people[w]=p});
+  HOUSE.least=L?L.least:ps.least||BASE.least;Object.keys(macroCache).forEach(k=>delete macroCache[k]);
+  if(!isLocked(wk)&&get("locks",{})[wk]){const all=Object.assign({},get("locks",{}));delete all[wk];save("locks",all)}
+  // A phone that learns of the order through sync keeps the week as it stands now.
+  if(isLocked(wk)&&!L)keepWeek(wk)}
+function keepWeek(wk){const all=Object.assign({},get("locks",{})),rec={},was=viewWk;viewWk=wk;
+  EAT.forEach(d=>SLOTS.forEach(sl=>HOUSE.order.forEach(w=>{const id=choice(sl,d,w);if(RECIPES[id])rec[id]=RECIPES[id]})));viewWk=was;
+  const people={};HOUSE.order.forEach(w=>{people[w]={scales:Object.assign({},HOUSE.people[w].scales),pieces:HOUSE.people[w].pieces}});
+  all[wk]={at:Date.now(),recipes:JSON.parse(JSON.stringify(rec)),people:people,least:Object.assign({},HOUSE.least)};
+  Object.keys(all).sort().slice(0,-3).forEach(k=>delete all[k]);save("locks",all);dataFor=null;weekData(wk)}
+// "Shopping ordered" fixes the menu as shown and keeps the week's quantities; tapping again releases it.
+function setOrdered(on){const wk=viewWk;if(on&&!allMenus()[wk]){const all=Object.assign({},allMenus()),m=weekSnapshot(),now=Date.now(),o={};all[wk]=m;save("menus",all);
+    Object.keys(m).forEach(k=>{o["m/"+wk+"/"+canon(k)]=m[k]+"@"+now});syncPush(o)}
+  const s={t:Object.assign({},shopState().t)};if(on)s.t.lock=true;else delete s.t.lock;saveShop(s);
+  const L=Object.assign({},get("locks",{}));delete L[wk];save("locks",L);dataFor=null;if(on)keepWeek(wk);else weekData(wk);
+  const o={};o["s/"+wk+"/lock"]=(on?1:-1)*Date.now();syncPush(o)}
 function saveShop(st){const all=Object.assign({},get("shops",{}));all[viewWk]=st;Object.keys(all).sort().slice(0,-4).forEach(k=>delete all[k]);save("shops",all)}
 
 // ---------- State accessors ----------
@@ -753,7 +783,8 @@ function renderFood(){
     '<p class="rest-note" style="margin:0"><b>Saturday prep:</b> '+["fresh","head","batch"].map(t=>EAT.filter(d=>(RECIPES[choice("dinner",d)]||{}).type===t).length+' '+DTYPE[t][0].toLowerCase()).join(" · ")+' dinners; '+HOUSE.order.map(w=>lunchN(w)+' lunch'+(lunchN(w)>1?'es':'')+' for '+(w===ME?'you':pname(w))).join(", ")+'; '+treatN+' batch treat'+(treatN===1?'':'s')+'.</p>'+menu+'<button type="button" class="btn ghost small" id="menu-reset" style="align-self:flex-start">Reset this menu to defaults</button></section>'+
     '<h2 class="sec">Sync with '+esc(pname(OTHER))+'</h2>'+syncCard()+
     '<h2 class="sec">Recipes</h2>'+lib+
-    '<h2 class="sec">Shopping list</h2><section class="card">'+seg("sv",shopView,[["house","Household"],[ME,"Just me"],[OTHER,"Just "+pname(OTHER)]])+'<p class="rest-note"><b>'+weekRange(viewWk)+'.</b> '+(shopView==="house"?'Everything both of you eat this week, at each person’s portions.':shopView===ME?'Only your portions.':'Only '+esc(poss(OTHER))+' portions.')+' Weights include an allowance for peel and trim; pack counts are a guide.</p><div class="data-btns"><button type="button" class="btn small" id="shop-copy">Copy shopping list</button></div><p class="rest-note" id="shop-msg" aria-live="polite"></p>'+lists+'</section>'+
+    '<h2 class="sec">Shopping list</h2><section class="card">'+seg("sv",shopView,[["house","Household"],[ME,"Just me"],[OTHER,"Just "+pname(OTHER)]])+'<p class="rest-note"><b>'+weekRange(viewWk)+'.</b> '+(shopView==="house"?'Everything both of you eat this week, at each person’s portions.':shopView===ME?'Only your portions.':'Only '+esc(poss(OTHER))+' portions.')+' Weights include an allowance for peel and trim; pack counts are a guide.</p><div class="data-btns"><button type="button" class="btn small" id="shop-copy">Copy shopping list</button>'+(isLocked(viewWk)?'':'<button type="button" class="btn small" id="ordered">Shopping ordered</button>')+'</div>'+
+    (isLocked(viewWk)?'<p class="banner"><b>Ordered.</b> This week’s amounts and portions are fixed at what you ordered. You can still swap meals by hand. <button type="button" class="btn ghost small" id="unorder">Undo</button></p>':'<p style="margin:0">Tap <b>Shopping ordered</b> once the shop is ordered, so this week’s amounts and portions stay as you ordered them.</p>')+'<p class="rest-note" id="shop-msg" aria-live="polite"></p>'+lists+'</section>'+
     '<h2 class="sec">Saturday run sheet'+(viewWk===THIS_MONDAY?'':' for next week')+'</h2><section class="card">'+(RS.steps.length?
       '<div class="prep-est"><b>About '+hm(RS.total)+'</b><span>start to finish with '+(RS.cooks>1?'two of you':'one cook')+', for Monday '+fmtDate(viewWk)+' to Saturday</span></div>'+seg("cooks",String(nCooks),[["2","Two of us"],["1","One cook"]])+(split?seg("rsv",mineOnly?"mine":"all",[["mine","My jobs"],["all","Both of us"]]):'')+
       '<p class="rest-note">Work down the list. Times count from when you start; each step shows who does it and the hands-on minutes. Ticking an oven or hob step starts its timer on both phones. It covers both your lunches, the treats, and head start or batch dinners, and rebuilds whenever you swap a meal.</p>'+prep+
@@ -917,7 +948,7 @@ function renderProgress(){
 }
 
 function render(){
-  viewWk=(tab==="food")?foodWk:THIS_MONDAY;
+  viewWk=(tab==="food")?foodWk:THIS_MONDAY;weekData(viewWk);
   renderStatus();
   const v=$("#view");
   v.innerHTML=tab==="today"?renderToday():tab==="week"?renderWeek():tab==="food"?renderFood():renderProgress();
@@ -965,7 +996,7 @@ $("#view").addEventListener("click",ev=>{
   if(mb){let md=get("meals",{d:TODAY,t:{}});if(md.d!==TODAY)md={d:TODAY,t:{}};md={d:TODAY,t:Object.assign({},md.t)};md.t[mb.dataset.meal]=!md.t[mb.dataset.meal];save("meals",md);logMeals(md);const y=window.scrollY;render();window.scrollTo(0,y);return}
   const dy=ev.target.closest("[data-day]"); if(dy){weekSel=Number(dy.dataset.day);render();return}
   const sh=ev.target.closest("[data-shop]"); if(sh){toggleShop(sh.dataset.shop,sh);return}
-  if(ev.target.id==="clear-shop"){const b=ev.target;if(b.dataset.armed){const o={},now=Date.now();Object.keys(shopState().t).forEach(k=>{o["s/"+viewWk+"/"+enc(k)]=-now});saveShop({t:{}});syncPush(o);render()}else{b.dataset.armed="1";b.textContent="Tap again to clear all ticks";setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.textContent="Clear ticks now"}},4000)}return}
+  if(ev.target.id==="clear-shop"){const b=ev.target;if(b.dataset.armed){const o={},now=Date.now();const lk=shopState().t.lock;Object.keys(shopState().t).filter(k=>k!=="lock").forEach(k=>{o["s/"+viewWk+"/"+enc(k)]=-now});saveShop({t:lk?{lock:true}:{}});syncPush(o);render()}else{b.dataset.armed="1";b.textContent="Tap again to clear all ticks";setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.textContent="Clear ticks now"}},4000)}return}
   if(ev.target.id==="p-save"){const d=$("#p-date").value||TODAY,wa=$("#p-waist").value;
     if(!wa){$("#p-msg").textContent="Enter your waist measurement in centimetres first.";return}
     saveBody(d,"",wa); render(); return}
@@ -1098,6 +1129,8 @@ $("#view").addEventListener("click",async ev=>{
   if(svb){keep(()=>{shopView=svb.dataset.sv});return}
   const pb=ev.target.closest("[data-pantry]");
   if(pb){keep(()=>{const p=Object.assign({},get("pantry",{}));const k=pb.dataset.pantry;if(p[k])delete p[k];else p[k]=1;save("pantry",p);const o={};o["p/"+enc(k)]=(p[k]?1:-1)*Date.now();syncPush(o)});return}
+  if(id==="ordered"){keep(()=>setOrdered(true));return}
+  if(id==="unorder"){const b=ev.target;if(b.dataset.armed){keep(()=>setOrdered(false))}else{b.dataset.armed="1";b.textContent="Tap again to undo";setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.textContent="Undo"}},4000)}return}
   if(id==="menu-reset"){const b=ev.target;if(b.dataset.armed){const all=Object.assign({},allMenus());all[viewWk]={};save("menus",all);const o={};o["r/"+viewWk]=Date.now();syncPush(o);render()}else{b.dataset.armed="1";b.textContent="Tap again to reset "+weekWord(viewWk)+"’s menu";setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.textContent="Reset this menu to defaults"}},4000)}return}
 });
 

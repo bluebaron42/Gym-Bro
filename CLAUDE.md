@@ -62,8 +62,18 @@ sometimes cancels the publishing run and the phones silently stay on the old ver
 **Household** (`HOUSE` in `data.js`): two people with portion scales (`p` protein and dairy, `c` carbs, fats and
 sauces, `v` veg). Dinners and treats are shared (one choice, two portions). Breakfast, shake and lunch are per person.
 Blue skips curries, so curries are lunch-only and only Harriett can pick them. No pork anywhere.
-On 10 Oct 2026 the scales were cut (Blue p 0.85 c 0.7, Harriett p 0.65 c 0.36) so that Monday to Saturday plans run a little under
-target and leave a bigger Sunday: on the default menus, about 3,550 kcal for Blue and 2,350 for Harriett.
+Scales were set on 10 Oct 2026 from guidance, leaving Monday to Saturday a little under target so Sunday is bigger:
+Blue p 0.8 c 1 (muscle gain: about 210 g protein, carbs for training, about 2,590 kcal a weekday on an average menu, Sunday
+about 3,700); Harriett p 0.62 c 0.34 (fat loss: about 150 g protein, fat about a quarter of calories, about 1,650 kcal a weekday,
+Sunday about 2,350; her heavier breakfast picks bring that down to about 1,950). `HOUSE.least` sets the smallest starch portion
+anyone gets (150 g raw potato, 45 g dry rice, 50 g dry pasta), so a small scale never gives a token amount; `scFor` applies it.
+Potatoes are cooked with the skins on (`TRIM` 1.02).
+
+**Shopping ordered**: the button under the shopping list marks a week as ordered (`s/<wk>/lock` in sync, so both phones see it).
+Each phone then keeps its own copy of that week's recipes and portions (`locks` in localStorage, `keepWeek`), and `weekData(wk)`,
+called on every render, uses that copy for the week, so later changes to `data.js` cannot change what an ordered week needs.
+Meals can still be swapped by hand; a dish swapped in comes as it is now. Undo releases it. `PRESETS[wk].people` and `.least`
+pin a week's portions the same way for weeks prepped before a change (the week of 12 Oct 2026).
 
 **Prep day is Saturday and Sunday is an open day** (Blue's request, 10 Oct 2026). Meals are planned Monday to Saturday only (`EAT`
 in `index.html`; `DEFAULTS` and `PRESETS` have no day 0, and `data-check.js` fails if they do). Sunday has no menu, shopping or prep.
