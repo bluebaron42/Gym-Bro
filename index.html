@@ -351,7 +351,7 @@ function scFor(id,who){const r=RECIPES[id],pe=person(who||ME);if(r&&r.pieces)ret
 function scaleOf(i,sc){const n=ING[i];sc=sc||person(ME).scales;if(sc.flat)return sc.flat;if(sc.whole&&sc.whole.indexOf(i)>=0)return 1;if(sc.least&&sc.least[i])return sc.least[i];if(!n||n[8]==="fixed")return 1;if(n[8]==="aroma")return lots(sc);return sc[CAT[n[1]]]!=null?sc[CAT[n[1]]]:1}
 const LIQUID={"orange-juice":1,"milk":1,"skimmed-milk":1,"coffee":1};
 const AISLES=["Protein","Carbs","Dairy and eggs","Fruit and veg","Sauces and cupboard"];
-const SLOTNAME={breakfast:"Breakfast",shake:"Morning shake",lunch:"Lunch",dinner:"Dinner",snack:"Treat"};
+const SLOTNAME={breakfast:"Breakfast",shake:"Morning shake",lunch:"Lunch",dinner:"Dinner",snack:"Treat",eve:"Evening shake"};
 const macroCache={};
 function macros(id,who){who=who||ME;const key=id+"|"+who;if(macroCache[key])return macroCache[key];const r=RECIPES[id],sc=scFor(id,who);let k=0,p=0,c=0,f=0;
   (r?r.ing:[]).forEach(([i,g0])=>{const n=ING[i];if(!n)return;const g=g0*scaleOf(i,sc);k+=n[2]*g/100;p+=n[3]*g/100;c+=n[4]*g/100;f+=n[5]*g/100});
@@ -371,14 +371,23 @@ function choice(slot,dow,who){who=who||ME;const k=menuKey(slot,dow,who),own=allM
   if(!own){const v=menuFor(viewWk)[k];if(fits(v,slot,who))return v}
   return isShared(slot)?DEF[slot][dow]:DEF[slot][who][dow]}
 // The first change to a week fixes the whole week as it currently shows, so later edits to other weeks cannot shift it.
-function weekSnapshot(){const m={};SLOTS.forEach(sl=>EAT.forEach(d=>(isShared(sl)?[ME]:HOUSE.order).forEach(w=>{m[menuKey(sl,d,w)]=choice(sl,d,w)})));return m}
+function weekSnapshot(){const m={};SLOTS.forEach(sl=>EAT.forEach(d=>(isShared(sl)?[ME]:HOUSE.order).forEach(w=>{m[menuKey(sl,d,w)]=choice(sl,d,w)})));
+  EAT.forEach(d=>HOUSE.order.forEach(w=>{const v=eveOf(d,w);if(v)m[menuKey("eve",d,w)]=v}));return m}
 function setChoice(slot,days,id,who){const all=Object.assign({},allMenus()),old=all[viewWk]||{};const m=all[viewWk]?Object.assign({},all[viewWk]):weekSnapshot();
   days.forEach(d=>{if(allowed(id,slot,d,who))m[menuKey(slot,d,who)]=id});all[viewWk]=m;
   save("menus",all);
   const out={},now=Date.now();Object.keys(m).forEach(k=>{if(old[k]!==m[k])out["m/"+viewWk+"/"+canon(k)]=m[k]+"@"+now});syncPush(out)}
+// The evening shake is optional and per person: an id adds it, "~"+id has it in place of that person's treat, "-" is none.
+// Shakes with coffee are left out of the evening.
+const nightShake=id=>!!(RECIPES[id]&&RECIPES[id].slot==="shake"&&!RECIPES[id].ing.some(x=>x[0]==="coffee"));
+function eveOf(dow,who){const v=((allMenus()[viewWk]||menuFor(viewWk))[menuKey("eve",dow,who||ME)])||"";return nightShake(v.replace(/^~/,""))?v:""}
+function setEve(dow,v,who){const all=Object.assign({},allMenus()),old=all[viewWk]||{};const m=all[viewWk]?Object.assign({},all[viewWk]):weekSnapshot();
+  m[menuKey("eve",dow,who||ME)]=v;all[viewWk]=m;save("menus",all);
+  const out={},now=Date.now();Object.keys(m).forEach(k=>{if(old[k]!==m[k])out["m/"+viewWk+"/"+canon(k)]=m[k]+"@"+now});syncPush(out)}
 function pool(slot,dow,who){const T={fresh:0,head:1,batch:2};
   return Object.keys(RECIPES).filter(id=>allowed(id,slot,dow,who)).sort((a,b)=>{const x=RECIPES[a],y=RECIPES[b];return ((T[x.type]||0)-(T[y.type]||0))||(x.name<y.name?-1:1)})}
-function dayMenu(dow,who){return dow===0?[]:SLOTS.map(s=>({slot:s,id:choice(s,dow,who)}))}
+function dayMenu(dow,who){if(dow===0)return [];const e=eveOf(dow,who);
+  return SLOTS.filter(s=>!(s==="snack"&&e[0]==="~")).map(s=>({slot:s,id:choice(s,dow,who)})).concat(e?[{slot:"eve",id:e.replace(/^~/,""),instead:e[0]==="~"}]:[])}
 function dayTotals(dow,who){let k=0,p=0;dayMenu(dow,who).forEach(m=>{const x=macros(m.id,who);k+=x.k;p+=x.p});return {k:k,p:p}}
 // Sunday's budget on this phone: the week's calories (7 days at target) less Monday to Saturday. A past day counts what was
 // ticked as eaten, or the target if nothing was ticked; today and later days count the plan. Never under three quarters of a day.
@@ -427,7 +436,7 @@ function seaText(str,scs,mult){const acc={};scs.forEach(sc=>seaParse(str).forEac
 let shopView="house";
 function shopPeople(){return shopView==="house"?HOUSE.order:[shopView]}
 function shopList(){const agg={},uses={},cup={};
-  shopPeople().forEach(w=>{EAT.forEach(d=>SLOTS.forEach(sl=>{const r=RECIPES[choice(sl,d,w)];if(!r)return;const sc=scFor(r.id,w);
+  shopPeople().forEach(w=>{EAT.forEach(d=>dayMenu(d,w).forEach(mm=>{const r=RECIPES[mm.id];if(!r)return;const sc=scFor(r.id,w);
     r.ing.forEach(([i,g])=>{agg[i]=(agg[i]||0)+g*scaleOf(i,sc);(uses[i]=uses[i]||{})[r.name]=1});
     seaGroups(r).forEach(g=>seaParse(g[1]).forEach(s=>{if(ALIAS[s.n]||!CUP[s.n])return;
       const u=s.u==="pinch"||s.u==="tbsp"?"tsp":s.u,q=s.q*(s.u==="pinch"?0.125:s.u==="tbsp"?3:1)*lots(sc);const k=u+"|"+s.n;(cup[k]=cup[k]||{u:u,n:s.n,q:0}).q+=q}))}))});
@@ -445,7 +454,7 @@ function runSheet(nCooks){
   const VEGE=FD.VEG_EACH;
   const use={};const addUse=(id,slot,d,who)=>{const u=use[id]=use[id]||{slot:slot,scs:[],boxes:[]};u.scs.push(scFor(id,who));u.boxes.push({d:d,who:who})};
   // Made on the Saturday before: Monday to Saturday breakfasts, lunches, dinners and treats for both people. Cook-fresh dinners are not prepped.
-  EAT.forEach(d=>["breakfast","lunch","dinner","snack"].forEach(sl=>HOUSE.order.forEach(w=>{const id=choice(sl,d,w);if(RECIPES[id].type==="fresh")return;addUse(id,sl,d,w)})));
+  EAT.forEach(d=>["breakfast","lunch","dinner","snack"].forEach(sl=>HOUSE.order.forEach(w=>{if(sl==="snack"&&eveOf(d,w)[0]==="~")return;const id=choice(sl,d,w);if(RECIPES[id].type==="fresh")return;addUse(id,sl,d,w)})));
   const gOf=(r,ing,sc)=>{const e=r.ing.find(x=>x[0]===ing);return e?e[1]*scaleOf(ing,sc):0};
   const list=a=>{a=[...new Set(a)];return a.length<3?a.join(" and "):a.slice(0,-1).join(", ")+" and "+a[a.length-1]};
   const lower=id=>ING[id]?ING[id][0].toLowerCase():id;
@@ -784,7 +793,7 @@ function exerciseCard(e){
 function mealsBlock(dow,interactive){
   if(dow===0)return openDayBlock();
   const md=get("meals",{d:TODAY,t:{}}); const t=(interactive&&md.d===TODAY)?md.t:{};
-  const keys={breakfast:"b",shake:"k",lunch:"l",dinner:"d",snack:"s"};
+  const keys={breakfast:"b",shake:"k",lunch:"l",dinner:"d",snack:"s",eve:"e"};
   let kc=0,pr=0;
   const rows=dayMenu(dow).map(m=>{const r=RECIPES[m.id], x=macros(m.id), key=keys[m.slot];
     if(t[key]){kc+=x.k;pr+=x.p}
@@ -842,7 +851,8 @@ function renderFood(){
   const chk=(key,label,sub)=>'<div class="check'+(shop[key]?' on':'')+'" data-shop="'+esc(key)+'" role="checkbox" tabindex="0" aria-checked="'+!!shop[key]+'"><span class="box" aria-hidden="true" style="'+(shop[key]?'background:var(--ok);border-color:var(--ok)':'')+'">✓</span><span>'+label+(sub?'<small class="uses">'+esc(sub)+'</small>':'')+'</span></div>';
   const menu=ORDER.map(d=>{if(d===0)return '<div class="mday"><div class="mday-h"><b>Sunday</b><span class="num">Open day'+(who===ME?' · '+fmtN(openDay().k)+' kcal':'')+'</span></div></div>';
     const tot=dayTotals(d,who);return '<div class="mday"><div class="mday-h"><b>'+DFULL[d]+'</b><span class="num">'+fmtN(tot.k)+' kcal · '+tot.p+' g P</span></div>'+
-    SLOTS.map(s=>{const id=choice(s,d,who);return '<div class="mrow"><span class="lbl">'+(s==="shake"?"Shake":SLOTNAME[s])+(isShared(s)?'<i class="both">for both</i>':'')+'</span><button type="button" class="linkish" data-recipe="'+id+'" data-dow="'+d+'" data-slot="'+s+'" data-who="'+who+'">'+esc(RECIPES[id].name)+'</button><button type="button" class="swap" data-swap="'+s+'" data-dow="'+d+'" data-who="'+who+'">Swap</button></div>';}).join("")+'</div>'}).join("");
+    SLOTS.map(s=>{const id=choice(s,d,who);return '<div class="mrow"><span class="lbl">'+(s==="shake"?"Shake":SLOTNAME[s])+(isShared(s)?'<i class="both">for both</i>':'')+'</span><button type="button" class="linkish" data-recipe="'+id+'" data-dow="'+d+'" data-slot="'+s+'" data-who="'+who+'">'+esc(RECIPES[id].name)+(s==="snack"&&eveOf(d,who)[0]==="~"?' (shake instead for '+(who===ME?'you':esc(pname(who)))+')':'')+'</button><button type="button" class="swap" data-swap="'+s+'" data-dow="'+d+'" data-who="'+who+'">Swap</button></div>';}).join("")+
+    (()=>{const e=eveOf(d,who),id=e.replace(/^~/,"");return '<div class="mrow"><span class="lbl">Evening shake</span>'+(e?'<button type="button" class="linkish" data-recipe="'+id+'" data-dow="'+d+'" data-slot="eve" data-who="'+who+'">'+esc(RECIPES[id].name)+(e[0]==="~"?' (instead of the treat)':'')+'</button>':'<span>None</span>')+'<button type="button" class="swap" data-swap="eve" data-dow="'+d+'" data-who="'+who+'">'+(e?'Swap':'Add')+'</button></div>'})()+'</div>'}).join("");
   const all=slot=>Object.keys(RECIPES).filter(k=>RECIPES[k].slot===slot).sort((a,b)=>RECIPES[a].name<RECIPES[b].name?-1:1);
   const lib='<details class="card lib"><summary>Dinners ('+all("dinner").length+')</summary>'+all("dinner").map(i=>recipeBtn(i)).join("")+'</details>'+
     '<details class="card lib"><summary>Lunches ('+all("lunch").length+')</summary>'+all("lunch").map(i=>recipeBtn(i)).join("")+'</details>'+
@@ -888,7 +898,15 @@ function closeSheet(){sheet=null;$("#sheet").hidden=true;document.body.style.ove
 function blockOf(dow){return dow>=1&&dow<=3?[[1,2,3],"Mon–Wed"]:dow>=4?[[4,5,6],"Thu–Sat"]:null}
 function renderSheet(){if(!sheet)return;const T=$("#sheet-title"),B=$("#sheet-body");const who=sheet.who||ME;
   if(sheet.mode==="timers"){T.textContent="Timers";B.innerHTML=timerSheet();return}
-  if(sheet.mode==="swap"){const cur=choice(sheet.slot,sheet.dow,who),blk=blockOf(sheet.dow);
+  if(sheet.mode==="swap"){const e=eveOf(sheet.dow,who),youw=who===ME?"you":pname(who);
+    const shakes=Object.keys(RECIPES).filter(nightShake).sort((a,b)=>RECIPES[a].name<RECIPES[b].name?-1:1);
+    const eveList=pre=>shakes.map(id=>{const x=macros(id,who),on=e===pre+id;return '<div class="opt'+(on?' on':'')+'"><div class="opt-top"><b>'+esc(RECIPES[id].name)+'</b>'+(on?'<span class="chip ok">Current</span>':'')+'</div><div class="opt-meta num">'+x.k+' kcal · '+x.p+' g protein</div>'+
+      '<div class="data-btns">'+(on?'':'<button type="button" class="btn small" data-eve="'+pre+id+'">Choose</button>')+'<button type="button" class="btn ghost small" data-recipe="'+id+'" data-dow="'+sheet.dow+'" data-slot="eve" data-who="'+who+'" data-from="swap">Recipe</button></div></div>'}).join("");
+    if(sheet.slot==="eve"){T.textContent=DFULL[sheet.dow]+" evening shake · "+youw;
+      B.innerHTML=(e?'<div class="data-btns"><button type="button" class="btn ghost small" data-eve="-">No evening shake</button></div>':'')+eveList(e[0]==="~"?"~":"");return}
+    const extra=sheet.slot==="snack"?'<details class="catchup"'+(e[0]==="~"?' open':'')+'><summary>Have a shake instead (just '+esc(youw)+')</summary>'+(e[0]==="~"?'<div class="data-btns"><button type="button" class="btn small" data-eve="-">Have the treat after all</button></div>':'')+eveList("~")+'</details>':
+      sheet.slot==="shake"?'<details class="catchup"><summary>Add an evening shake</summary>'+eveList("")+'</details>':'';
+    const cur=choice(sheet.slot,sheet.dow,who),blk=blockOf(sheet.dow);
     T.textContent=DFULL[sheet.dow]+" "+SLOTNAME[sheet.slot].toLowerCase()+(isShared(sheet.slot)?"":" · "+(who===ME?"you":pname(who)));
     let last=null;
     B.innerHTML='<p class="rest-note">'+(isShared(sheet.slot)?'One choice for both of you. ':'')+(sheet.slot==="lunch"&&sheet.dow>=3?'Wednesday to Saturday lunches come from the freezer, so only ones that freeze. ':'')+'The shopping list and prep update straight away.</p>'+pool(sheet.slot,sheet.dow,who).map(id=>{const r=RECIPES[id],x=macros(id,who),on=id===cur;
@@ -898,7 +916,7 @@ function renderSheet(){if(!sheet)return;const T=$("#sheet-title"),B=$("#sheet-bo
         '<div class="data-btns">'+(on?'':'<button type="button" class="btn small" data-choose="'+id+'" data-days="'+sheet.dow+'">Choose</button>')+
           (sheet.slot==="lunch"&&blk&&allowed(id,"lunch",blk[0][0],who)?'<button type="button" class="btn ghost small" data-choose="'+id+'" data-days="'+blk[0].join(",")+'">Use '+blk[1]+'</button>':'')+
           (sheet.slot==="snack"?'<button type="button" class="btn ghost small" data-choose="'+id+'" data-days="'+EAT.join(",")+'">Use all week</button>':'')+
-          '<button type="button" class="btn ghost small" data-recipe="'+id+'" data-dow="'+sheet.dow+'" data-slot="'+sheet.slot+'" data-who="'+who+'" data-from="swap">Recipe</button></div></div>'}).join("");
+          '<button type="button" class="btn ghost small" data-recipe="'+id+'" data-dow="'+sheet.dow+'" data-slot="'+sheet.slot+'" data-who="'+who+'" data-from="swap">Recipe</button></div></div>'}).join("")+extra;
     return}
   const r=RECIPES[sheet.id], x=macros(sheet.id,who), s=sheet.serv||1;
   // Shared dishes are cooked for both; a shake is shown for two when you both picked it that day.
@@ -931,6 +949,8 @@ document.addEventListener("click",ev=>{
   if(ev.target.closest("[data-back]")){sheet={mode:"swap",slot:sheet.slot,dow:sheet.dow,who:sheet.who};renderSheet();return}
   const sv=ev.target.closest("[data-serv]");
   if(sv){sheet.serv=Math.min(8,Math.max(1,(sheet.serv||1)+Number(sv.dataset.serv)));renderSheet();return}
+  const ev_=ev.target.closest("[data-eve]");
+  if(ev_){setEve(sheet.dow,ev_.dataset.eve,sheet.who||ME);closeSheet();const y=window.scrollY;render();window.scrollTo(0,y);return}
   const ch=ev.target.closest("[data-choose]");
   if(ch){setChoice(sheet.slot,ch.dataset.days.split(",").map(Number),ch.dataset.choose,sheet.who||ME);closeSheet();const y=window.scrollY;render();window.scrollTo(0,y);return}
 });
@@ -1261,7 +1281,7 @@ keepAwake();
 
 // ---------- The record: everything measured is kept, and can be shared privately for review ----------
 // One line per day of what was eaten, rewritten whenever a meal is ticked or unticked.
-function logMeals(md){const keys={breakfast:"b",shake:"k",lunch:"l",dinner:"d",snack:"s"},ate={};let k=0,p=0;
+function logMeals(md){const keys={breakfast:"b",shake:"k",lunch:"l",dinner:"d",snack:"s",eve:"e"},ate={};let k=0,p=0;
   dayMenu(parse(md.d).getDay()).forEach(m=>{if(md.t[keys[m.slot]]){const x=macros(m.id);k+=x.k;p+=x.p;ate[m.slot]=m.id}});
   const h=Object.assign({},get("mealhist",{}));if(Object.keys(ate).length)h[md.d]={ate:ate,k:k,p:p,tk:kcalTarget(),tp:P.protein};else delete h[md.d];save("mealhist",h)}
 // Optional copy for Claude to read: this phone's record under its own private key, in weekly pieces. Off unless switched on.
@@ -1373,6 +1393,10 @@ render();
 
 // ---------- Offline + install ----------
 syncStart();renderTimers();
+// Today's date and week are fixed when the app opens. If it is left open past midnight, start it afresh on the new day
+// (not while something is being typed).
+function newDay(){if(iso(new Date())===TODAY)return;const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;location.reload()}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")newDay()});setInterval(newDay,60000);
 if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{})})}
 })();
 </script>

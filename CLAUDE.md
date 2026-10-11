@@ -83,6 +83,12 @@ day. Today shows it on Sunday, the Food menu shows it on the Sunday row, and the
 The Saturday session preps the following Monday to Saturday, so Saturday's food is a week old: Monday and Tuesday go in the fridge
 (Monday only for raw head-start bags), everything later in the freezer.
 
+**Evening shake** (11 Oct 2026): an optional per-person slot `eve` in the week's menu (`eveOf`, `setEve`). An id adds a second
+shake; `~` + id has it in place of that person's treat (the treat stays for the other person, and the run sheet makes one fewer
+portion); `-` is none. Shakes with coffee are not offered in the evening. It counts in `dayMenu`, so shopping, macros, ticks
+(`e`) and the Sunday budget include it. Chosen from the Treat swap ("Have a shake instead"), the Shake swap ("Add an evening
+shake"), or the Evening shake row on the Food menu.
+
 **Menus** are stored per week (`menus[mondayDate]`). Own and shared slots are keyed `slot+day` (`dinner1`, 1 = Monday, 6 = Saturday);
 the other person's are prefixed `p:`. A meal resolves in this order: chosen for that week, a one-off `PRESETS` entry
 for that week, what the week before had, then `DEFAULTS`. The first edit to a week freezes the whole week as shown.
@@ -177,7 +183,7 @@ Open items:
 - Catching up (10 Oct 2026): `missedDays()` finds this week's sessions with fewer than half their exercises ticked since their
   day. A rest day offers them in place of resting, and a training day offers them under its title ("Do a missed session
   instead"). The pick (`swapday`, per phone, today only) replaces Today's exercises; sets save under the actual date. One
-  session a day; earlier weeks are not carried over.
+  session a day; earlier weeks are not carried over. An app left open past midnight reloads itself on the new day (`newDay`), since TODAY and the week are fixed when it opens.
 - Training reviews happen when Blue asks for one (not on a schedule). Weights and exercises are both adjusted in the review, in conversation; he declined an automatic "drop the weight" prompt in the app, so do not build one. Read his record, and swap an exercise only when it is clearly not working: below the rep range two sessions running despite less weight, or he cannot do the movement. Swap to an easier version of the same movement using kit NRG has, change at most two exercises a week, and tell him what changed and why.
 - Review of 7 Oct 2026: Blue found the plan too many sets (about 110 a week) and prefers fewer, heavier sets. It was cut to about 74:
   no exercise above 3 sets, nothing above 15 reps in the gym, and cable fly, pec deck, upright row, sled push and Tuesday's neck work

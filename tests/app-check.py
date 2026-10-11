@@ -140,6 +140,16 @@ try:
     pg.click('[data-tab="food"]')
     if "Open day" not in pg.inner_text("#view") or pg.query_selector('#view [data-dow="0"]'): fail("open day: the Food tab plans Sunday")
     if er: fail(f"open day: page errors {er}")
+    # Left open past midnight, the app moves to the new day by itself (so Sunday's catch-up appears without reopening)
+    pg = b.new_context(service_workers="block").new_page(); pg.clock.install(time="2026-10-10T23:58:30"); pg.goto("http://localhost:8765/gym-bro/index.html")
+    pg.clock.run_for(180000); time.sleep(3)
+    ok = False
+    for _ in range(20):
+        try:
+            if pg.query_selector('[data-catch="6"]') and "11 OCT" in pg.inner_text("#view").upper(): ok = True; break
+        except Exception: pass
+        time.sleep(0.5)
+    if not ok: fail("new day: the app left open past midnight still shows yesterday: " + pg.evaluate("new Date().toString()") + " | " + pg.inner_text("#view")[:80].replace("\n", " "))
     # Catching up: on Sunday, the week's missed sessions are offered; one replaces the rest day, logs under Sunday's date,
     # and once done it is no longer offered
     pg = b.new_context(service_workers="block").new_page(); er = []; pg.on("pageerror", lambda e: er.append(str(e))); pg.clock.install(time="2026-10-11T10:00:00")
@@ -156,6 +166,22 @@ try:
     pg.click('[data-catch=""]')
     if pg.query_selector('[data-catch="6"]') or not pg.query_selector(".rest-card"): fail("catch-up: Saturday is still offered after it was done, or the rest day did not come back")
     if er: fail(f"catch-up: page errors {er}")
+    # Evening shake: a shake in place of my treat changes my shopping and my treat portions, and the treat stays for the other person
+    pg = b.new_context(service_workers="block").new_page(); er = []; pg.on("pageerror", lambda e: er.append(str(e))); pg.clock.install(time="2026-10-14T10:00:00")
+    pg.goto("http://localhost:8765/gym-bro/index.html"); pg.click('[data-tab="food"]'); pg.click('[data-wk="2026-10-19"]')
+    need = lambda: dict((k, float(v)) for k, v in (t.split("|") for t in pg.eval_on_selector_all("[data-need]", "els=>els.map(e=>e.dataset.need)")))
+    portions = lambda: re.findall(r"• (\d+) × about \d+ g \(Blue\)", pg.inner_text("#view"))
+    n0, p0 = need(), portions()
+    pg.click('[data-swap="snack"][data-dow="1"]'); pg.click("#sheet details.catchup summary"); pg.click('#sheet [data-eve="~sh-strawb-thick"]')
+    m = json.loads(pg.evaluate("localStorage.getItem('banebuild:menus')"))["2026-10-19"]
+    if m.get("eve1") != "~sh-strawb-thick": fail(f"evening shake: not saved as a shake in place of the treat: {m.get('eve1')}")
+    n1, p1 = need(), portions()
+    if abs(n1.get("strawberries", 0) - n0.get("strawberries", 0) - 150) > 1: fail(f"evening shake: shopping strawberries {n0.get('strawberries')} -> {n1.get('strawberries')}, expected +150 g")
+    if not p0 or not p1 or sum(map(int, p1)) != sum(map(int, p0)) - 1: fail(f"evening shake: my treat portions did not drop by one ({p0} -> {p1})")
+    if "instead of the treat" not in pg.inner_text("#view"): fail("evening shake: the menu does not show the shake in place of the treat")
+    pg.click('[data-swap="eve"][data-dow="1"]'); pg.click('#sheet [data-eve="-"]')
+    if need() != n0: fail("evening shake: removing it did not put the shopping list back")
+    if er: fail(f"evening shake: page errors {er}")
     # "Shopping ordered" keeps a week's amounts when the app's portions change later; undoing it lets them follow again
     ctx = b.new_context(service_workers="block"); pg = ctx.new_page(); er = []; pg.on("pageerror", lambda e: er.append(str(e))); pg.clock.install(time="2026-10-14T10:00:00")
     pg.goto("http://localhost:8765/gym-bro/index.html"); pg.click('[data-tab="food"]'); pg.click('[data-wk="2026-10-19"]')
