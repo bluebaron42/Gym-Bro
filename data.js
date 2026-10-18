@@ -226,7 +226,8 @@ window.BB_DATA = (function () {
         "boost": {"breakfast": {"p": 1.25, "c": 1.15}, "lunch": {"p": 1.35, "c": 1.3}, "dinner": {"p": 1.35, "c": 1.3}},
         "skip": [
           "curry"
-        ]
+        ],
+        "instead": {"bf-bagel": "bf-bagel-bacon"}
       },
       "harriett": {
         "name": "Harriett",

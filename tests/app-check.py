@@ -15,6 +15,7 @@ def allowed(D, rid, slot, dow, who):
     if not r or r["slot"] != slot: return False
     eat = H["order"] if slot in H["shared"] else [who]
     if r.get("kind") and any(r["kind"] in H["people"][w]["skip"] for w in eat): return False
+    if any(rid in H["people"][w].get("instead", {}) for w in eat): return False
     return not (slot == "lunch" and dow >= 3 and r.get("late") == "no")
 SLOTS = ["breakfast", "shake", "lunch", "dinner"]
 VAGUE = re.compile(r"brown(ed)? (it )?hard|sear hard|steam-dry|until just|glossy|a little (oil|water)|a splash|blitz|caramelis|to taste|\brest(,| and| then)|natural release|\bundefined\b|\bNaN\b|Do: \.|Weigh out: *(\n|$)|Take: *(\n|$)", re.I)
@@ -201,6 +202,17 @@ try:
     if "Everything goes in the freezer" not in pg.inner_text("#view"): fail("prep day: a Thursday prep should freeze everything")
     st_s = json.loads(pg.evaluate("localStorage.getItem('banebuild:shops')"))["2026-10-19"]["t"]
     if not st_s.get("pd:4") or st_s.get("pd:0"): fail(f"prep day: not saved as one day: {st_s}")
+    pg.click('[data-pd="1"]')
+    if "Everything goes in the freezer" not in pg.inner_text("#view") or len(pg.query_selector_all('[data-pd]')) != 7: fail("prep day: every day of the week is not offered, or a Monday prep does not freeze everything")
+    pg.click('[data-pd="3"]'); pg.reload(); pg.click('[data-tab="food"]')
+    if "NEXT WEEK" not in pg.inner_text("#view h1").upper(): fail("prep day: on a Wednesday prep day the Food tab does not open next week")
+    # Blue's own version of a dish: a week of turkey bagels comes out as bacon bagels for him, and the turkey ones are not offered to him
+    pg.evaluate("localStorage.setItem('banebuild:menus',JSON.stringify({'2026-10-19':Object.fromEntries([1,2,3,4,5,6].map(d=>['breakfast'+d,'bf-bagel']))}))"); pg.reload(); pg.click('[data-tab="food"]')
+    if pg.inner_text("#view").count("Bacon and egg bagels") < 6: fail("bacon: Blue's turkey bagels did not become bacon bagels on the menu")
+    if not any(t.startswith("back-bacon|") for t in pg.eval_on_selector_all("[data-need]", "els=>els.map(e=>e.dataset.need)")): fail("bacon: back bacon is not on the shopping list")
+    pg.click('[data-swap="breakfast"][data-dow="1"]')
+    if "Turkey bacon and egg bagels" in pg.inner_text("#sheet") or not pg.query_selector('#sheet [data-recipe="bf-bagel-bacon"]'): fail("bacon: Blue is offered the turkey bagels")
+    pg.keyboard.press("Escape")
     pg = b.new_context(service_workers="block").new_page(); pg.clock.install(time="2026-10-16T10:00:00"); pg.goto("http://localhost:8765/gym-bro/index.html")
     pg.evaluate("localStorage.setItem('banebuild:shops',JSON.stringify({'2026-10-19':{t:{'pd:5':true}}}))"); pg.reload(); pg.click('[data-tab="food"]')
     if "NEXT WEEK" not in pg.inner_text("#view h1").upper(): fail("prep day: on a Friday prep day the Food tab does not open next week")

@@ -192,7 +192,7 @@ body.has-kt main{padding-bottom:132px}
 #sh-load{align-self:flex-start}
 .seg.wide{display:flex}
 .seg.wk button{padding:9px 12px;font-size:14px}
-.seg.wide button{flex:1}
+.seg.wide button{flex:1;min-width:0;padding-left:2px;padding-right:2px}
 .seg button:disabled{opacity:.45;cursor:not-allowed}
 .share{gap:12px}
 .share textarea{width:100%;min-height:90px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--fg);font:13px ui-monospace,monospace;padding:8px}
@@ -359,16 +359,17 @@ function macros(id,who){who=who||ME;const key=id+"|"+who;if(macroCache[key])retu
 // Menu choices live in one object per week: shared and my own slots as slot+day, the other person's as "p:"+slot+day.
 function menuKey(slot,dow,who){return (isShared(slot)||(who||ME)===ME?"":"p:")+slot+dow}
 // fits = this person can have this dish in this slot. allowed = fits, and can be picked for that day (lunch keeping rule).
-function fits(id,slot,who){const r=RECIPES[id];if(!r||r.slot!==slot)return false;
+function fits(id,slot,who){const r=RECIPES[id];if(!r||r.slot!==slot||eaters(slot,who).some(w=>(person(w).instead||{})[id]))return false;
   return !(r.kind&&eaters(slot,who).some(w=>person(w).skip.indexOf(r.kind)>=0))}
 // Days after the fridge limit come from the freezer, so a lunch that does not freeze can only be on a fridge day.
 function allowed(id,slot,dow,who){return fits(id,slot,who)&&!(slot==="lunch"&&dow>fridgeTo(viewWk,false)&&RECIPES[id].late==="no")}
 // A week's meal, in order: what was chosen for that week; a one-off preset for that week; what the week before had
 // (a new week starts as a copy of the last one); the standard default.
-function choice(slot,dow,who){who=who||ME;const k=menuKey(slot,dow,who),own=allMenus()[viewWk];
-  if(own){if(fits(own[k],slot,who))return own[k]}
-  const ps=((FD.PRESETS||{})[viewWk]||{})[slot],pv=ps&&(isShared(slot)?ps[dow]:(ps[who]||{})[dow]);if(fits(pv,slot,who))return pv;
-  if(!own){const v=menuFor(viewWk)[k];if(fits(v,slot,who))return v}
+// A dish a person has swapped for their own version (HOUSE.people[x].instead) resolves to that version.
+function choice(slot,dow,who){who=who||ME;const k=menuKey(slot,dow,who),own=allMenus()[viewWk],sw=id=>(isShared(slot)?null:(person(who).instead||{})[id])||id;
+  if(own){if(fits(sw(own[k]),slot,who))return sw(own[k])}
+  const ps=((FD.PRESETS||{})[viewWk]||{})[slot],pv=ps&&sw(isShared(slot)?ps[dow]:(ps[who]||{})[dow]);if(fits(pv,slot,who))return pv;
+  if(!own){const v=sw(menuFor(viewWk)[k]);if(fits(v,slot,who))return v}
   return isShared(slot)?DEF[slot][dow]:DEF[slot][who][dow]}
 // The first change to a week fixes the whole week as it currently shows, so later edits to other weeks cannot shift it.
 function weekSnapshot(){const m={};SLOTS.forEach(sl=>EAT.forEach(d=>(isShared(sl)?[ME]:HOUSE.order).forEach(w=>{m[menuKey(sl,d,w)]=choice(sl,d,w)})));
@@ -692,7 +693,7 @@ const NEXT_MONDAY=(()=>{const d=parse(THIS_MONDAY);d.setDate(d.getDate()+7);retu
 // Menus are kept per week (keyed by that week's Monday). Today and Week always read this week;
 // the Food tab reads whichever week is selected, so planning ahead never changes this week.
 // From next week's prep day onwards the Food tab looks at the coming week.
-let foodWk=(()=>{const o={4:0,5:1,6:2,0:3},td=new Date().getDay();return o[td]!=null&&o[td]>=o[prepDay(NEXT_MONDAY)]?NEXT_MONDAY:THIS_MONDAY})();
+let foodWk=(()=>{const o={1:0,2:1,3:2,4:3,5:4,6:5,0:6};return o[new Date().getDay()]>=o[prepDay(NEXT_MONDAY)]?NEXT_MONDAY:THIS_MONDAY})();
 let viewWk=THIS_MONDAY;
 function allMenus(){let all=get("menus",null);if(!all){const old=get("menu",null);all={};if(old&&Object.keys(old).length)all[THIS_MONDAY]=old;cache.menus=all;if(old&&Object.keys(old).length)lsSet("menus",all)}return all}
 function menuFor(wk){const all=allMenus();if(all[wk])return all[wk];const prev=Object.keys(all).filter(k=>k<wk).sort().pop();return prev?all[prev]:{}}
@@ -700,11 +701,12 @@ function weekRange(wk){const b=parse(wk);b.setDate(b.getDate()+6);return fmtDate
 function weekWord(wk){return wk===THIS_MONDAY?"this week":wk===NEXT_MONDAY?"next week":"the week of "+fmtDate(wk)}
 function shopState(){return (get("shops",{})[viewWk])||{t:{}}}
 // ---------- Prep day ----------
-// Each week is prepped on the Thursday to Sunday before it, Saturday unless chosen; shared through the week's ticks as "pd:<day>".
-const PREPDAYS=[4,5,6,0];
-function prepDay(wk){const t=((get("shops",{})[wk]||{}).t)||{};const d=[4,5,6,0].find(x=>t["pd:"+x]);return d==null?6:d}
+// Each week is prepped on a day of the week before it (Monday to Sunday), Saturday unless chosen; shared through the week's ticks as "pd:<day>".
+// PREPDAYS is in that order; PREPGAP is how many days each one is before the week's Monday.
+const PREPDAYS=[1,2,3,4,5,6,0],PREPGAP={1:7,2:6,3:5,4:4,5:3,6:2,0:1};
+function prepDay(wk){const t=((get("shops",{})[wk]||{}).t)||{};const d=[1,2,3,4,5,6,0].find(x=>t["pd:"+x]);return d==null?6:d}
 // Cooked food keeps 3 days in the fridge and raw marinated meat 2, counted from prep day: the last meal day (1 = Monday) each can be.
-function fridgeTo(wk,raw){return (raw?2:3)-({0:1,6:2,5:3,4:4})[prepDay(wk)]+1}
+function fridgeTo(wk,raw){return (raw?2:3)-PREPGAP[prepDay(wk)]+1}
 const fridgeDays=f=>f<1?"nothing":f===1?"Monday":"Monday to "+DFULL[f];
 // ---------- The quantities a week is shopped and prepped at ----------
 // Recipes and portions come from data.js, except for a week that has been marked "Shopping ordered": that week keeps the
@@ -915,7 +917,7 @@ function renderFood(){
     '<h2 class="sec">Recipes</h2>'+lib+
     '<h2 class="sec">Shopping list</h2><section class="card">'+seg("sv",shopView,[["house","Household"],[ME,"Just me"],[OTHER,"Just "+pname(OTHER)]])+'<p class="rest-note"><b>'+weekRange(viewWk)+'.</b> '+(shopView==="house"?'Everything both of you eat this week, at each person’s portions.':shopView===ME?'Only your portions.':'Only '+esc(poss(OTHER))+' portions.')+' Weights include an allowance for peel and trim; pack counts are a guide.</p><div class="data-btns"><button type="button" class="btn small" id="shop-copy">Copy shopping list</button>'+(isLocked(viewWk)?'':'<button type="button" class="btn small" id="ordered">Shopping ordered</button>')+'</div>'+
     (isLocked(viewWk)?'<p class="banner"><b>Ordered.</b> This week’s amounts and portions are fixed at what you ordered. You can still swap meals by hand. <button type="button" class="btn ghost small" id="unorder">Undo</button></p>':'<p style="margin:0">Tap <b>Shopping ordered</b> once the shop is ordered, so this week’s amounts and portions stay as you ordered them.</p>')+'<p class="rest-note" id="shop-msg" aria-live="polite"></p>'+lists+'</section>'+
-    '<h2 class="sec">Prep run sheet'+(viewWk===THIS_MONDAY?'':' for next week')+'</h2><section class="card"><div class="eyebrow">Prep day</div>'+seg("pd",String(prepDay(viewWk)),[["4","Thu"],["5","Fri"],["6","Sat"],["0","Sun"]])+(RS.steps.length?
+    '<h2 class="sec">Prep run sheet'+(viewWk===THIS_MONDAY?'':' for next week')+'</h2><section class="card"><div class="eyebrow">Prep day</div>'+seg("pd",String(prepDay(viewWk)),PREPDAYS.map(d=>[String(d),DFULL[d].slice(0,3)]))+(RS.steps.length?
       '<div class="prep-est"><b>About '+hm(RS.total)+'</b><span>start to finish with '+(RS.cooks>1?'two of you':'one cook')+', for Monday '+fmtDate(viewWk)+' to Saturday</span></div>'+seg("cooks",String(nCooks),[["2","Two of us"],["1","One cook"]])+(split?seg("rsv",mineOnly?"mine":"all",[["mine","My jobs"],["all","Both of us"]]):'')+
       '<p class="rest-note">Work down the list. Times count from when you start; each step shows who does it and the hands-on minutes. Ticking an oven or hob step starts its timer on both phones. It covers both your breakfasts and lunches, and head start or batch dinners, and rebuilds whenever you swap a meal.</p>'+prep+
       '<p class="rest-note"><b>Cooling and storing:</b> spread rice, noodles and pasta on trays and get them boxed and chilled within 1 hour, everything else within 90 minutes. Lids on only once cold. Label every box and bag with the day. '+(fridgeTo(viewWk,false)>=6?'Everything goes in the fridge.':fridgeTo(viewWk,false)<1?'Everything goes in the freezer.':fridgeDays(fridgeTo(viewWk,false))+' go in the fridge, the rest in the freezer.')+' Each night, move the next day’s freezer boxes to the fridge, and reheat cooked food until piping hot.</p>'

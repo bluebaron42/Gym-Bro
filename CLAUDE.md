@@ -62,7 +62,8 @@ sometimes cancels the publishing run and the phones silently stay on the old ver
 **Household** (`HOUSE` in `data.js`): two people with portion scales (`p` protein and dairy, `c` carbs, fats and
 sauces, `v` veg). Dinners are shared (one choice, two portions). Breakfast, shake and lunch are per person.
 Blue skips curries, so curries are lunch-only and only Harriett can pick them. The only pork is Blue's "Bacon and egg bagels"
-(`kind: "pork"`, which Harriett skips); everything else uses turkey or chicken. Treats were removed on 18 Oct 2026 at Blue's
+(`kind: "pork"`, which Harriett skips); everything else uses turkey or chicken. `HOUSE.people[x].instead` maps a dish to that
+person's own version of it (Blue: turkey bagels to bacon bagels): `choice` resolves a saved pick to it and `fits` hides the original from them. Treats were removed on 18 Oct 2026 at Blue's
 request; their calories and protein moved into breakfast, lunch and dinner through each person's `boost` (per meal, multiplies
 `p` and `c`; piece breakfasts keep their count), so day totals stayed where they were.
 Scales were set on 10 Oct 2026 (with the boosts from 18 Oct) from guidance, leaving Monday to Saturday a little under target so Sunday is bigger:
@@ -83,7 +84,7 @@ in `index.html`; `DEFAULTS` and `PRESETS` have no day 0, and `data-check.js` fai
 Its budget (`openDay()`, per phone) is 7 x the daily target less Monday to Saturday: a past day counts its ticked meals
 (`mealhist`), or the target if nothing was ticked; today and later days count the plan. It is never under three quarters of a
 day. Today shows it on Sunday, the Food menu shows it on the Sunday row, and the meals card shows "Sunday so far" during the week.
-The prep day (Thursday to Sunday before the week, Saturday unless chosen on the run sheet; `prepDay(wk)`, synced as the tick
+The prep day (any day of the week before, Saturday unless chosen on the run sheet; `PREPGAP` is its days before Monday; `prepDay(wk)`, synced as the tick
 `s/<wk>/pd:<day>`) preps the following Monday to Saturday. `fridgeTo(wk, raw)` gives the last day that can come from the fridge:
 cooked food within 3 days of prep, raw head-start bags within 2; later days go in the freezer, and a lunch that does not freeze
 (`late: "no"`) can only go on a fridge day. The Food tab turns to next week from that week's prep day.

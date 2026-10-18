@@ -47,6 +47,8 @@ Object.values(R).forEach((r) => (r.comp || []).forEach((c) => { const m = JSON.s
 // Only the four meal slots exist, and every per-meal boost is for one of them with p and c multipliers.
 Object.values(R).forEach((r) => { if (["breakfast", "shake", "lunch", "dinner"].indexOf(r.slot) < 0) fail(r.id + ": unknown slot " + r.slot); });
 H.order.forEach((w) => Object.keys(H.people[w].boost || {}).forEach((sl) => { const b = H.people[w].boost[sl]; if (["breakfast", "lunch", "dinner"].indexOf(sl) < 0 || typeof b.p !== "number" || typeof b.c !== "number") fail("boost for " + w + " " + sl + " is not right"); }));
+// A person's own version of a dish (instead) is a dish of the same slot that they eat, not a shared one.
+H.order.forEach((w) => Object.entries(H.people[w].instead || {}).forEach(([a, b]) => { const x = R[a], y = R[b]; if (!x || !y || x.slot !== y.slot || H.shared.indexOf(x.slot) >= 0 || (y.kind && H.people[w].skip.indexOf(y.kind) >= 0) || (H.people[w].instead || {})[b]) fail("instead for " + w + ": " + a + " -> " + b + " is not right"); }));
 // Smallest starch portions name real carbs.
 Object.keys(H.least || {}).forEach((i) => { if (!D.ING[i] || D.ING[i][1] !== "Carbs") fail("HOUSE.least: " + i + " is not a carb"); });
 // Sunday is an open day: nothing planned for it.
