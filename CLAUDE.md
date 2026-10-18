@@ -11,7 +11,7 @@ Two installable phone web apps (static files on GitHub Pages) for one household:
 | Gym-Bro | Blue | Android, Chrome | `bluebaron42/Gym-Bro` | https://bluebaron42.github.io/Gym-Bro/ |
 | Gym-Gyal | Harriett | iPhone, Safari home-screen app | `bluebaron42/Gym-Gyal` | https://bluebaron42.github.io/Gym-Gyal/ |
 
-Each app has training (Today, Week), food (menus, recipes, shopping, Saturday run sheet, sync, timers) and progress.
+Each app has training (Today, Week), food (menus, recipes, shopping, prep run sheet, sync, timers) and progress.
 Blue is the cook and the person you talk to. He is a chef: be precise about quantities and kitchen workflow.
 
 ## Files
@@ -60,9 +60,12 @@ sometimes cancels the publishing run and the phones silently stay on the old ver
 ## How the food side works
 
 **Household** (`HOUSE` in `data.js`): two people with portion scales (`p` protein and dairy, `c` carbs, fats and
-sauces, `v` veg). Dinners and treats are shared (one choice, two portions). Breakfast, shake and lunch are per person.
-Blue skips curries, so curries are lunch-only and only Harriett can pick them. No pork anywhere.
-Scales were set on 10 Oct 2026 from guidance, leaving Monday to Saturday a little under target so Sunday is bigger:
+sauces, `v` veg). Dinners are shared (one choice, two portions). Breakfast, shake and lunch are per person.
+Blue skips curries, so curries are lunch-only and only Harriett can pick them. The only pork is Blue's "Bacon and egg bagels"
+(`kind: "pork"`, which Harriett skips); everything else uses turkey or chicken. Treats were removed on 18 Oct 2026 at Blue's
+request; their calories and protein moved into breakfast, lunch and dinner through each person's `boost` (per meal, multiplies
+`p` and `c`; piece breakfasts keep their count), so day totals stayed where they were.
+Scales were set on 10 Oct 2026 (with the boosts from 18 Oct) from guidance, leaving Monday to Saturday a little under target so Sunday is bigger:
 Blue p 0.8 c 1 (muscle gain: about 210 g protein, carbs for training, about 2,590 kcal a weekday on an average menu, Sunday
 about 3,700); Harriett p 0.62 c 0.34 (fat loss: about 150 g protein, fat about a quarter of calories, about 1,650 kcal a weekday,
 Sunday about 2,350; her heavier breakfast picks bring that down to about 1,950). `HOUSE.least` sets the smallest starch portion
@@ -73,21 +76,27 @@ Potatoes are cooked with the skins on (`TRIM` 1.02).
 Each phone then keeps its own copy of that week's recipes and portions (`locks` in localStorage, `keepWeek`), and `weekData(wk)`,
 called on every render, uses that copy for the week, so later changes to `data.js` cannot change what an ordered week needs.
 Meals can still be swapped by hand; a dish swapped in comes as it is now. Undo releases it. `PRESETS[wk].people` and `.least`
-pin a week's portions the same way for weeks prepped before a change (the week of 12 Oct 2026).
+pin a week's portions the same way (no boost) for a week prepped before a change; `PRESETS` is empty at the moment.
 
-**Prep day is Saturday and Sunday is an open day** (Blue's request, 10 Oct 2026). Meals are planned Monday to Saturday only (`EAT`
+**Prep day is chosen per week and Sunday is an open day** (Blue's requests, 10 and 18 Oct 2026). Meals are planned Monday to Saturday only (`EAT`
 in `index.html`; `DEFAULTS` and `PRESETS` have no day 0, and `data-check.js` fails if they do). Sunday has no menu, shopping or prep.
 Its budget (`openDay()`, per phone) is 7 x the daily target less Monday to Saturday: a past day counts its ticked meals
 (`mealhist`), or the target if nothing was ticked; today and later days count the plan. It is never under three quarters of a
 day. Today shows it on Sunday, the Food menu shows it on the Sunday row, and the meals card shows "Sunday so far" during the week.
-The Saturday session preps the following Monday to Saturday, so Saturday's food is a week old: Monday and Tuesday go in the fridge
-(Monday only for raw head-start bags), everything later in the freezer.
+The prep day (Thursday to Sunday before the week, Saturday unless chosen on the run sheet; `prepDay(wk)`, synced as the tick
+`s/<wk>/pd:<day>`) preps the following Monday to Saturday. `fridgeTo(wk, raw)` gives the last day that can come from the fridge:
+cooked food within 3 days of prep, raw head-start bags within 2; later days go in the freezer, and a lunch that does not freeze
+(`late: "no"`) can only go on a fridge day. The Food tab turns to next week from that week's prep day.
 
-**Evening shake** (11 Oct 2026): an optional per-person slot `eve` in the week's menu (`eveOf`, `setEve`). An id adds a second
-shake; `~` + id has it in place of that person's treat (the treat stays for the other person, and the run sheet makes one fewer
-portion); `-` is none. Shakes with coffee are not offered in the evening. It counts in `dayMenu`, so shopping, macros, ticks
-(`e`) and the Sunday budget include it. Chosen from the Treat swap ("Have a shake instead"), the Shake swap ("Add an evening
-shake"), or the Evening shake row on the Food menu.
+**Something else eaten**: each meal on Today (and on earlier days this week in the Week tab) has "Ate something else", and the
+day has "Ate something else all day": a description, calories and optional protein. They live in `daylog[date]` (`t` ticks,
+`x` per meal, `day`), and `logDay(date)` rewrites `mealhist[date]` from it, with `other` and `day` lines for the record and the
+export. A logged meal counts in place of the planned one; a logged day replaces the whole plan.
+
+**Evening shake** (11 Oct 2026): an optional per-person slot `eve` in the week's menu (`eveOf`, `setEve`): an id adds a second
+shake, `-` is none (an old `~` prefix from when it could replace a treat is ignored). Shakes with coffee are not offered in the
+evening. It counts in `dayMenu`, so shopping, macros, ticks (`e`) and the Sunday budget include it. Chosen from the Shake swap
+("Add an evening shake") or the Evening shake row on the Food menu.
 
 **Menus** are stored per week (`menus[mondayDate]`). Own and shared slots are keyed `slot+day` (`dinner1`, 1 = Monday, 6 = Saturday);
 the other person's are prefixed `p:`. A meal resolves in this order: chosen for that week, a one-off `PRESETS` entry
@@ -109,7 +118,7 @@ be in `CUPBOARD`. Methods carry no amounts.
   schedules by, and `portion(part, scale, lots)` gives one person's weight of a part. Cooked weights are estimates from raw weights
   and the `COOKED` table, so they read "about". The run sheet shows them three ways: every box-up lists each person's portion of
   each part (raw weights for a head-start bag); shaping, breading and one-at-a-time steps say the size of each piece; and a dish
-  with no box-up (treats, overnight oats) says its portion on the step that finishes each part. Cooked steps also say roughly what
+  with no box-up (overnight oats) says its portion on the step that finishes each part. Cooked steps also say roughly what
   the batch should weigh. Blue asked for this: portion weights matter, batch totals alone are not enough.
 - Every dish with components has `rest`: the ingredients no prep component handles. `data-check.js` fails unless it matches,
   so a new ingredient has to be put in a component (a seasoning list, or the list at the end of an `O`, `X`, `H` or `S`) or in `rest`.
@@ -125,7 +134,7 @@ be in `CUPBOARD`. Methods carry no amounts.
 guide. Pack sizes are typical UK sizes and have not been checked against a supermarket. Cupboard seasonings are a
 checklist whose ticks persist.
 
-**Saturday run sheet** (`runSheet` in `index.html`): turns every prep component of the chosen dishes into tasks with
+**Prep run sheet** (`runSheet` in `index.html`): turns every prep component of the chosen dishes into tasks with
 hands-on minutes, unattended minutes, kit and dependencies, then schedules them on one or two cooks. Kit limits are
 two oven trays at one temperature, four hob rings, one Instant Pot. With two cooks, each phone shows only its owner's jobs (Blue is
 `HOUSE.prep.chef`, Harriett the helper; the others are rendered but hidden), a "Both of us" switch shows everything (`rsall`,
@@ -177,8 +186,6 @@ screen-awake, body weight in pounds for Harriett (stored in kg), home form guide
 
 Open items:
 
-- `PRESETS` in `data.js` pins the week of 5 Oct 2026 to what was already prepped (breakfast shows Weetabix, because the old egg and oat breakfasts were removed mid-week). Delete it after that week;
-  `data-check.js` starts failing three weeks later as a reminder.
 - Blue cannot yet do a bodyweight pull-up, so his Monday slot is "Wide-grip lat pulldown" at his request. If he later wants pull-ups back, the weighted pull-up slot and guide are in git history before 6 Oct 2026, along with its line in `mainLifts`.
 - Catching up (10 Oct 2026): `missedDays()` finds this week's sessions with fewer than half their exercises ticked since their
   day. A rest day offers them in place of resting, and a training day offers them under its title ("Do a missed session
@@ -190,11 +197,10 @@ Open items:
   were dropped (their guides stay in `guides.js` for future swaps). Do not add volume back without asking. His logged sets were not
   read for this review.
 - Blue trains at NRG Gym Lewisham: Life Fitness kit, with Hammer Strength plate-loaded machines, Insignia pin-loaded machines and free weights. An assisted pull-up machine there is not confirmed.
-- The Tasty Shreds recipes (added 7 Oct 2026: 8 breakfasts, 7 treats, 12 lunches, 12 dinners) are converted from a US book and
+- The Tasty Shreds recipes (added 7 Oct 2026: 8 breakfasts, 12 lunches, 12 dinners; the 7 treats went with the rest on 18 Oct) are converted from a US book and
   have not been test-cooked. Portions were sized up to match the rest of the app, US products were swapped for UK ones (panko for
   cornflakes, smoked paprika and orange juice for achiote, chipotle paste, home-made ranch and nacho sauce), and Claude chose which
-  are lunches and which are dinners. The brookie (skyr in place of banana) and the cheesecake bake time at 180°C are the least
-  certain. Macros for the new ingredients are typical UK label values, not checked against Asda. The burrito lunches come out
+  are lunches and which are dinners. Macros for the new ingredients are typical UK label values, not checked against Asda. The burrito lunches come out
   around 500 kcal for Blue, lighter than the rice-bowl lunches. Overnight oats is kept as a breakfast because Harriett likes them.
 - Portion weights for cooked mixtures (curries, ragù, fillings, bakes) are estimates that have not been weighed in a real prep.
   Ask Blue how the batch weights compared and adjust `COOKED` in `data.js`.

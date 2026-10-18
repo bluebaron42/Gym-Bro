@@ -9,14 +9,14 @@ bad = []
 def fail(m): bad.append(m); print("FAIL", m)
 EXPECT = """(arg)=>{const D=window.BB_DATA,H=D.HOUSE,CAT={"Protein":"p","Dairy and eggs":"p","Carbs":"c","Sauces and cupboard":"c","Fruit and veg":"v"};
   const sc=(i,s)=>{const n=D.ING[i];return n[8]==="fixed"?1:n[8]==="aroma"?(s.p+s.c)/2:s[CAT[n[1]]]};const out={};
-  arg.people.forEach(w=>{const s=H.people[w].scales;Object.keys(arg.menu[w]).forEach(k=>{const r=D.RECIPES[arg.menu[w][k]];r.ing.forEach(([i,g])=>{let f=r.pieces?H.people[w].pieces:(r.whole||[]).indexOf(i)>=0?1:sc(i,s);const m=!r.pieces&&(r.whole||[]).indexOf(i)<0&&(H.least||{})[i]?Math.min(g,H.least[i]):0;if(m&&g*f<m)f=m/g;out[i]=(out[i]||0)+g*f})})});return out}"""
+  arg.people.forEach(w=>{Object.keys(arg.menu[w]).forEach(k=>{const r=D.RECIPES[arg.menu[w][k]],b=(H.people[w].boost||{})[r.slot],s0=H.people[w].scales,s=b?{p:s0.p*b.p,c:s0.c*b.c,v:s0.v}:s0;r.ing.forEach(([i,g])=>{let f=r.pieces?H.people[w].pieces:(r.whole||[]).indexOf(i)>=0?1:sc(i,s);const m=!r.pieces&&(r.whole||[]).indexOf(i)<0&&(H.least||{})[i]?Math.min(g,H.least[i]):0;if(m&&g*f<m)f=m/g;out[i]=(out[i]||0)+g*f})})});return out}"""
 def allowed(D, rid, slot, dow, who):
     r = D["RECIPES"].get(rid); H = D["HOUSE"]
     if not r or r["slot"] != slot: return False
     eat = H["order"] if slot in H["shared"] else [who]
     if r.get("kind") and any(r["kind"] in H["people"][w]["skip"] for w in eat): return False
     return not (slot == "lunch" and dow >= 3 and r.get("late") == "no")
-SLOTS = ["breakfast", "shake", "lunch", "dinner", "snack"]
+SLOTS = ["breakfast", "shake", "lunch", "dinner"]
 VAGUE = re.compile(r"brown(ed)? (it )?hard|sear hard|steam-dry|until just|glossy|a little (oil|water)|a splash|blitz|caramelis|to taste|\brest(,| and| then)|natural release|\bundefined\b|\bNaN\b|Do: \.|Weigh out: *(\n|$)|Take: *(\n|$)", re.I)
 try:
   with sync_playwright() as p:
@@ -117,17 +117,17 @@ try:
         if pg.inner_text("#view") != this_before: fail(f"{app}: this week's page changed after planning next week")
         if errs: fail(f"{app}: page errors {errs}")
         print(app, "rounds", rounds, "recipes exercised", len(seen))
-    # a one-off preset week beats what would be copied from the week before, and the first edit freezes the week as shown
+    # a new week starts as a copy of the week before, and the first edit freezes the week as shown
     pg = b.new_context(service_workers="block").new_page(); pg.clock.install(time="2026-10-06T09:00:00"); pg.goto("http://localhost:8765/gym-bro/index.html")
-    pg.evaluate("localStorage.setItem('banebuild:menus',JSON.stringify({'2026-09-28':{dinner5:'d-pizza',snack1:'s-crumble',lunch2:'l-shawarma','p:lunch2':'l-caesar'}}))"); pg.reload(); pg.click('[data-tab="food"]')
+    pg.evaluate("localStorage.setItem('banebuild:menus',JSON.stringify({'2026-09-28':{dinner5:'d-pizza',lunch2:'l-shawarma','p:lunch2':'l-caesar'}}))"); pg.reload(); pg.click('[data-tab="food"]')
     seen_now = pg.eval_on_selector_all("#view [data-recipe][data-slot]", "els=>els.map(e=>e.dataset.slot+e.dataset.dow+'='+e.dataset.recipe)")
-    for want in ("dinner5=d-bigmac", "snack1=s-choc-mousse", "lunch2=l-bulgogi"):
-        if want not in seen_now: fail(f"preset week: expected {want}")
+    for want in ("dinner5=d-pizza", "lunch2=l-shawarma"):
+        if want not in seen_now: fail(f"copied week: expected {want}")
     pg.click('[data-who="harriett"]')
-    if "lunch2=l-caesar" not in pg.eval_on_selector_all("#view [data-recipe][data-slot]", "els=>els.map(e=>e.dataset.slot+e.dataset.dow+'='+e.dataset.recipe)"): fail("a new week did not start from last week's choice where there is no preset")
-    pg.click('[data-who="blue"]'); pg.click('[data-swap="dinner"][data-dow="1"]'); pg.locator('#sheet [data-choose="d-ragu"]').first.click()
+    if "lunch2=l-caesar" not in pg.eval_on_selector_all("#view [data-recipe][data-slot]", "els=>els.map(e=>e.dataset.slot+e.dataset.dow+'='+e.dataset.recipe)"): fail("a new week did not start from last week's choice for the other person")
+    pg.click('[data-who="blue"]'); pg.click('[data-swap="dinner"][data-dow="1"]'); pg.locator('#sheet [data-choose="d-chilli"]').first.click()
     wkm = json.loads(pg.evaluate("localStorage.getItem('banebuild:menus')"))["2026-10-05"]
-    if wkm.get("dinner5") != "d-bigmac" or wkm.get("dinner1") != "d-ragu" or wkm.get("p:lunch2") != "l-caesar": fail(f"first edit did not freeze the week as shown: {wkm}")
+    if wkm.get("dinner5") != "d-pizza" or wkm.get("dinner1") != "d-chilli" or wkm.get("p:lunch2") != "l-caesar": fail(f"first edit did not freeze the week as shown: {wkm}")
     # Sunday is an open day: no meals, and a budget of the week's calories less what Monday to Saturday used
     # (ticked meals where a day has ticks, the target where it has none), never under three quarters of a day
     pg = b.new_context(service_workers="block").new_page(); er = []; pg.on("pageerror", lambda e: er.append(str(e))); pg.clock.install(time="2026-10-11T10:00:00"); pg.goto("http://localhost:8765/gym-bro/index.html")
@@ -166,19 +166,56 @@ try:
     pg.click('[data-catch=""]')
     if pg.query_selector('[data-catch="6"]') or not pg.query_selector(".rest-card"): fail("catch-up: Saturday is still offered after it was done, or the rest day did not come back")
     if er: fail(f"catch-up: page errors {er}")
-    # Evening shake: a shake in place of my treat changes my shopping and my treat portions, and the treat stays for the other person
+    # Something else eaten: in place of one meal, or the whole day, today or earlier this week; the record counts what was logged
+    pg = b.new_context(service_workers="block").new_page(); er = []; pg.on("pageerror", lambda e: er.append(str(e))); pg.clock.install(time="2026-10-13T12:00:00")
+    pg.goto("http://localhost:8765/gym-bro/index.html")
+    hist = lambda d: (json.loads(pg.evaluate("localStorage.getItem('banebuild:mealhist')") or "{}")).get(d)
+    def alt(sel, n, k, p=""):
+        pg.click(sel); pg.fill("#alt-n", n); pg.fill("#alt-k", str(k)); pg.fill("#alt-p", str(p)); pg.click("#alt-save")
+    alt('#view [data-alt="l"]', "Nando's half chicken", 900, 60)
+    h = hist("2026-10-13")
+    if not h or h["k"] != 900 or h["p"] != 60 or "Nando" not in json.dumps(h.get("other", {})): fail(f"something else: a meal logged instead was not recorded: {h}")
+    pg.locator('#view [data-meal="b"]').click(); bk = pg.evaluate("1")
+    h = hist("2026-10-13")
+    if not h or h["k"] <= 900 or "breakfast" not in h["ate"]: fail(f"something else: a ticked meal did not add to it: {h}")
+    alt('#view [data-alt="day"]', "Wedding", 3200)
+    h = hist("2026-10-13")
+    if not h or h["k"] != 3200 or "Wedding" not in h.get("day", ""): fail(f"something else: the whole day was not recorded: {h}")
+    pg.click('#view [data-alt="day"]'); pg.click("#alt-clear")
+    h = hist("2026-10-13")
+    if not h or h["k"] <= 900 or h.get("day"): fail(f"something else: back to the plan did not restore the day: {h}")
+    pg.click('[data-tab="week"]'); pg.click('[data-day="1"]'); alt('#view [data-alt="d"]', "Pizza out", 1100, 45)
+    if (hist("2026-10-12") or {}).get("k") != 1100: fail(f"something else: an earlier day this week could not be logged: {hist('2026-10-12')}")
+    pg.click('[data-day="4"]')
+    if pg.query_selector('#view [data-alt]'): fail("something else: a future day offers logging")
+    if er: fail(f"something else: page errors {er}")
+    # Prep day: chosen per week; it moves the fridge/freezer split, which lunches fit which days, and when the Food tab turns to next week
+    pg = b.new_context(service_workers="block").new_page(); er = []; pg.on("pageerror", lambda e: er.append(str(e))); pg.clock.install(time="2026-10-14T10:00:00")
+    pg.goto("http://localhost:8765/gym-bro/index.html"); pg.click('[data-tab="food"]'); pg.click('[data-wk="2026-10-19"]')
+    if "Monday to Tuesday go in the fridge" not in pg.inner_text("#view"): fail("prep day: Saturday prep should keep Monday and Tuesday in the fridge")
+    pg.click('[data-pd="0"]')
+    if "Monday to Wednesday go in the fridge" not in pg.inner_text("#view"): fail("prep day: a Sunday prep should keep Monday to Wednesday in the fridge")
+    pg.click('[data-swap="lunch"][data-dow="3"]')
+    if not pg.query_selector('#sheet [data-choose="l-prawn-egg"]'): fail("prep day: a lunch that does not freeze is not offered on Wednesday after a Sunday prep")
+    pg.keyboard.press("Escape"); pg.click('[data-pd="4"]')
+    if "Everything goes in the freezer" not in pg.inner_text("#view"): fail("prep day: a Thursday prep should freeze everything")
+    st_s = json.loads(pg.evaluate("localStorage.getItem('banebuild:shops')"))["2026-10-19"]["t"]
+    if not st_s.get("pd:4") or st_s.get("pd:0"): fail(f"prep day: not saved as one day: {st_s}")
+    pg = b.new_context(service_workers="block").new_page(); pg.clock.install(time="2026-10-16T10:00:00"); pg.goto("http://localhost:8765/gym-bro/index.html")
+    pg.evaluate("localStorage.setItem('banebuild:shops',JSON.stringify({'2026-10-19':{t:{'pd:5':true}}}))"); pg.reload(); pg.click('[data-tab="food"]')
+    if "NEXT WEEK" not in pg.inner_text("#view h1").upper(): fail("prep day: on a Friday prep day the Food tab does not open next week")
+    if er: fail(f"prep day: page errors {er}")
+    # Evening shake: adding one adds its shopping and shows on the menu; removing it puts the list back
     pg = b.new_context(service_workers="block").new_page(); er = []; pg.on("pageerror", lambda e: er.append(str(e))); pg.clock.install(time="2026-10-14T10:00:00")
     pg.goto("http://localhost:8765/gym-bro/index.html"); pg.click('[data-tab="food"]'); pg.click('[data-wk="2026-10-19"]')
     need = lambda: dict((k, float(v)) for k, v in (t.split("|") for t in pg.eval_on_selector_all("[data-need]", "els=>els.map(e=>e.dataset.need)")))
-    portions = lambda: re.findall(r"• (\d+) × about \d+ g \(Blue\)", pg.inner_text("#view"))
-    n0, p0 = need(), portions()
-    pg.click('[data-swap="snack"][data-dow="1"]'); pg.click("#sheet details.catchup summary"); pg.click('#sheet [data-eve="~sh-strawb-thick"]')
+    n0 = need()
+    pg.click('[data-swap="shake"][data-dow="1"]'); pg.click("#sheet details.catchup summary"); pg.click('#sheet [data-eve="sh-strawb-thick"]')
     m = json.loads(pg.evaluate("localStorage.getItem('banebuild:menus')"))["2026-10-19"]
-    if m.get("eve1") != "~sh-strawb-thick": fail(f"evening shake: not saved as a shake in place of the treat: {m.get('eve1')}")
-    n1, p1 = need(), portions()
+    if m.get("eve1") != "sh-strawb-thick": fail(f"evening shake: not saved: {m.get('eve1')}")
+    n1 = need()
     if abs(n1.get("strawberries", 0) - n0.get("strawberries", 0) - 150) > 1: fail(f"evening shake: shopping strawberries {n0.get('strawberries')} -> {n1.get('strawberries')}, expected +150 g")
-    if not p0 or not p1 or sum(map(int, p1)) != sum(map(int, p0)) - 1: fail(f"evening shake: my treat portions did not drop by one ({p0} -> {p1})")
-    if "instead of the treat" not in pg.inner_text("#view"): fail("evening shake: the menu does not show the shake in place of the treat")
+    if pg.eval_on_selector_all('#view [data-slot="eve"][data-dow="1"]', "els=>els.map(e=>e.dataset.recipe)") != ["sh-strawb-thick"]: fail("evening shake: not on the menu")
     pg.click('[data-swap="eve"][data-dow="1"]'); pg.click('#sheet [data-eve="-"]')
     if need() != n0: fail("evening shake: removing it did not put the shopping list back")
     if er: fail(f"evening shake: page errors {er}")
@@ -237,13 +274,13 @@ try:
     ca.set_offline(False); A.evaluate("window.dispatchEvent(new Event('online'))")
     until("offline change was not sent after reconnecting", lambda: stored(B, "gymgyal:", "menus")[WK].get("dinner4") == "d-quesadilla")
     # timers: ticking a timed step starts it on both phones, it rings when due, and dismissing clears both
-    step = A.locator("[data-timer]").first; tid = step.get_attribute("data-shop"); mins = int(step.get_attribute("data-timer")); step.click()
+    step = A.locator("[data-timer]:not([hidden])").first; tid = step.get_attribute("data-shop"); mins = int(step.get_attribute("data-timer")); step.click()
     if A.locator("[data-step]").count() < 3: fail("sync: the run sheet vanished after ticking a step")
     until("timer did not start on the phone that ticked the step", lambda: A.locator("#ktimers .kt").count() == 1)
     until("timer did not appear on the other phone", lambda: B.locator("#ktimers .kt").count() == 1)
     # several timers still take one slim bar; the full list opens in a sheet
-    steps2 = A.locator('[data-timer]:not(.on)'); n2 = min(2, steps2.count())
-    for _ in range(n2): A.locator('[data-timer]:not(.on)').first.click()
+    steps2 = A.locator('[data-timer]:not(.on):not([hidden])'); n2 = min(2, steps2.count())
+    for _ in range(n2): A.locator('[data-timer]:not(.on):not([hidden])').first.click()
     until("extra timers did not reach the other phone", lambda: "more" in B.inner_text("#ktimers") if n2 else True)
     if A.locator("#ktimers .kt").count() != 1: fail("timers: the bar is stacking instead of staying one row")
     if A.evaluate("document.querySelector('#ktimers').getBoundingClientRect().height") > 70: fail("timers: the bar is taller than one row")

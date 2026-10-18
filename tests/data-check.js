@@ -44,11 +44,14 @@ const H = D.HOUSE, ok = (id, slot, dow, who) => { const r = R[id]; if (!r || r.s
 // Prep wording is for someone who has not cooked it before: no chef shorthand in any prep component.
 const VAGUE = /brown(ed)? (it )?hard|sear hard|steam-dry|until just|glossy|a little (oil|water)|a splash|blitz|caramelis|to taste|\brest(,| and| then)|natural release/i;
 Object.values(R).forEach((r) => (r.comp || []).forEach((c) => { const m = JSON.stringify(c).match(VAGUE); if (m) fail(r.id + ": unclear prep wording '" + m[0] + "' in " + JSON.stringify(c).slice(0, 80)); }));
+// Only the four meal slots exist, and every per-meal boost is for one of them with p and c multipliers.
+Object.values(R).forEach((r) => { if (["breakfast", "shake", "lunch", "dinner"].indexOf(r.slot) < 0) fail(r.id + ": unknown slot " + r.slot); });
+H.order.forEach((w) => Object.keys(H.people[w].boost || {}).forEach((sl) => { const b = H.people[w].boost[sl]; if (["breakfast", "lunch", "dinner"].indexOf(sl) < 0 || typeof b.p !== "number" || typeof b.c !== "number") fail("boost for " + w + " " + sl + " is not right"); }));
 // Smallest starch portions name real carbs.
 Object.keys(H.least || {}).forEach((i) => { if (!D.ING[i] || D.ING[i][1] !== "Carbs") fail("HOUSE.least: " + i + " is not a carb"); });
 // Sunday is an open day: nothing planned for it.
 if (JSON.stringify(D.DEFAULTS).indexOf('"0":') >= 0 || Object.values(D.PRESETS).some((p) => JSON.stringify(p).indexOf('"0":') >= 0)) fail("Sunday (day 0) has a planned meal, but it is an open day");
-["breakfast", "shake", "lunch", "dinner", "snack"].forEach((slot) => H.order.forEach((w) => [1, 2, 3, 4, 5, 6].forEach((d) => { const id = H.shared.indexOf(slot) >= 0 ? D.DEFAULTS[slot][d] : D.DEFAULTS[slot][w][d]; if (!ok(id, slot, d, w)) fail("default " + slot + " day " + d + " for " + w + " is not allowed: " + id); })));
+["breakfast", "shake", "lunch", "dinner"].forEach((slot) => H.order.forEach((w) => [1, 2, 3, 4, 5, 6].forEach((d) => { const id = H.shared.indexOf(slot) >= 0 ? D.DEFAULTS[slot][d] : D.DEFAULTS[slot][w][d]; if (!ok(id, slot, d, w)) fail("default " + slot + " day " + d + " for " + w + " is not allowed: " + id); })));
 Object.keys(D.PRESETS || {}).forEach((wk) => {
   if ((Date.now() - new Date(wk).getTime()) / 864e5 > 21) fail("preset for the week of " + wk + " has passed: delete it from data.js");
   // A preset may also keep the portions a week was prepped at: people (scales per person) and least (smallest starch portions).
@@ -67,5 +70,5 @@ require("../guides.js");
   })); });
 Object.keys(window.GB_HOME_MAP).forEach((k) => { const v = window.GB_HOME_MAP[k]; if (!(window.GB_HOME_GUIDES[v] || window.GB_GUIDES[v])) fail("home guide map points at a missing guide: " + v); });
 const n = (f) => Object.values(R).filter(f).length;
-console.log("dinners " + n((r) => r.slot === "dinner") + " (fresh " + n((r) => r.type === "fresh") + ", head " + n((r) => r.type === "head") + ", batch " + n((r) => r.type === "batch") + "), lunches " + n((r) => r.slot === "lunch") + ", treats " + n((r) => r.slot === "snack"));
+console.log("dinners " + n((r) => r.slot === "dinner") + " (fresh " + n((r) => r.type === "fresh") + ", head " + n((r) => r.type === "head") + ", batch " + n((r) => r.type === "batch") + "), lunches " + n((r) => r.slot === "lunch") + ", breakfasts " + n((r) => r.slot === "breakfast") + ", shakes " + n((r) => r.slot === "shake"));
 console.log(bad ? bad + " problem(s)" : "All checks passed"); process.exit(bad ? 1 : 0);

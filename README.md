@@ -29,8 +29,8 @@ Your data is lost if you uninstall the app or clear Chrome's site data, so keep 
 
 ## Planning food for the household
 
-- Dinners and treats are one choice for both of you. Breakfast, shake and lunch are each person's own.
-- **Food tab → Harriett's meals** lets you plan her meals on your phone, so the shopping list and Sunday prep cover you both.
+- Dinners are one choice for both of you. Breakfast, shake and lunch are each person's own.
+- **Food tab → Harriett's meals** lets you plan her meals on your phone, so the shopping list and prep run sheet cover you both.
 - **Shopping list** defaults to **Household**; switch to **Just me** or **Just Harriett** if you need one person's list.
 - **Sync:** Food tab → **Set up sync** on one phone, send the link code to the other, and **Join with a code** there. Menus, shopping and run-sheet ticks, the cupboard list and kitchen timers then update on both phones. Weights, training logs and meal ticks are never sent.
 - **Run sheet timers:** ticking an oven or hob step starts its timer on both phones. The screen stays awake while the app is open so the alarm can sound.

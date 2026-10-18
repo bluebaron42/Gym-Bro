@@ -18,13 +18,11 @@ window.BB_DATA = (function () {
     "potatoes": ["Potatoes", "Carbs",77,2,17,0.1],
     "rice-noodles": ["Rice noodles (dry)", "Carbs",360,6,82,0.6],
     "digestives": ["Digestive biscuits", "Carbs",480,7,62,21,15,"biscuits"],
-    "rice-cakes": ["Rice cakes", "Carbs",390,8,81,3,8,"rice cakes"],
     "panko": ["Panko breadcrumbs", "Carbs",370,12,75,3],
     "granola": ["Granola (lower sugar)", "Carbs",430,10,60,15],
     "english-muffin": ["English muffins", "Carbs",225,9,43,1.8,68,"muffins"],
     "thin-bagel": ["Thin bagels", "Carbs",255,10,48,2,45,"bagels"],
     "mini-wrap": ["Mini wraps", "Carbs",300,8.5,50,7,31,"wraps"],
-    "sr-flour": ["Self-raising flour", "Carbs",340,9.5,72,1.2],
     "oreo": ["Oreo biscuits", "Carbs",480,5,69,20,11,"biscuits"],
     "tortilla-chips": ["Tortilla chips (lightly salted)", "Carbs",490,7,60,24],
     "weetabix-minis": ["Weetabix Minis Chocolate Chip", "Carbs", 389, 9.9, 71, 5.3],
@@ -35,6 +33,7 @@ window.BB_DATA = (function () {
     "beef-shin": ["Beef shin", "Protein",130,21,0,5],
     "steak": ["Sirloin steak, trimmed", "Protein",150,23,0,6],
     "turkey-rashers": ["Turkey rashers", "Protein",105,22,0.5,1.5],
+    "back-bacon": ["Back bacon", "Protein",215,16.5,0.5,16.5,28,"rashers"],
     "turkey-mince": ["Turkey thigh mince (7% fat)", "Protein",140,20,0,7],
     "chicken-mince": ["Chicken mince", "Protein",120,20,0,4.5],
     "turkey-ham": ["Turkey ham", "Protein",105,19,2,2.5],
@@ -57,7 +56,6 @@ window.BB_DATA = (function () {
     "cheddar": ["Light mature cheddar", "Dairy and eggs",310,28,1,22],
     "cottage-cheese": ["Cottage cheese (low fat)", "Dairy and eggs",70,11,4,1.5],
     "squirty-cream": ["Light squirty cream", "Dairy and eggs",200,2.5,9,17],
-    "cherries": ["Frozen cherries", "Fruit and veg",50,1,11,0.2],
     "strawberries": ["Frozen strawberries", "Fruit and veg",32,0.7,6,0.3],
     "mushrooms": ["Mushrooms", "Fruit and veg",22,3,1,0.4],
     "onion": ["Onions", "Fruit and veg",40,1.1,9,0.1],
@@ -72,7 +70,6 @@ window.BB_DATA = (function () {
     "edamame": ["Edamame beans (frozen)", "Fruit and veg",125,11,7,5],
     "peas": ["Frozen peas", "Fruit and veg",70,5.5,10,1.4],
     "berries": ["Berries (frozen is fine)", "Fruit and veg",50,1,9,0.3],
-    "apple": ["Apples", "Fruit and veg",52,0.3,14,0.2,150,"apples"],
     "beansprouts": ["Beansprouts", "Fruit and veg",30,3,4,0.2],
     "lime": ["Limes", "Fruit and veg",30,0.7,10,0.2,65,"limes", "aroma"],
     "mango": ["Mango", "Fruit and veg",60,0.8,15,0.4],
@@ -106,11 +103,8 @@ window.BB_DATA = (function () {
     "peanuts": ["Roasted peanuts", "Sauces and cupboard",590,26,13,49],
     "kidney-beans": ["Kidney beans (tin, drained)", "Sauces and cupboard",100,7,15,0.5],
     "peri-peri": ["Peri-peri sauce", "Sauces and cupboard",80,1,15,2],
-    "pb-powder": ["Peanut butter powder", "Sauces and cupboard",375,48,25,9],
     "jalapenos": ["Pickled jalapeños (jar)", "Sauces and cupboard",20,1,3,0.5],
     "franks": ["Frank's RedHot sauce", "Sauces and cupboard",15,1,2,0.5],
-    "icing-sugar": ["Icing sugar", "Sauces and cupboard",400,0,100,0],
-    "lager": ["Lager", "Sauces and cupboard",40,0.3,3,0],
     "orange-juice": ["Orange juice", "Sauces and cupboard",45,0.7,10,0.1],
     "chipotle": ["Chipotle paste", "Sauces and cupboard",130,2,20,4],
     "sweet-chilli": ["Sweet chilli sauce", "Sauces and cupboard",230,0.5,56,0.3],
@@ -181,21 +175,9 @@ window.BB_DATA = (function () {
     "light cheddar": ["cheddar",{}],
     "cottage cheese": ["cottage-cheese",{}],
     "Frank's hot sauce": ["franks",{}],
-    "lager": ["lager",{"tbsp":15}],
-    "self-raising flour": ["sr-flour",{}],
-    "frozen cherries": ["cherries",{}],
-    "icing sugar": ["icing-sugar",{}],
-    "Oreo": ["oreo",{"x":11}],
-    "peanut butter powder": ["pb-powder",{}],
     "oats": ["oats",{}],
     "peanut butter": ["peanut-butter",{}],
-    "cocoa": ["cocoa",{}],
     "dark chocolate": ["dark-choc",{}],
-    "chocolate whey": ["whey",{}],
-    "vanilla whey": ["whey",{}],
-    "granola": ["granola",{}],
-    "berries": ["berries",{}],
-    "apple": ["apple",{"x":150}],
     "egg": ["eggs",{"x":50}],
     "cucumber, grated and squeezed": ["cucumber",{}],
     "skyr": ["skyr",{}],
@@ -204,17 +186,19 @@ window.BB_DATA = (function () {
     "capers": ["capers",{}]
   };
   // Seasonings that live in the cupboard: checked off, not bought by weight.
-  const CUPBOARD = {"American mustard":"American mustard", "Dijon mustard":"Dijon mustard", "Worcestershire":"Worcestershire", "baking powder":"Baking powder", "bay leaf":"Bay leaf", "beef stock":"Beef stock (cubes)", "black pepper":"Black pepper", "butter":"Butter", "cayenne":"Cayenne", "chilli flakes":"Chilli flakes", "chilli powder":"Chilli powder", "cinnamon":"Cinnamon", "cinnamon stick":"Cinnamon stick", "cumin":"Cumin", "dried mint":"Dried mint", "dried oregano":"Dried oregano", "dried thyme":"Dried thyme", "five-spice":"Five-spice", "garam masala":"Garam masala", "garlic granules":"Garlic granules", "ground cardamom":"Ground cardamom", "ground coriander":"Ground coriander", "nutmeg":"Nutmeg", "onion powder":"Onion powder", "salt":"Salt", "smoked paprika":"Smoked paprika", "stock cube":"Stock cube", "sugar":"Sugar", "tomato purée":"Tomato purée", "turmeric":"Turmeric", "vanilla extract":"Vanilla extract", "white pepper":"White pepper", "dried sage":"Dried sage", "Italian herbs":"Italian herbs", "taco seasoning":"Taco seasoning", "sprinkles":"Sprinkles", "xanthan gum":"Xanthan gum", "Cajun seasoning":"Cajun seasoning", "dried dill":"Dried dill"};
+  const CUPBOARD = {"American mustard":"American mustard", "Dijon mustard":"Dijon mustard", "Worcestershire":"Worcestershire", "baking powder":"Baking powder", "bay leaf":"Bay leaf", "beef stock":"Beef stock (cubes)", "black pepper":"Black pepper", "butter":"Butter", "cayenne":"Cayenne", "chilli flakes":"Chilli flakes", "chilli powder":"Chilli powder", "cinnamon":"Cinnamon", "cinnamon stick":"Cinnamon stick", "cumin":"Cumin", "dried mint":"Dried mint", "dried oregano":"Dried oregano", "dried thyme":"Dried thyme", "five-spice":"Five-spice", "garam masala":"Garam masala", "garlic granules":"Garlic granules", "ground cardamom":"Ground cardamom", "ground coriander":"Ground coriander", "nutmeg":"Nutmeg", "onion powder":"Onion powder", "salt":"Salt", "smoked paprika":"Smoked paprika", "stock cube":"Stock cube", "sugar":"Sugar", "tomato purée":"Tomato purée", "turmeric":"Turmeric", "vanilla extract":"Vanilla extract", "white pepper":"White pepper", "dried sage":"Dried sage", "Italian herbs":"Italian herbs", "taco seasoning":"Taco seasoning", "xanthan gum":"Xanthan gum", "Cajun seasoning":"Cajun seasoning", "dried dill":"Dried dill"};
   // Buy this much more than the prepared weight (peel, trim, stones).
-  const TRIM = {"onion":1.1,"garlic":1.2,"ginger":1.25,"peppers":1.15,"lettuce":1.15,"broccoli":1.1,"greens":1.1,"mango":1.45,"avocado":1.35,"potatoes":1.02,"apple":1.1,"spring-onion":1.1,"basil":1.2,"coriander":1.2,"parsley":1.2,"mint":1.2,"cucumber":1.03,"chicken-thigh":1.05,"beef-shin":1.1};
+  const TRIM = {"onion":1.1,"garlic":1.2,"ginger":1.25,"peppers":1.15,"lettuce":1.15,"broccoli":1.1,"greens":1.1,"mango":1.45,"avocado":1.35,"potatoes":1.02,"spring-onion":1.1,"basil":1.2,"coriander":1.2,"parsley":1.2,"mint":1.2,"cucumber":1.03,"chicken-thigh":1.05,"beef-shin":1.1};
   // Typical UK pack: [grams, label]. A guide only; the weight needed is always shown.
-  const PACKS = {"chopped-tom":[400,"tin"],"passata":[500,"carton"],"coconut-light":[400,"tin"],"kidney-beans":[240,"tin, drained"],"tuna":[102,"tin, drained"],"eggs":[300,"box of 6"],"beef-mince":[500,"pack"],"mozzarella":[125,"ball"],"skyr":[450,"pot"],"greek-yog":[500,"tub"],"wrap":[496,"pack of 8"],"brioche":[240,"pack of 4"],"sub-roll":[360,"pack of 4"],"pizza-base":[300,"pack of 2"],"rocket":[60,"bag"],"spinach":[200,"bag"],"beansprouts":[300,"bag"],"cream-cheese":[165,"tub"],"cheese-slice":[200,"pack of 10"],"english-muffin":[272,"pack of 4"],"thin-bagel":[270,"pack of 6"],"mini-wrap":[248,"pack of 8"],"turkey-mince":[500,"pack"],"chicken-mince":[500,"pack"],"pasta":[500,"pack"],"penne":[500,"pack"],"sushi-rice":[500,"pack"],"jasmine-rice":[1000,"bag"],"basil":[30,"pot or bunch"],"coriander":[30,"bunch"],"parsley":[30,"bunch"],"mint":[30,"bunch"],"salmon":[240,"pack of 2 fillets"]};
+  const PACKS = {"chopped-tom":[400,"tin"],"passata":[500,"carton"],"coconut-light":[400,"tin"],"kidney-beans":[240,"tin, drained"],"tuna":[102,"tin, drained"],"eggs":[300,"box of 6"],"beef-mince":[500,"pack"],"mozzarella":[125,"ball"],"skyr":[450,"pot"],"greek-yog":[500,"tub"],"wrap":[496,"pack of 8"],"brioche":[240,"pack of 4"],"sub-roll":[360,"pack of 4"],"pizza-base":[300,"pack of 2"],"rocket":[60,"bag"],"spinach":[200,"bag"],"beansprouts":[300,"bag"],"cream-cheese":[165,"tub"],"cheese-slice":[200,"pack of 10"],"back-bacon":[300,"pack"],"english-muffin":[272,"pack of 4"],"thin-bagel":[270,"pack of 6"],"mini-wrap":[248,"pack of 8"],"turkey-mince":[500,"pack"],"chicken-mince":[500,"pack"],"pasta":[500,"pack"],"penne":[500,"pack"],"sushi-rice":[500,"pack"],"jasmine-rice":[1000,"bag"],"basil":[30,"pot or bunch"],"coriander":[30,"bunch"],"parsley":[30,"bunch"],"mint":[30,"bunch"],"salmon":[240,"pack of 2 fillets"]};
 
-  // The household. Dinners and treats are shared; breakfast, shake and lunch are per person.
+  // The household. Dinners are shared; breakfast, shake and lunch are per person.
   // scales: p = protein and dairy, c = carbs, fats and sauces, v = fruit and veg.
   // pieces: how many this person has of a breakfast that is built in whole pieces (a recipe with pieces: true).
   // least: the smallest portion of a starch anyone is given, in raw or dry grams (about a cupped hand once cooked),
   // unless the recipe itself uses less. It stops small scales giving token amounts of potatoes, rice or pasta.
+  // boost: per meal, multiplies the scales. Set on 18 Oct 2026 when treats were dropped: the treat's calories and protein moved
+  // into breakfast, lunch and dinner, mostly as protein, so each day's totals stayed the same. Piece breakfasts keep their count.
   // Scales set on 10 Oct 2026 from guidance for Blue (muscle gain: about 2.1 g protein per kg, carbs to fuel training, a small
   // weekday deficit) and Harriett (fat loss: protein held at her target, fat about a quarter of calories).
   const HOUSE = {
@@ -228,8 +212,7 @@ window.BB_DATA = (function () {
       "helper": "harriett"
     },
     "shared": [
-      "dinner",
-      "snack"
+      "dinner"
     ],
     "people": {
       "blue": {
@@ -240,6 +223,7 @@ window.BB_DATA = (function () {
           "c": 1,
           "v": 1
         },
+        "boost": {"breakfast": {"p": 1.25, "c": 1.15}, "lunch": {"p": 1.35, "c": 1.3}, "dinner": {"p": 1.35, "c": 1.3}},
         "skip": [
           "curry"
         ]
@@ -252,26 +236,18 @@ window.BB_DATA = (function () {
           "c": 0.34,
           "v": 1
         },
-        "skip": []
+        "boost": {"breakfast": {"p": 1.25, "c": 1.15}, "lunch": {"p": 1.45, "c": 1.35}, "dinner": {"p": 1.45, "c": 1.35}},
+        "skip": ["pork"]
       }
     }
   };
   // The menu a new week starts from, Monday (1) to Saturday (6). Sunday is an open day with no menu.
-  const DEFAULTS = {"dinner":{"1":"d-ragu", "2":"d-smash", "3":"d-fried-rice", "4":"d-peri-peri", "5":"d-bigmac", "6":"d-carbonara"}, "snack":{"1":"s-brownie", "2":"s-brownie", "3":"s-brownie", "4":"s-brownie", "5":"s-bark", "6":"s-bark"}, "lunch":{"blue":{"1":"l-teriyaki", "2":"l-teriyaki", "3":"l-teriyaki", "4":"l-ragu-box", "5":"l-ragu-box", "6":"l-ragu-box"}, "harriett":{"1":"l-shawarma", "2":"l-shawarma", "3":"l-shawarma", "4":"l-green-curry", "5":"l-green-curry", "6":"l-green-curry"}}, "breakfast":{"blue":{"1":"bf-mcbuffin", "2":"bf-mcbuffin", "3":"bf-mcbuffin", "4":"bf-bagel", "5":"bf-bagel", "6":"bf-bagel"}, "harriett":{"1":"bf-mcbuffin", "2":"bf-mcbuffin", "3":"bf-mcbuffin", "4":"bf-bagel", "5":"bf-bagel", "6":"bf-bagel"}}, "shake":{"blue":{"1":"sh-cookies-cream", "2":"sh-mocha", "3":"sh-strawberry", "4":"sh-berry-oat", "5":"sh-lassi", "6":"sh-strawb-thick"}, "harriett":{"1":"sh-cookies-cream", "2":"sh-mocha", "3":"sh-strawberry", "4":"sh-berry-oat", "5":"sh-lassi", "6":"sh-strawb-thick"}}};
+  const DEFAULTS = {"dinner":{"1":"d-ragu", "2":"d-smash", "3":"d-fried-rice", "4":"d-peri-peri", "5":"d-bigmac", "6":"d-carbonara"}, "lunch":{"blue":{"1":"l-teriyaki", "2":"l-teriyaki", "3":"l-teriyaki", "4":"l-ragu-box", "5":"l-ragu-box", "6":"l-ragu-box"}, "harriett":{"1":"l-shawarma", "2":"l-shawarma", "3":"l-shawarma", "4":"l-green-curry", "5":"l-green-curry", "6":"l-green-curry"}}, "breakfast":{"blue":{"1":"bf-mcbuffin", "2":"bf-mcbuffin", "3":"bf-mcbuffin", "4":"bf-bagel-bacon", "5":"bf-bagel-bacon", "6":"bf-bagel-bacon"}, "harriett":{"1":"bf-mcbuffin", "2":"bf-mcbuffin", "3":"bf-mcbuffin", "4":"bf-bagel", "5":"bf-bagel", "6":"bf-bagel"}}, "shake":{"blue":{"1":"sh-cookies-cream", "2":"sh-mocha", "3":"sh-strawberry", "4":"sh-berry-oat", "5":"sh-lassi", "6":"sh-strawb-thick"}, "harriett":{"1":"sh-cookies-cream", "2":"sh-mocha", "3":"sh-strawberry", "4":"sh-berry-oat", "5":"sh-lassi", "6":"sh-strawb-thick"}}};
 
-  // One-off weeks that start from something other than DEFAULTS. Delete an entry once its week has passed
-  // (tests/data-check.js fails when one is more than two weeks old).
-  // Week of 5 Oct 2026: prepped and shopped before the household update, so it keeps Blue's menu from then.
-  // Week of 12 Oct 2026: shopped and prepped before the portion change of 10 Oct, so it keeps the portions it was prepped at.
-  const PRESETS = { "2026-10-05": {
-    dinner: {"1": "d-gyros", "2": "d-philly", "3": "d-fried-rice", "4": "d-doner", "5": "d-bigmac", "6": "d-lasagne"},
-    snack: {"1": "s-choc-mousse", "2": "s-brownie", "3": "s-cheesecake", "4": "s-bark", "5": "s-crumble", "6": "s-pbj"},
-    breakfast: {blue: {"1": "bf-weetabix", "2": "bf-weetabix", "3": "bf-weetabix", "4": "bf-weetabix", "5": "bf-weetabix", "6": "bf-weetabix"}, harriett: {"1": "bf-weetabix", "2": "bf-weetabix", "3": "bf-weetabix", "4": "bf-weetabix", "5": "bf-weetabix", "6": "bf-weetabix"}},
-    lunch: {blue: {"1": "l-teriyaki", "2": "l-bulgogi", "3": "l-prawn-egg", "4": "l-spicy-salmon", "5": "l-shawarma", "6": "l-prawn-egg"}},
-    shake: {blue: {"1": "sh-mocha", "2": "sh-mocha", "3": "sh-strawberry", "4": "sh-berry-oat", "5": "sh-lassi", "6": "sh-mocha"}}
-  }, "2026-10-12": {
-    people: {blue: {"p": 0.85, "c": 0.7, "v": 1}, harriett: {"p": 0.65, "c": 0.36, "v": 1}}, least: {}
-  } };
+  // One-off weeks that start from something other than DEFAULTS, by Monday date: menus by slot and day, and optionally
+  // people (scales per person, no per-meal boost) and least, to keep a week at the portions it was prepped at.
+  // Delete an entry once its week has passed (tests/data-check.js fails when one is more than three weeks old).
+  const PRESETS = {};
 
   // Recipes: ing = grams per full portion. sea = [label, list] seasoning groups not covered by a prep component.
   // method = from scratch, no amounts (they are in the lists). finish = on the day, after Saturday prep.
@@ -284,7 +260,7 @@ window.BB_DATA = (function () {
   // rest = ingredients no prep component handles (packed as they are, used for cooking, or added on the day);
   // tests/data-check.js fails if the list does not match what the components leave over.
   // O, X, H and S components may end with a list of ingredients to show the weight of, instead of the dish's main protein.
-  // comp = prep components (made on Saturday): V veg, L long cook, M marinade, B breading, X shape, S sauce, O oven, H hob, T treat, P pack.
+  // comp = prep components (made on Saturday): V veg, L long cook, M marinade, B breading, X shape, S sauce, O oven, H hob, T make-ahead (overnight oats), P pack.
   // The run sheet works out what each component needs first; after = {component index: [indexes it also needs]} for the exceptions.
   const R = [
     { id: "bf-weetabix", slot: "breakfast", name: "Chocolate chip Weetabix minis", time: "1 min",
@@ -318,6 +294,15 @@ window.BB_DATA = (function () {
       comp: [["O",180,14,"Egg squares: beat the eggs and pour into a lined tin, scatter any cheddar over, bake, cool, then cut into one square per sandwich",["eggs","cheddar"]],
         ["O",200,10,"Turkey rashers: flat on a lined tray, not overlapping",["turkey-rashers"]],
         ["P", "Build each one on a split bagel: egg square, cheese slice, two rashers, lid. Wrap one by one"]] },
+    { id: "bf-bagel-bacon", slot: "breakfast", name: "Bacon and egg bagels", time: "Batch: 25 min", pieces: true, kind: "pork",
+      ing: [["thin-bagel",45], ["back-bacon",56], ["eggs",50], ["cheese-slice",20]],
+      rest: ["thin-bagel", "cheese-slice"],
+      sea: [["Seasoning", "1 pinch salt; 1 pinch black pepper"]],
+      method: ["Beat and season the eggs, bake in a lined tin at 180°C for 14 minutes and cut into squares.", "Bake the bacon flat on a lined tray at 200°C for 12 minutes.", "Build on a split bagel: egg, cheese slice, bacon. Toast in the air fryer for 3 minutes."],
+      finish: "Unwrap, microwave 60 to 90 seconds, then air fryer at 200°C for 3 minutes. 5 min",
+      comp: [["O",180,14,"Egg squares: beat the eggs and pour into a lined tin, scatter any cheddar over, bake, cool, then cut into one square per sandwich",["eggs","cheddar"]],
+        ["O",200,12,"Back bacon: flat on a lined tray, not overlapping; done when the fat is golden",["back-bacon"]],
+        ["P", "Build each one on a split bagel: egg square, cheese slice, two rashers of bacon, lid. Wrap one by one"]] },
     { id: "bf-tacos", slot: "breakfast", name: "Steak and cheese breakfast tacos", time: "Batch: 35 min", pieces: true,
       ing: [["mini-wrap",31], ["steak",40], ["turkey-rashers",25], ["eggs",85], ["cheddar",13], ["cheese-slice",10], ["milk",5]],
       rest: ["mini-wrap", "cheddar"],
@@ -375,84 +360,6 @@ window.BB_DATA = (function () {
       method: ["Stir the oats, milk, skyr, honey, vanilla and cinnamon together in a jar.", "Lid on and into the fridge overnight.", "Top with the berries."],
       finish: "Top with the berries. 1 min",
       comp: [["T", "Overnight oats jars", "Stir everything together in each jar, lid on, into the fridge. They keep four days, so make any for later in the week on Wednesday", "50 g oats; 130 ml milk; 120 g skyr; 10 g honey; 0.25 tsp vanilla extract; 1 pinch cinnamon"]] },
-    { id: "snack", slot: "snack", name: "Yoghurt bowl and an apple", time: "2 min",
-      ing: [["greek-yog",300], ["honey",15], ["berries",80], ["granola",40], ["apple",150]],
-      method: ["Greek yoghurt with honey, berries and granola.", "An apple on the side, or sliced in."],
-      comp: [] },
-    { id: "s-choc-mousse", slot: "snack", name: "Chocolate protein mousse", time: "5 min", tag: "Sweet",
-      ing: [["skyr",250], ["whey",30], ["cocoa",10], ["honey",10], ["berries",60], ["dark-choc",10]],
-      sea: [["Mousse", "250 g skyr; 30 g chocolate whey; 10 g cocoa; 10 g honey"]],
-      method: ["Whisk skyr, whey, cocoa and honey until thick and smooth.", "Top with berries and grated dark chocolate. Chill 20 minutes if you can."] },
-    { id: "s-brownie", slot: "snack", name: "Protein brownies with yoghurt", time: "Batch: 25 min", tag: "Sweet",
-      ing: [["oats",30], ["whey",30], ["cocoa",12], ["eggs",25], ["honey",15], ["dark-choc",10], ["greek-yog",200], ["berries",60], ["milk",30]],
-      rest: ["greek-yog", "berries"],
-      method: ["Blitz oats to flour; mix with whey, cocoa, egg, honey and a splash of milk to a thick batter.", "Fold in chopped dark chocolate; bake in a lined tin at 180°C for 15–18 minutes, still fudgy in the middle.", "Two squares per serving with Greek yoghurt and berries."],
-      finish: "Two squares with Greek yoghurt and berries. 1 min",
-      comp: [["T", "Protein brownie batter", "Blend the oats in the blender for 30 seconds until they are a fine flour. Stir in everything else except the chocolate until there are no dry bits. Chop the chocolate and stir it in. Spread in a lined tin", "30 g oats; 30 g chocolate whey; 12 g cocoa; 0.5 x egg; 15 g honey; 10 g dark chocolate; 1 pinch baking powder; 2 tbsp milk"],
-        ["O",180,16,"Protein brownies: bake until a knife in the middle comes out with a few moist crumbs; cool in the tin, then cut into one square per portion"]] },
-    { id: "s-cheesecake", slot: "snack", name: "Berry cheesecake pot", time: "5 min", tag: "Sweet",
-      ing: [["skyr",200], ["cream-cheese",30], ["whey",30], ["honey",10], ["berries",80], ["digestives",15]],
-      sea: [["Filling", "200 g skyr; 30 g light cream cheese; 30 g vanilla whey; 10 g honey; 0.25 tsp vanilla extract"]],
-      method: ["Crush a digestive into the bottom of a jar.", "Whisk skyr, cream cheese, whey and honey; spoon over.", "Top with berries."] },
-    { id: "s-bark", slot: "snack", name: "Frozen yoghurt bark", time: "Batch: 10 min + freezing", tag: "Sweet",
-      ing: [["greek-yog",300], ["honey",15], ["berries",80], ["dark-choc",15], ["granola",20]],
-      rest: [],
-      sea: [["Flavouring", "0.25 tsp vanilla extract"]],
-      method: ["Mix yoghurt and honey; spread 1 cm thick on a lined tray.", "Scatter berries, granola and chopped dark chocolate; freeze 3 hours.", "Snap into shards."],
-      finish: "Snap off a portion. 0 min",
-      comp: [["T", "Yoghurt bark", "Mix the yoghurt and honey, spread 1 cm thick on a lined tray, then scatter over the berries, granola and chopped chocolate. Freeze 3 hours, then break into pieces and bag", "300 g greek yoghurt; 15 g honey; 80 g berries; 20 g granola; 15 g dark chocolate"]] },
-    { id: "s-crumble", slot: "snack", name: "Apple crumble pot with vanilla yoghurt", time: "Batch: 20 min", tag: "Sweet",
-      ing: [["apple",150], ["honey",10], ["oats",30], ["peanut-butter",10], ["greek-yog",250], ["whey",30]],
-      rest: [],
-      method: ["Dice the apple and microwave with cinnamon and half the honey for 2 minutes.", "Crumble: oats, peanut butter and the rest of the honey, toasted in a dry pan or baked at 180°C for 8 minutes.", "Stir whey (vanilla if you have it) into the yoghurt; layer apple, yoghurt and crumble."],
-      finish: "Layer apple, yoghurt and crumble. 2 min",
-      comp: [["T", "Crumble topping", "Rub the oats, peanut butter, honey and cinnamon together with your fingertips until crumbly, and spread on a lined tray", "30 g oats; 10 g peanut butter; 5 g honey; 1 pinch cinnamon"],
-        ["O",180,10,"Crumble topping: bake until golden brown"],
-        ["H", "Cinnamon apple",6,"Cut the apple into 1 cm cubes (no need to peel). Put in the pan with the honey, cinnamon and 2 tbsp water on a medium heat for 5 min, stirring, until soft", "1 x apple; 5 g honey; 0.5 tsp cinnamon",[]],
-        ["T", "Vanilla yoghurt pots", "Stir the whey into the yoghurt", "250 g greek yoghurt; 30 g vanilla whey"]] },
-    { id: "s-pbj", slot: "snack", name: "PB and jam rice cakes with yoghurt", time: "3 min", tag: "Sweet",
-      ing: [["rice-cakes",32], ["peanut-butter",20], ["jam",20], ["greek-yog",200], ["berries",50]],
-      method: ["Spread 4 rice cakes with peanut butter and jam.", "Greek yoghurt with berries on the side."],
-      comp: [] },
-    { id: "s-cherry-cheesecake", slot: "snack", name: "Cherry crumble cheesecake", time: "Batch: 30 min + chilling", tag: "Sweet",
-      ing: [["cream-cheese",50], ["skyr",150], ["eggs",25], ["whey",15], ["honey",20], ["milk",10], ["cherries",60], ["digestives",15]],
-      rest: ["digestives"],
-      method: ["Blend the cream cheese, skyr, egg, whey, honey, milk and vanilla until smooth.", "Bake in a lined tin at 180°C for about 20 minutes, until just wobbling in the middle. Cool, then chill for 2 hours.", "Simmer the cherries with a little honey until syrupy.", "Spoon the cherries over a slice and crumble the digestive on top."],
-      finish: "Cut a slice, spoon over the cherries and crumble the digestive on top. 1 min",
-      comp: [["T", "Cheesecake batter", "Blend everything until smooth and pour into a lined tin. One tin makes every cheesecake this week", "50 g light cream cheese; 150 g skyr; 0.5 x egg; 15 g vanilla whey; 15 g honey; 2 tsp milk; 0.25 tsp vanilla extract"],
-        ["O",180,20,"Baked cheesecake: bake until the edge is set and the middle wobbles slightly when you shake the tin; cool, then into the fridge for 2 hours"],
-        ["H", "Cherry compote",5,"Put the cherries and honey in the pan on a medium heat. When it bubbles, turn down and cook 5 min, stirring, until the juice is thick like syrup. Cool", "60 g frozen cherries; 5 g honey"]] },
-    { id: "s-bday-cheesecake", slot: "snack", name: "Birthday cake cheesecake", time: "Batch: 30 min + chilling", tag: "Sweet",
-      ing: [["cream-cheese",50], ["skyr",150], ["eggs",25], ["whey",15], ["honey",15], ["milk",15], ["icing-sugar",10]],
-      rest: ["milk", "icing-sugar"],
-      sea: [["Icing", "10 g icing sugar; 1 tsp milk; 1 tsp sprinkles"]],
-      method: ["Blend the cream cheese, skyr, egg, whey, honey, milk and vanilla until smooth.", "Bake in a lined tin at 180°C for about 20 minutes, until just wobbling in the middle. Cool, then chill for 2 hours.", "Stir the icing sugar and milk to a thick icing, spread over a slice and finish with sprinkles."],
-      finish: "Cut a slice, spread with the icing and finish with sprinkles. 2 min",
-      comp: [["T", "Cheesecake batter", "Blend everything until smooth and pour into a lined tin. One tin makes every cheesecake this week", "50 g light cream cheese; 150 g skyr; 0.5 x egg; 15 g vanilla whey; 15 g honey; 2 tsp milk; 0.25 tsp vanilla extract"],
-        ["O",180,20,"Baked cheesecake: bake until the edge is set and the middle wobbles slightly when you shake the tin; cool, then into the fridge for 2 hours"]] },
-    { id: "s-oreo-cheesecake", slot: "snack", name: "Oreo cheesecake", time: "Batch: 30 min + chilling", tag: "Sweet",
-      ing: [["cream-cheese",60], ["skyr",180], ["eggs",25], ["whey",15], ["honey",15], ["milk",10], ["oreo",11]],
-      rest: ["cream-cheese", "skyr", "oreo"],
-      sea: [["Topping", "30 g skyr; 10 g light cream cheese; 1 x Oreo; 1 tsp sprinkles"]],
-      method: ["Blend the cream cheese, skyr, egg, whey, honey, milk and vanilla until smooth.", "Bake in a lined tin at 180°C for about 20 minutes, until just wobbling in the middle. Cool, then chill for 2 hours.", "Whisk the topping skyr and cream cheese, fold in the crushed Oreo, spread over a slice and finish with sprinkles."],
-      finish: "Cut a slice, whisk the topping with the crushed Oreo, spread over and finish with sprinkles. 2 min",
-      comp: [["T", "Cheesecake batter", "Blend everything until smooth and pour into a lined tin. One tin makes every cheesecake this week", "50 g light cream cheese; 150 g skyr; 0.5 x egg; 15 g vanilla whey; 15 g honey; 2 tsp milk; 0.25 tsp vanilla extract"],
-        ["O",180,20,"Baked cheesecake: bake until the edge is set and the middle wobbles slightly when you shake the tin; cool, then into the fridge for 2 hours"]] },
-    { id: "s-pretzel", slot: "snack", name: "Pretzel bites with beer cheese", time: "Batch: 30 min", tag: "Savoury",
-      ing: [["sr-flour",60], ["skyr",75], ["cottage-cheese",55], ["cheddar",20], ["cream-cheese",15], ["lager",15]],
-      rest: [],
-      method: ["Bring the flour, skyr and salt together into a dough, roll into ropes and cut into 2 cm bites.", "Bake on a lined tray at 200°C for 12 minutes until deep golden.", "Blend the cottage cheese, cheddar, cream cheese, lager and mustard, then stir over a medium heat for 5 minutes until melted and smooth."],
-      finish: "Bites back in the air fryer at 200°C for 3 minutes; warm the dip gently. 4 min",
-      comp: [["T", "Pretzel dough", "Mix the flour, skyr and salt into a dough with your hands. Roll it into sausages as thick as your thumb and cut into 2 cm pieces onto a lined tray", "60 g self-raising flour; 75 g skyr; 1 pinch salt"],
-        ["O",200,12,"Pretzel bites: bake until deep golden brown"],
-        ["S", "Beer cheese dip", "55 g cottage cheese; 20 g light cheddar; 15 g light cream cheese; 1 tbsp lager; 0.5 tsp Dijon mustard",5,true]] },
-    { id: "s-brookie", slot: "snack", name: "Brookie", time: "Batch: 30 min", tag: "Sweet",
-      ing: [["eggs",50], ["whey",15], ["pb-powder",17], ["cocoa",5], ["oats",10], ["honey",20], ["skyr",40], ["dark-choc",8], ["milk",10]],
-      rest: [],
-      method: ["Blitz the oats to flour and mix with everything except the cocoa and chocolate.", "Split the batter in two and stir the cocoa into one half.", "Marble both into a lined tin, press the chopped chocolate on top and bake at 180°C for about 20 minutes, until just set."],
-      finish: "One square, cold or warmed for 20 seconds. 1 min",
-      comp: [["T", "Brookie batters", "Blend the oats in the blender for 30 seconds until they are a fine flour. Stir in everything except the cocoa and chocolate. Pour half into another bowl and stir the cocoa into it. Spoon both in blobs into a lined tin, swirl once with a knife, and press the chopped chocolate on top", "1 x egg; 15 g vanilla whey; 17 g peanut butter powder; 10 g oats; 20 g honey; 40 g skyr; 5 g cocoa; 8 g dark chocolate; 2 tsp milk; 1 pinch salt"],
-        ["O",180,20,"Brookie: bake until the middle no longer wobbles; cool in the tin, then cut into one square per portion"]] },
     { id: "sh-cookies-cream", slot: "shake", name: "Cookies and cream thick shake", time: "4 min", tag: "Shake",
       ing: [["whey",30], ["skyr",100], ["cocoa",10], ["honey",15], ["milk",100], ["oreo",22], ["squirty-cream",15]],
       sea: [["Thickener", "0.5 tsp xanthan gum"]],
@@ -1221,7 +1128,7 @@ window.BB_DATA = (function () {
     return { parts: out, rest: rest }; }
   // Cooked weight per raw weight. These are kitchen estimates, so anything cooked is shown as "about".
   const CARB_YIELD = { "sushi-rice": 2.3, "jasmine-rice": 2.6, "pasta": 2.2, "penne": 2.2, "rice-noodles": 2.5, "lasagne-sheets": 2.2 };
-  const COOKED = { "chicken-breast": 0.75, "chicken-thigh": 0.72, "beef-mince": 0.75, "lamb-mince": 0.72, "beef-shin": 0.65, "steak": 0.8, "turkey-rashers": 0.75, "salmon": 0.85,
+  const COOKED = { "chicken-breast": 0.75, "chicken-thigh": 0.72, "beef-mince": 0.75, "lamb-mince": 0.72, "beef-shin": 0.65, "steak": 0.8, "turkey-rashers": 0.75, "back-bacon": 0.65, "salmon": 0.85,
     "turkey-mince": 0.75, "chicken-mince": 0.75, "turkey-ham": 0.9, "turkey-pepperoni": 0.9, "chicken-sausage": 0.85, "tuna": 1, "prawns": 1, "eggs": 0.9, 
     "onion": 0.6, "peppers": 0.7, "mushrooms": 0.55, "spinach": 0.25, "greens": 0.9, "broccoli": 0.9, "corn": 1, "peas": 1, "passata": 0.75, "chopped-tom": 0.75, "coconut-light": 0.85 };
   // One portion of a part for a person: scale(ingredient) is their share of each ingredient, lots their share of unlisted liquids.
